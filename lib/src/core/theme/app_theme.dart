@@ -6,6 +6,8 @@ class AppColors {
   static const accent = Color(0xFFFFC107);
   static const danger = Color(0xFFE04B3B); // red
   static const background = Color(0xFFF6F7FB);
+  static Color primaryBlue = Color(0xFF4A7BD6);
+  static Color pageBackground = Color(0xFFF6F7FB);
   static const surface = Colors.white;
   static const muted = Color(0xFF9AA0AB);
   static const border = Color(0xFFE9EDF2);

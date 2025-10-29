@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/src/features/components_showcase/components_showcase_page.dart';
+import 'package:sellefli/src/features/settings/settings_page.dart';
 import 'src/core/theme/app_theme.dart';
-import 'src/features/components_showcase/components_showcase_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       initialRoute: '/',
-      routes: {'/': (context) => const ComponentsShowcasePage()},
+      routes: {'/': (context) => ComponentsShowcasePage()},
     );
   }
 }

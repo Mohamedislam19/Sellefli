@@ -9,7 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_svg: ^2.0.7  # add this (version may vary)
+  flutter_svg: ^2.0.7  
+  google_fonts: ^5.0.0
 
 dev_dependencies:
   flutter_test:
