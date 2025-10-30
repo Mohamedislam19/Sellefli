@@ -209,7 +209,11 @@ class _MapPickerPageState extends State<MapPickerPage> {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      TopSnack.show(context, 'Location confirmed!', true);
+                      // TopSnack.show(context, 'Location confirmed!', true);
+                      Navigator.pop(context, {
+                        'latlng': selectedLatLng,
+                        'address': '', // add reverse geocoding here if desired
+                      });
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
