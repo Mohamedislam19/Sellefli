@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sellefli/src/features/components_showcase/components_showcase_page.dart';
+import 'package:sellefli/src/features/map/map_picker.dart';
 import 'package:sellefli/src/features/settings/settings_page.dart';
 import 'src/core/theme/app_theme.dart';
 
