@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/screens/auth_screen.dart';
 import 'src/core/theme/app_theme.dart';
-import 'src/features/components_showcase/components_showcase_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       initialRoute: '/',
-      routes: {'/': (context) => const ComponentsShowcasePage()},
+      home: AuthScreen(),
     );
   }
 }
