@@ -6,12 +6,14 @@ import '../../theme/app_theme.dart';
 
 class AnimatedDropdown extends StatefulWidget {
   final List<String> categories;
+  final Map<String, IconData> categoryIcons; // <-- ADD THIS
   final String selected;
   final double scale;
   final ValueChanged<String> onChanged;
 
   const AnimatedDropdown({
     required this.categories,
+    required this.categoryIcons, // <-- ADD THIS
     required this.selected,
     required this.scale,
     required this.onChanged,
@@ -85,6 +87,14 @@ class _AnimatedDropdownState extends State<AnimatedDropdown>
             ),
             child: Row(
               children: [
+                // ADD ICON HERE
+                Icon(
+                  widget.categoryIcons[widget.selected] ??
+                      Icons.category_rounded,
+                  color: AppColors.primaryBlue,
+                  size: 22 * widget.scale,
+                ),
+                SizedBox(width: 10 * widget.scale),
                 Expanded(
                   child: AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 220),
@@ -154,6 +164,29 @@ class _AnimatedDropdownState extends State<AnimatedDropdown>
                             ),
                             child: Row(
                               children: [
+                                // ADD ICON HERE
+                                Icon(
+                                  widget.categoryIcons[cat] ??
+                                      Icons.category_rounded,
+                                  size: 20 * widget.scale,
+                                  color: cat == widget.selected
+                                      ? AppColors.primaryBlue
+                                      : Colors.grey[500],
+                                ),
+                                SizedBox(width: 12 * widget.scale),
+                                Expanded(
+                                  child: Text(
+                                    cat,
+                                    style: GoogleFonts.outfit(
+                                      color: cat == widget.selected
+                                          ? AppColors.primaryBlue
+                                          : Colors.black87,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 15 * widget.scale,
+                                    ),
+                                  ),
+                                ),
+                                // Radio indicator on the right
                                 Icon(
                                   cat == widget.selected
                                       ? Icons.radio_button_checked
@@ -162,17 +195,6 @@ class _AnimatedDropdownState extends State<AnimatedDropdown>
                                   color: cat == widget.selected
                                       ? AppColors.primaryBlue
                                       : Colors.grey[400],
-                                ),
-                                SizedBox(width: 9 * widget.scale),
-                                Text(
-                                  cat,
-                                  style: GoogleFonts.outfit(
-                                    color: cat == widget.selected
-                                        ? AppColors.primaryBlue
-                                        : Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 15 * widget.scale,
-                                  ),
                                 ),
                               ],
                             ),

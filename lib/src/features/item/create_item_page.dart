@@ -34,13 +34,41 @@ class _CreateItemPageState extends State<CreateItemPage>
   late AnimationController _animController;
 
   final List<String> _categories = [
-    'Electronics',
-    'Books',
-    'Home',
-    'Tools',
-    'Sport',
-    'Other',
+    'Electronics & Tech',
+    'Home & Appliances',
+    'Furniture & Décor',
+    'Tools & Equipment',
+    'Vehicles & Mobility',
+    'Sports & Outdoors',
+    'Books & Study',
+    'Fashion & Accessories',
+    'Events & Celebrations',
+    'Baby & Kids',
+    'Health & Personal Care',
+    'Musical Instruments',
+    'Hobbies & Crafts',
+    'Pet Supplies',
+    'Other Items',
   ];
+
+  final Map<String, IconData> _categoryIcons = {
+    'Electronics & Tech': Icons.devices_rounded,
+    'Home & Appliances': Icons.kitchen_rounded,
+    'Furniture & Décor': Icons.chair_rounded,
+    'Tools & Equipment': Icons.construction_rounded,
+    'Vehicles & Mobility': Icons.directions_car_rounded,
+    'Sports & Outdoors': Icons.sports_soccer_rounded,
+    'Books & Study': Icons.menu_book_rounded,
+    'Fashion & Accessories': Icons.checkroom_rounded,
+    'Events & Celebrations': Icons.celebration_rounded,
+    'Baby & Kids': Icons.child_care_rounded,
+    'Health & Personal Care': Icons.favorite_rounded,
+    'Musical Instruments': Icons.music_note_rounded,
+    'Hobbies & Crafts': Icons.palette_rounded,
+    'Pet Supplies': Icons.pets_rounded,
+    'Other Items': Icons.category_rounded,
+  };
+
 
   @override
   void initState() {
@@ -324,6 +352,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                 ),
                 AnimatedDropdown(
                   categories: _categories,
+                  categoryIcons: _categoryIcons, // <-- ADD THIS
                   selected: _category!,
                   scale: scale,
                   onChanged: (v) => setState(() => _category = v),
@@ -341,7 +370,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                   ),
                 ),
                 TextFormField(
-                  decoration: fieldDecoration(label: null, hint: 'e.g., \$150'),
+                  decoration: fieldDecoration(label: null, hint: 'e.g., 150 DA'),
                   keyboardType: TextInputType.number,
                   onSaved: (val) => _value = val == null || val.isEmpty
                       ? 0
@@ -362,7 +391,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                 TextFormField(
                   decoration: fieldDecoration(
                     label: null,
-                    hint: 'e.g., \$50 (refundable)',
+                    hint: 'e.g., 50 DA (refundable)',
                   ),
                   keyboardType: TextInputType.number,
                   onSaved: (val) => _deposit = val == null || val.isEmpty
@@ -382,17 +411,16 @@ class _CreateItemPageState extends State<CreateItemPage>
                           child: TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Available From',
-                              hintText: '',
+                              hintText: 'MM/DD/YYYY', // Placeholder date format
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.always, // Always float
                               filled: true,
                               fillColor: Colors.white,
-                              suffixIcon:
-                                  Icon(Icons.calendar_today_outlined) != null
-                                  ? Icon(
-                                      Icons.calendar_today_outlined,
-                                      color: AppColors.primaryBlue,
-                                      size: 20,
-                                    )
-                                  : null,
+                              suffixIcon: Icon(
+                                Icons.calendar_today_outlined,
+                                color: AppColors.primaryBlue,
+                                size: 20,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(11),
                                 borderSide: BorderSide(
@@ -416,15 +444,15 @@ class _CreateItemPageState extends State<CreateItemPage>
                               labelStyle: GoogleFonts.outfit(
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87,
+                                fontSize: 19 * scale,
                               ),
                               hintStyle: GoogleFonts.outfit(
                                 color: Colors.grey[400],
+                                fontSize: 12 * scale,
                               ),
-                              contentPadding: const EdgeInsets.only(
-                                top: 16,
-                                bottom: 16,
-                                left: 0,
-                                right: 0,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                                horizontal: 6,
                               ),
                             ),
                             controller: TextEditingController(
@@ -446,17 +474,16 @@ class _CreateItemPageState extends State<CreateItemPage>
                           child: TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Available Until',
-                              hintText: '',
+                              hintText: 'MM/DD/YYYY', // Placeholder date format
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.always, // Always float
                               filled: true,
                               fillColor: Colors.white,
-                              suffixIcon:
-                                  Icon(Icons.calendar_today_outlined) != null
-                                  ? Icon(
-                                      Icons.calendar_today_outlined,
-                                      color: AppColors.primaryBlue,
-                                      size: 20,
-                                    )
-                                  : null,
+                              suffixIcon: Icon(
+                                Icons.calendar_today_outlined,
+                                color: AppColors.primaryBlue,
+                                size: 20,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(11),
                                 borderSide: BorderSide(
@@ -480,15 +507,15 @@ class _CreateItemPageState extends State<CreateItemPage>
                               labelStyle: GoogleFonts.outfit(
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87,
+                                fontSize: 19 * scale,
                               ),
                               hintStyle: GoogleFonts.outfit(
                                 color: Colors.grey[400],
+                                fontSize: 12 * scale,
                               ),
-                              contentPadding: const EdgeInsets.only(
-                                top: 16,
-                                bottom: 16,
-                                left: 0,
-                                right: 0,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                                horizontal: 6,
                               ),
                             ),
                             controller: TextEditingController(
