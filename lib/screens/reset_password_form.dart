@@ -1,28 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 
-class LoginForm extends StatefulWidget {
-  final VoidCallback onToggleSignUp;
-  final VoidCallback onForgotPassword;
+class ResetPasswordForm extends StatefulWidget {
+  final VoidCallback onToggle;
 
-  const LoginForm({
-    super.key,
-    required this.onToggleSignUp,
-    required this.onForgotPassword,
-  });
+  const ResetPasswordForm({super.key, required this.onToggle});
 
   @override
-  State<LoginForm> createState() => _LoginFormState();
+  State<ResetPasswordForm> createState() => _ResetPasswordFormState();
 }
 
-class _LoginFormState extends State<LoginForm>
+class _ResetPasswordFormState extends State<ResetPasswordForm>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _phoneFocusNode = FocusNode();
-  final _passwordFocusNode = FocusNode();
-  bool _obscurePassword = true;
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -48,14 +40,12 @@ class _LoginFormState extends State<LoginForm>
   @override
   void dispose() {
     _phoneController.dispose();
-    _passwordController.dispose();
     _phoneFocusNode.dispose();
-    _passwordFocusNode.dispose();
     _animationController.dispose();
     super.dispose();
   }
 
-  void _login() {
+  void _resetPassword() {
     // Dismiss keyboard
     FocusScope.of(context).unfocus();
 
@@ -71,7 +61,7 @@ class _LoginFormState extends State<LoginForm>
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
                   const SizedBox(width: 12),
-                  const Text('Login Successful!'),
+                  const Text('Reset link sent to your phone!'),
                 ],
               ),
               backgroundColor: AppColors.success,
@@ -137,7 +127,7 @@ class _LoginFormState extends State<LoginForm>
                           ],
                         ),
                         child: const Icon(
-                          Icons.lock_outline,
+                          Icons.lock_reset,
                           size: 44,
                           color: Colors.white,
                         ),
@@ -147,7 +137,7 @@ class _LoginFormState extends State<LoginForm>
 
                     // Title with better typography
                     Text(
-                      'Hello again!',
+                      'Reset Password',
                       style: AppTextStyles.title.copyWith(
                         color: AppColors.primaryDark,
                         fontSize: 32,
@@ -158,7 +148,7 @@ class _LoginFormState extends State<LoginForm>
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Please log in to continue',
+                      'Enter your phone number to receive\na password reset link',
                       style: AppTextStyles.subtitle.copyWith(
                         color: AppColors.muted,
                         fontSize: 16,
@@ -173,10 +163,9 @@ class _LoginFormState extends State<LoginForm>
                       controller: _phoneController,
                       focusNode: _phoneFocusNode,
                       keyboardType: TextInputType.phone,
-                      textInputAction: TextInputAction.next,
-                      onFieldSubmitted: (_) {
-                        _passwordFocusNode.requestFocus();
-                      },
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _resetPassword(),
+                      autofocus: true,
                       style: AppTextStyles.body.copyWith(fontSize: 16),
                       decoration: InputDecoration(
                         labelText: 'Phone number',
@@ -243,122 +232,11 @@ class _LoginFormState extends State<LoginForm>
                         return null;
                       },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 32),
 
-                    // Password Field with improved styling
-                    TextFormField(
-                      controller: _passwordController,
-                      focusNode: _passwordFocusNode,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _login(),
-                      style: AppTextStyles.body.copyWith(fontSize: 16),
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: Container(
-                          margin: const EdgeInsets.all(12),
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.lock_outline,
-                            color: AppColors.primary,
-                            size: 22,
-                          ),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: AppColors.muted,
-                            size: 22,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                          splashRadius: 24,
-                        ),
-                        filled: true,
-                        fillColor: AppColors.primary.withOpacity(0.03),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(
-                            color: AppColors.border.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(
-                            color: AppColors.primary,
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(
-                            color: AppColors.danger,
-                            width: 1,
-                          ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(
-                            color: AppColors.danger,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Forgot Password with better touch target
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: widget.onForgotPassword,
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          minimumSize: const Size(0, 40),
-                        ),
-                        child: Text(
-                          'Forgot your password?',
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // Login Button with better styling
+                    // Reset Button with better styling
                     ElevatedButton(
-                      onPressed: _isLoading ? null : _login,
+                      onPressed: _isLoading ? null : _resetPassword,
                       style:
                           ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
@@ -397,7 +275,7 @@ class _LoginFormState extends State<LoginForm>
                               ),
                             )
                           : Text(
-                              'Log in',
+                              'Send Reset Link',
                               style: AppTextStyles.subtitle.copyWith(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -408,19 +286,49 @@ class _LoginFormState extends State<LoginForm>
                     ),
                     const SizedBox(height: 28),
 
-                    // Sign Up Link with better spacing and touch target
+                    // Divider with text
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: AppColors.border.withOpacity(0.5),
+                            thickness: 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'OR',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.muted,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: AppColors.border.withOpacity(0.5),
+                            thickness: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Back to Login Link with better spacing and touch target
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Don\'t have an account? ',
+                          'Remember your password? ',
                           style: AppTextStyles.body.copyWith(
                             color: AppColors.muted,
                             fontSize: 15,
                           ),
                         ),
                         InkWell(
-                          onTap: widget.onToggleSignUp,
+                          onTap: widget.onToggle,
                           borderRadius: BorderRadius.circular(8),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -428,7 +336,7 @@ class _LoginFormState extends State<LoginForm>
                               vertical: 4,
                             ),
                             child: Text(
-                              'Register',
+                              'Log in',
                               style: AppTextStyles.subtitle.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
