@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   static const primary = Color(0xFF2F6CE6); // blue from screenshot
+  static const appBarBackground = Color(0xFFDCEBFF);
   static const primaryDark = Color(0xFF1F4FD6);
   static const accent = Color(0xFFFFC107);
   static const danger = Color(0xFFE04B3B); // red
@@ -13,6 +14,17 @@ class AppColors {
   static const border = Color(0xFFE9EDF2);
   static const success = Color(0xFF2ECC71);
   static const star = Color(0xFFFFC107);
+
+  /// 🌈 Main App Gradient (Sellefli Sky)
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [
+      Color(0xFFBFD9FF), // very soft blue (top)
+      Color(0xFFDCEBFF), // lighter mid tone
+      Color(0xFFF4F9FF), // almost white pastel blue (bottom)
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
 
 class AppTextStyles {

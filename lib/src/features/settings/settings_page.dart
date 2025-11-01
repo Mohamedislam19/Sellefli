@@ -52,10 +52,11 @@ class SettingsHelpPage extends StatelessWidget {
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
 
-    return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+    return 
+    Scaffold(
+      // backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBackground,
         elevation: 1,
         centerTitle: true,
         leading: const AnimatedReturnButton(),
@@ -73,193 +74,199 @@ class SettingsHelpPage extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView(
-        padding: EdgeInsets.only(
-          bottom: 9 * scale,
-          top: 9 * scale,
-          left: 18 * scale,
-          right: 18 * scale,
+      body: 
+      Container(
+        decoration: const BoxDecoration(
+          gradient: AppColors.primaryGradient
         ),
-        children: [
-          sectionTitle('About Us', scale),
-          AnimatedExpansionCard(
-            icon: Icons.info_outline_rounded,
-            title: 'About Sellefli',
-            scale: scale,
-            descriptionWidget: buildStyledDescription([
-              normalText(
-                "Sellefli is a community-based mobile platform that helps neighbors and campus users rent or borrow everyday items from people nearby.",
-                scale,
-              ),
-              TextSpan(text: '\n\n'), // spacing
-              normalText("Instead of buying new things, you can ", scale),
-              boldText("share", scale),
-              normalText(" what you already own and ", scale),
-              boldText("earn money", scale),
-              normalText(
-                " while helping others. Sellefli makes local exchanges ",
-                scale,
-              ),
-              boldText("simple, safe, and trustworthy.", scale),
-            ]),
+        child: ListView(
+          padding: EdgeInsets.only(
+            bottom: 9 * scale,
+            top: 9 * scale,
+            left: 18 * scale,
+            right: 18 * scale,
           ),
-          AnimatedExpansionCard(
-            icon: Icons.location_city_outlined,
-            title: 'Our Mission',
-            scale: scale,
-            descriptionWidget: buildStyledDescription([
-              normalText("Our mission is to ", scale),
-              boldText("make sharing a normal part of everyday life.", scale),
-              TextSpan(text: '\n\n'),
-              normalText("Sellefli empowers people to save ", scale),
-              boldText(
-                "money, reduce waste, and strengthen community connections",
-                scale,
-              ),
-              normalText(" through a trusted local rental network.", scale),
-            ]),
-          ),
-          AnimatedExpansionCard(
-            icon: Icons.help_outline_rounded,
-            title: 'How It Works',
-            scale: scale,
-            descriptionWidget: buildStyledDescription([
-              subtitleText("Browse:", scale),
-              normalText(
-                " Discover items available for rent near you—from tools and electronics to books and household items.",
-                scale,
-              ),
-              TextSpan(text: '\n\n'),
-              subtitleText("Request:", scale),
-              normalText(
-                " Choose what you need and send a booking request with your preferred dates.",
-                scale,
-              ),
-              TextSpan(text: '\n\n'),
-              subtitleText("Confirm:", scale),
-              normalText(
-                " The owner reviews your request and approves it.",
-                scale,
-              ),
-              TextSpan(text: '\n\n'),
-              subtitleText("Meet & Exchange:", scale),
-              normalText(
-                " Arrange a safe meeting point to borrow or rent the item.",
-                scale,
-              ),
-              TextSpan(text: '\n\n'),
-              subtitleText("Return:", scale),
-              normalText(
-                " Bring the item back on time and rate your experience to build trust in the community.",
-                scale,
-              ),
-            ]),
-          ),
-          sectionTitle('Support', scale),
-          AnimatedExpansionCard(
-            icon: Icons.question_answer_outlined,
-            title: 'FAQ',
-            scale: scale,
-            descriptionWidget: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: faqData
-                  .map(
-                    (faq) => SubExpansionCard(
-                      title: faq['question']!,
-                      description: faq['answer']!,
-                      scale: scale,
-                    ),
-                  )
-                  .toList(),
+          children: [
+            sectionTitle('About Us', scale),
+            AnimatedExpansionCard(
+              icon: Icons.info_outline_rounded,
+              title: 'About Sellefli',
+              scale: scale,
+              descriptionWidget: buildStyledDescription([
+                normalText(
+                  "Sellefli is a community-based mobile platform that helps neighbors and campus users rent or borrow everyday items from people nearby.",
+                  scale,
+                ),
+                TextSpan(text: '\n\n'), // spacing
+                normalText("Instead of buying new things, you can ", scale),
+                boldText("share", scale),
+                normalText(" what you already own and ", scale),
+                boldText("earn money", scale),
+                normalText(
+                  " while helping others. Sellefli makes local exchanges ",
+                  scale,
+                ),
+                boldText("simple, safe, and trustworthy.", scale),
+              ]),
             ),
-          ),
-          AnimatedExpansionCard(
-            icon: Icons.support_agent_rounded,
-            title: 'Contact & Support',
-            scale: scale,
-            descriptionWidget: buildStyledDescription([
-              normalText("📧 Email: support@sellefli.com\n\n", scale),
-              normalText("🌐 Website: www.sellefli.dz\n", scale),
-              TextSpan(text: '\n'),
-              normalText(
-                "If you encounter any issue or wish to share feedback, please reach out via email or social media. We respond within 24–48 hours.",
-                scale,
-              ),
-            ]),
-          ),
-          sectionTitle('Legal & Community', scale),
-          AnimatedExpansionCard(
-            icon: Icons.groups_2_outlined,
-            title: 'Community Guidelines',
-            scale: scale,
-            descriptionWidget: buildStyledDescription([
-              normalText(
-                "Sellefli is built on trust and respect. Every user contributes to a safe and friendly environment.",
-                scale,
-              ),
-              TextSpan(text: '\n\n'),
-              bulletPoint("Be respectful and reliable.", scale),
-              bulletPoint("Communicate clearly.", scale),
-              bulletPoint("Avoid last-minute cancellations.", scale),
-              bulletPoint(
-                "Keep your items clean and in good condition.",
-                scale,
-              ),
-            ]),
-          ),
-          AnimatedExpansionCard(
-            icon: Icons.library_books_outlined,
-            title: 'Terms and Conditions',
-            scale: scale,
-            descriptionWidget: buildStyledDescription([
-              normalText("By using Sellefli, you agree to:\n", scale),
-              bulletPoint(
-                "Share only items that you own or have the right to lend.",
-                scale,
-              ),
-              bulletPoint(
-                "Treat borrowed items with care and return them on time.",
-                scale,
-              ),
-              bulletPoint(
-                "Communicate honestly and respectfully with other users.",
-                scale,
-              ),
-              bulletPoint("Avoid prohibited, unsafe, or illegal items.", scale),
-              bulletPoint(
-                "Report any suspicious or inappropriate behavior to the support team.",
-                scale,
-              ),
-              TextSpan(text: '\n'),
-              normalText(
-                "Sellefli is not responsible for lost or damaged items but provides guidance and tools to help users resolve issues responsibly. Full Terms and Conditions will be available at launch on the official website.",
-                scale,
-              ),
-            ]),
-          ),
-          AnimatedExpansionCard(
-            icon: Icons.privacy_tip_rounded,
-            title: 'Privacy Policy',
-            scale: scale,
-            descriptionWidget: buildStyledDescription([
-              normalText(
-                "Sellefli respects your privacy as described in our full policy, available on the official website.",
-                scale,
-              ),
-            ]),
-          ),
-          SizedBox(height: 32 * scale),
-          Center(
-            child: Text(
-              'App Version 1.0.0 (Beta)\n© 2025 Sellefli. All rights reserved.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
-                fontSize: 13 * scale,
-                color: Colors.grey[500],
+            AnimatedExpansionCard(
+              icon: Icons.location_city_outlined,
+              title: 'Our Mission',
+              scale: scale,
+              descriptionWidget: buildStyledDescription([
+                normalText("Our mission is to ", scale),
+                boldText("make sharing a normal part of everyday life.", scale),
+                TextSpan(text: '\n\n'),
+                normalText("Sellefli empowers people to save ", scale),
+                boldText(
+                  "money, reduce waste, and strengthen community connections",
+                  scale,
+                ),
+                normalText(" through a trusted local rental network.", scale),
+              ]),
+            ),
+            AnimatedExpansionCard(
+              icon: Icons.help_outline_rounded,
+              title: 'How It Works',
+              scale: scale,
+              descriptionWidget: buildStyledDescription([
+                subtitleText("Browse:", scale),
+                normalText(
+                  " Discover items available for rent near you—from tools and electronics to books and household items.",
+                  scale,
+                ),
+                TextSpan(text: '\n\n'),
+                subtitleText("Request:", scale),
+                normalText(
+                  " Choose what you need and send a booking request with your preferred dates.",
+                  scale,
+                ),
+                TextSpan(text: '\n\n'),
+                subtitleText("Confirm:", scale),
+                normalText(
+                  " The owner reviews your request and approves it.",
+                  scale,
+                ),
+                TextSpan(text: '\n\n'),
+                subtitleText("Meet & Exchange:", scale),
+                normalText(
+                  " Arrange a safe meeting point to borrow or rent the item.",
+                  scale,
+                ),
+                TextSpan(text: '\n\n'),
+                subtitleText("Return:", scale),
+                normalText(
+                  " Bring the item back on time and rate your experience to build trust in the community.",
+                  scale,
+                ),
+              ]),
+            ),
+            sectionTitle('Support', scale),
+            AnimatedExpansionCard(
+              icon: Icons.question_answer_outlined,
+              title: 'FAQ',
+              scale: scale,
+              descriptionWidget: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: faqData
+                    .map(
+                      (faq) => SubExpansionCard(
+                        title: faq['question']!,
+                        description: faq['answer']!,
+                        scale: scale,
+                      ),
+                    )
+                    .toList(),
               ),
             ),
-          ),
-        ],
+            AnimatedExpansionCard(
+              icon: Icons.support_agent_rounded,
+              title: 'Contact & Support',
+              scale: scale,
+              descriptionWidget: buildStyledDescription([
+                normalText("📧 Email: support@sellefli.com\n\n", scale),
+                normalText("🌐 Website: www.sellefli.dz\n", scale),
+                TextSpan(text: '\n'),
+                normalText(
+                  "If you encounter any issue or wish to share feedback, please reach out via email or social media. We respond within 24–48 hours.",
+                  scale,
+                ),
+              ]),
+            ),
+            sectionTitle('Legal & Community', scale),
+            AnimatedExpansionCard(
+              icon: Icons.groups_2_outlined,
+              title: 'Community Guidelines',
+              scale: scale,
+              descriptionWidget: buildStyledDescription([
+                normalText(
+                  "Sellefli is built on trust and respect. Every user contributes to a safe and friendly environment.",
+                  scale,
+                ),
+                TextSpan(text: '\n\n'),
+                bulletPoint("Be respectful and reliable.", scale),
+                bulletPoint("Communicate clearly.", scale),
+                bulletPoint("Avoid last-minute cancellations.", scale),
+                bulletPoint(
+                  "Keep your items clean and in good condition.",
+                  scale,
+                ),
+              ]),
+            ),
+            AnimatedExpansionCard(
+              icon: Icons.library_books_outlined,
+              title: 'Terms and Conditions',
+              scale: scale,
+              descriptionWidget: buildStyledDescription([
+                normalText("By using Sellefli, you agree to:\n", scale),
+                bulletPoint(
+                  "Share only items that you own or have the right to lend.",
+                  scale,
+                ),
+                bulletPoint(
+                  "Treat borrowed items with care and return them on time.",
+                  scale,
+                ),
+                bulletPoint(
+                  "Communicate honestly and respectfully with other users.",
+                  scale,
+                ),
+                bulletPoint("Avoid prohibited, unsafe, or illegal items.", scale),
+                bulletPoint(
+                  "Report any suspicious or inappropriate behavior to the support team.",
+                  scale,
+                ),
+                TextSpan(text: '\n'),
+                normalText(
+                  "Sellefli is not responsible for lost or damaged items but provides guidance and tools to help users resolve issues responsibly. Full Terms and Conditions will be available at launch on the official website.",
+                  scale,
+                ),
+              ]),
+            ),
+            AnimatedExpansionCard(
+              icon: Icons.privacy_tip_rounded,
+              title: 'Privacy Policy',
+              scale: scale,
+              descriptionWidget: buildStyledDescription([
+                normalText(
+                  "Sellefli respects your privacy as described in our full policy, available on the official website.",
+                  scale,
+                ),
+              ]),
+            ),
+            SizedBox(height: 32 * scale),
+            Center(
+              child: Text(
+                'App Version 1.0.0 (Beta)\n© 2025 Sellefli. All rights reserved.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 13 * scale,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

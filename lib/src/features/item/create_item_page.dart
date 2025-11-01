@@ -127,7 +127,45 @@ class _CreateItemPageState extends State<CreateItemPage>
       initialDate: initDate,
       firstDate: firstDate,
       lastDate: DateTime(DateTime.now().year + 3),
+      builder: (context, child) {
+        // wrap the date picker in a Theme to override colors locally
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primaryBlue, // header background, selected day
+              onPrimary: Colors.white, // header & selected text color
+              onSurface: Colors.black87, // default text color
+            ),
+            dialogBackgroundColor:
+                AppColors.pageBackground, // dialog card background
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primaryBlue,
+              ),
+            ),
+            // If your Flutter supports DatePickerThemeData you can add more:
+            datePickerTheme: DatePickerThemeData(
+              backgroundColor: AppColors.appBarBackground,
+              headerBackgroundColor: AppColors.primaryBlue,
+              headerForegroundColor: Colors.white,
+              // rangeSelectionOverlayColor: AppColors.primaryBlue.withOpacity(
+              //   0.12,
+              // ),
+              dayForegroundColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected))
+                  return Colors.white;
+                if (states.contains(MaterialState.disabled))
+                  return Colors.grey.shade400;
+                return Colors.black87;
+              }),
+              // todayForegroundColor: AppColors.primaryBlue,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (picked != null) {
       setState(() {
         if (isFrom)
@@ -196,7 +234,7 @@ class _CreateItemPageState extends State<CreateItemPage>
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBackground,
         elevation: 1,
         centerTitle: true,
         leading: const AnimatedReturnButton(),
@@ -214,396 +252,403 @@ class _CreateItemPageState extends State<CreateItemPage>
           ),
         ),
       ),
-      backgroundColor: AppColors.pageBackground,
-      body: FadeTransition(
-        opacity: CurvedAnimation(
-          parent: _animController,
-          curve: Curves.easeOut,
-        ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: 17 * scale,
-            vertical: 10 * scale,
+      // backgroundColor: AppColors.pageBackground,
+      body: 
+      Container(
+        decoration: const BoxDecoration(
+      gradient: AppColors.primaryGradient,
+    ),
+        child: FadeTransition(
+          opacity: CurvedAnimation(
+            parent: _animController,
+            curve: Curves.easeOut,
           ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Item Photos',
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15 * scale,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: 17 * scale,
+              vertical: 10 * scale,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Item Photos',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15 * scale,
+                    ),
                   ),
-                ),
-
-                // IMAGE GALLERY (component)
-                ImageGallery(
-                  images: _images,
-                  scale: scale,
-                  showImageError: _showImageError,
-                  onRemove: _removeImage,
-                ),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _pickImages,
+        
+                  // IMAGE GALLERY (component)
+                  ImageGallery(
+                    images: _images,
+                    scale: scale,
+                    showImageError: _showImageError,
+                    onRemove: _removeImage,
+                  ),
+        
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _pickImages,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            padding: EdgeInsets.symmetric(vertical: 13 * scale),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(9 * scale),
+                            ),
+                          ),
+                          icon: Icon(
+                            Icons.photo_library_outlined,
+                            size: 18 * scale,
+                          ),
+                          label: Text(
+                            'Gallery',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12 * scale),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _pickImageCamera,
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: AppColors.primaryBlue),
+                            padding: EdgeInsets.symmetric(vertical: 13 * scale),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(9 * scale),
+                            ),
+                            backgroundColor: AppColors.pageBackground,
+                          ),
+                          icon: Icon(
+                            Icons.camera_alt_outlined,
+                            color: AppColors.primaryBlue,
+                            size: 18 * scale,
+                          ),
+                          label: Text(
+                            'Camera',
+                            style: TextStyle(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+        
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 230),
+                    curve: Curves.easeInOut,
+                    child: _showImageError
+                        ? Padding(
+                            padding: EdgeInsets.only(top: 8 * scale),
+                            child: Text(
+                              'At least one photo is required.',
+                              style: TextStyle(
+                                color: Colors.red[700],
+                                fontSize: 12.8 * scale,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+        
+                  SizedBox(height: 0 * scale),
+        
+                  // Title field
+                  Padding(
+                    padding: EdgeInsets.only(top: 12 * scale, bottom: 4 * scale),
+                    child: Text(
+                      'Title',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15 * scale,
+                      ),
+                    ),
+                  ),
+                  TextFormField(
+                    decoration: fieldDecoration(
+                      label: null,
+                      hint: 'e.g., Electric Drill, Bicycle',
+                    ),
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Required' : null,
+                    onSaved: (val) => _title = val,
+                  ),
+        
+                  // Category Dropdown
+                  Padding(
+                    padding: EdgeInsets.only(top: 14 * scale, bottom: 4 * scale),
+                    child: Text(
+                      'Category',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15 * scale,
+                      ),
+                    ),
+                  ),
+                  AnimatedDropdown(
+                    categories: _categories,
+                    categoryIcons: _categoryIcons, // <-- ADD THIS
+                    selected: _category!,
+                    scale: scale,
+                    onChanged: (v) => setState(() => _category = v),
+                  ),
+        
+                  // Estimated Value
+                  Padding(
+                    padding: EdgeInsets.only(top: 12 * scale, bottom: 4 * scale),
+                    child: Text(
+                      'Estimated Value',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15 * scale,
+                      ),
+                    ),
+                  ),
+                  TextFormField(
+                    decoration: fieldDecoration(label: null, hint: 'e.g., 150 DA'),
+                    keyboardType: TextInputType.number,
+                    onSaved: (val) => _value = val == null || val.isEmpty
+                        ? 0
+                        : double.tryParse(val) ?? 0,
+                  ),
+        
+                  // Deposit
+                  Padding(
+                    padding: EdgeInsets.only(top: 12 * scale, bottom: 4 * scale),
+                    child: Text(
+                      'Deposit Required',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15 * scale,
+                      ),
+                    ),
+                  ),
+                  TextFormField(
+                    decoration: fieldDecoration(
+                      label: null,
+                      hint: 'e.g., 50 DA (refundable)',
+                    ),
+                    keyboardType: TextInputType.number,
+                    onSaved: (val) => _deposit = val == null || val.isEmpty
+                        ? 0
+                        : double.tryParse(val) ?? 0,
+                  ),
+        
+                  SizedBox(height: 20 * scale),
+        
+                  // Date pickers row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _selectDate(context, true),
+                          child: AbsorbPointer(
+                            child: TextFormField(
+                              decoration: InputDecoration(
+                                labelText: 'Available From',
+                                hintText: 'MM/DD/YYYY', // Placeholder date format
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always, // Always float
+                                filled: true,
+                                fillColor: Colors.white,
+                                suffixIcon: Icon(
+                                  Icons.calendar_today_outlined,
+                                  color: AppColors.primaryBlue,
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(11),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[200]!,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(11),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[200]!,
+                                    width: 1.1,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(11),
+                                  borderSide: BorderSide(
+                                    color: AppColors.primaryBlue,
+                                    width: 1.8,
+                                  ),
+                                ),
+                                labelStyle: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                  fontSize: 19 * scale,
+                                ),
+                                hintStyle: GoogleFonts.outfit(
+                                  color: Colors.grey[400],
+                                  fontSize: 12 * scale,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                  horizontal: 6,
+                                ),
+                              ),
+                              controller: TextEditingController(
+                                text: _fromDate == null
+                                    ? ''
+                                    : '${_fromDate!.month}/${_fromDate!.day}/${_fromDate!.year}',
+                              ),
+                              validator: (val) =>
+                                  _fromDate == null ? 'Required' : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 13 * scale),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _selectDate(context, false),
+                          child: AbsorbPointer(
+                            child: TextFormField(
+                              decoration: InputDecoration(
+                                labelText: 'Available Until',
+                                hintText: 'MM/DD/YYYY', // Placeholder date format
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always, // Always float
+                                filled: true,
+                                fillColor: Colors.white,
+                                suffixIcon: Icon(
+                                  Icons.calendar_today_outlined,
+                                  color: AppColors.primaryBlue,
+                                  size: 20,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(11),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[200]!,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(11),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[200]!,
+                                    width: 1.1,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(11),
+                                  borderSide: BorderSide(
+                                    color: AppColors.primaryBlue,
+                                    width: 1.8,
+                                  ),
+                                ),
+                                labelStyle: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                  fontSize: 19 * scale,
+                                ),
+                                hintStyle: GoogleFonts.outfit(
+                                  color: Colors.grey[400],
+                                  fontSize: 12 * scale,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                  horizontal: 6,
+                                ),
+                              ),
+                              controller: TextEditingController(
+                                text: _untilDate == null
+                                    ? ''
+                                    : '${_untilDate!.month}/${_untilDate!.day}/${_untilDate!.year}',
+                              ),
+                              validator: (val) =>
+                                  _untilDate == null ? 'Required' : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+        
+                  // Location
+                  Padding(
+                    padding: EdgeInsets.only(top: 12 * scale, bottom: 4 * scale),
+                    child: Text(
+                      'Location',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15 * scale,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _selectLocation,
+                    child: AbsorbPointer(
+                      child: TextFormField(
+                        decoration: fieldDecoration(
+                          label: null,
+                          hint: 'Pick on map',
+                          icon: Icons.map_outlined,
+                        ),
+                        controller: TextEditingController(
+                          text: _locationLatLng == null
+                              ? ''
+                              : 'Lat: ${_locationLatLng!.latitude.toStringAsFixed(5)}, Lng: ${_locationLatLng!.longitude.toStringAsFixed(5)}',
+                        ),
+                        validator: (val) {
+                          if (_locationLatLng == null) return 'Required';
+                          return null;
+                        },
+                      ),
+                    ),
+                  ),
+        
+                  SizedBox(height: 20 * scale),
+        
+                  // Save Button Animation
+                  AnimatedBuilder(
+                    animation: _animController,
+                    builder: (context, child) => Transform.translate(
+                      offset: Offset(
+                        0,
+                        11 *
+                            (1 -
+                                Curves.easeInOut.transform(
+                                  _animController.value,
+                                )),
+                      ),
+                      child: child!,
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 49 * scale,
+                      child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryBlue,
-                          padding: EdgeInsets.symmetric(vertical: 13 * scale),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(9 * scale),
+                            borderRadius: BorderRadius.circular(11 * scale),
                           ),
                         ),
-                        icon: Icon(
-                          Icons.photo_library_outlined,
-                          size: 18 * scale,
-                        ),
-                        label: Text(
-                          'Gallery',
+                        onPressed: _onSave,
+                        child: Text(
+                          'Publish Item',
                           style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 17 * scale,
+                            letterSpacing: 0.2,
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(width: 12 * scale),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _pickImageCamera,
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppColors.primaryBlue),
-                          padding: EdgeInsets.symmetric(vertical: 13 * scale),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(9 * scale),
-                          ),
-                        ),
-                        icon: Icon(
-                          Icons.camera_alt_outlined,
-                          color: AppColors.primaryBlue,
-                          size: 18 * scale,
-                        ),
-                        label: Text(
-                          'Camera',
-                          style: TextStyle(
-                            color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 230),
-                  curve: Curves.easeInOut,
-                  child: _showImageError
-                      ? Padding(
-                          padding: EdgeInsets.only(top: 8 * scale),
-                          child: Text(
-                            'At least one photo is required.',
-                            style: TextStyle(
-                              color: Colors.red[700],
-                              fontSize: 12.8 * scale,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-
-                SizedBox(height: 0 * scale),
-
-                // Title field
-                Padding(
-                  padding: EdgeInsets.only(top: 12 * scale, bottom: 4 * scale),
-                  child: Text(
-                    'Title',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15 * scale,
-                    ),
                   ),
-                ),
-                TextFormField(
-                  decoration: fieldDecoration(
-                    label: null,
-                    hint: 'e.g., Electric Drill, Bicycle',
-                  ),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Required' : null,
-                  onSaved: (val) => _title = val,
-                ),
-
-                // Category Dropdown
-                Padding(
-                  padding: EdgeInsets.only(top: 14 * scale, bottom: 4 * scale),
-                  child: Text(
-                    'Category',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15 * scale,
-                    ),
-                  ),
-                ),
-                AnimatedDropdown(
-                  categories: _categories,
-                  categoryIcons: _categoryIcons, // <-- ADD THIS
-                  selected: _category!,
-                  scale: scale,
-                  onChanged: (v) => setState(() => _category = v),
-                ),
-
-                // Estimated Value
-                Padding(
-                  padding: EdgeInsets.only(top: 12 * scale, bottom: 4 * scale),
-                  child: Text(
-                    'Estimated Value',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15 * scale,
-                    ),
-                  ),
-                ),
-                TextFormField(
-                  decoration: fieldDecoration(label: null, hint: 'e.g., 150 DA'),
-                  keyboardType: TextInputType.number,
-                  onSaved: (val) => _value = val == null || val.isEmpty
-                      ? 0
-                      : double.tryParse(val) ?? 0,
-                ),
-
-                // Deposit
-                Padding(
-                  padding: EdgeInsets.only(top: 12 * scale, bottom: 4 * scale),
-                  child: Text(
-                    'Deposit Required',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15 * scale,
-                    ),
-                  ),
-                ),
-                TextFormField(
-                  decoration: fieldDecoration(
-                    label: null,
-                    hint: 'e.g., 50 DA (refundable)',
-                  ),
-                  keyboardType: TextInputType.number,
-                  onSaved: (val) => _deposit = val == null || val.isEmpty
-                      ? 0
-                      : double.tryParse(val) ?? 0,
-                ),
-
-                SizedBox(height: 20 * scale),
-
-                // Date pickers row
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => _selectDate(context, true),
-                        child: AbsorbPointer(
-                          child: TextFormField(
-                            decoration: InputDecoration(
-                              labelText: 'Available From',
-                              hintText: 'MM/DD/YYYY', // Placeholder date format
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.always, // Always float
-                              filled: true,
-                              fillColor: Colors.white,
-                              suffixIcon: Icon(
-                                Icons.calendar_today_outlined,
-                                color: AppColors.primaryBlue,
-                                size: 20,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(11),
-                                borderSide: BorderSide(
-                                  color: Colors.grey[200]!,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(11),
-                                borderSide: BorderSide(
-                                  color: Colors.grey[200]!,
-                                  width: 1.1,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(11),
-                                borderSide: BorderSide(
-                                  color: AppColors.primaryBlue,
-                                  width: 1.8,
-                                ),
-                              ),
-                              labelStyle: GoogleFonts.outfit(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                                fontSize: 19 * scale,
-                              ),
-                              hintStyle: GoogleFonts.outfit(
-                                color: Colors.grey[400],
-                                fontSize: 12 * scale,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 16,
-                                horizontal: 6,
-                              ),
-                            ),
-                            controller: TextEditingController(
-                              text: _fromDate == null
-                                  ? ''
-                                  : '${_fromDate!.month}/${_fromDate!.day}/${_fromDate!.year}',
-                            ),
-                            validator: (val) =>
-                                _fromDate == null ? 'Required' : null,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 13 * scale),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => _selectDate(context, false),
-                        child: AbsorbPointer(
-                          child: TextFormField(
-                            decoration: InputDecoration(
-                              labelText: 'Available Until',
-                              hintText: 'MM/DD/YYYY', // Placeholder date format
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.always, // Always float
-                              filled: true,
-                              fillColor: Colors.white,
-                              suffixIcon: Icon(
-                                Icons.calendar_today_outlined,
-                                color: AppColors.primaryBlue,
-                                size: 20,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(11),
-                                borderSide: BorderSide(
-                                  color: Colors.grey[200]!,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(11),
-                                borderSide: BorderSide(
-                                  color: Colors.grey[200]!,
-                                  width: 1.1,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(11),
-                                borderSide: BorderSide(
-                                  color: AppColors.primaryBlue,
-                                  width: 1.8,
-                                ),
-                              ),
-                              labelStyle: GoogleFonts.outfit(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                                fontSize: 19 * scale,
-                              ),
-                              hintStyle: GoogleFonts.outfit(
-                                color: Colors.grey[400],
-                                fontSize: 12 * scale,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 16,
-                                horizontal: 6,
-                              ),
-                            ),
-                            controller: TextEditingController(
-                              text: _untilDate == null
-                                  ? ''
-                                  : '${_untilDate!.month}/${_untilDate!.day}/${_untilDate!.year}',
-                            ),
-                            validator: (val) =>
-                                _untilDate == null ? 'Required' : null,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Location
-                Padding(
-                  padding: EdgeInsets.only(top: 12 * scale, bottom: 4 * scale),
-                  child: Text(
-                    'Location',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15 * scale,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: _selectLocation,
-                  child: AbsorbPointer(
-                    child: TextFormField(
-                      decoration: fieldDecoration(
-                        label: null,
-                        hint: 'Pick on map',
-                        icon: Icons.map_outlined,
-                      ),
-                      controller: TextEditingController(
-                        text: _locationLatLng == null
-                            ? ''
-                            : 'Lat: ${_locationLatLng!.latitude.toStringAsFixed(5)}, Lng: ${_locationLatLng!.longitude.toStringAsFixed(5)}',
-                      ),
-                      validator: (val) {
-                        if (_locationLatLng == null) return 'Required';
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 20 * scale),
-
-                // Save Button Animation
-                AnimatedBuilder(
-                  animation: _animController,
-                  builder: (context, child) => Transform.translate(
-                    offset: Offset(
-                      0,
-                      11 *
-                          (1 -
-                              Curves.easeInOut.transform(
-                                _animController.value,
-                              )),
-                    ),
-                    child: child!,
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 49 * scale,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(11 * scale),
-                        ),
-                      ),
-                      onPressed: _onSave,
-                      child: Text(
-                        'Publish Item',
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 17 * scale,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

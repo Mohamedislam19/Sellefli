@@ -85,7 +85,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.appBarBackground,
         elevation: 1,
         centerTitle: true,
         leading: const AnimatedReturnButton(),
