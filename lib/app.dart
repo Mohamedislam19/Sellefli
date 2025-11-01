@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sellefli/screens/auth_screen.dart';
+import 'package:sellefli/marketplace_home_page.dart';
 import 'src/core/theme/app_theme.dart';
 
 class MyApp extends StatelessWidget {
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       initialRoute: '/',
-      home: AuthScreen(),
+      home: MarketplaceHomePage(),
     );
   }
 }
