@@ -15,7 +15,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       initialRoute: '/',
-      routes: {'/': (context) => ComponentsShowcasePage()},
+      routes: {'/': (context) => CreateItemPage(),
+       '/map-picker': (context) => const MapPickerPage(),
+      },
     );
   }
 }
