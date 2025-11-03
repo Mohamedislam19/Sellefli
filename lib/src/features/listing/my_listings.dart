@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/widgets/nav/bottom_nav.dart'; // ✅ Import your custom navbar
-import '../../core/theme/app_theme.dart'; // ✅ To ensure colors work
+import '../../core/widgets/nav/bottom_nav.dart'; 
+import '../../core/theme/app_theme.dart'; 
 
 class MyListingsPage extends StatefulWidget {
   const MyListingsPage({Key? key}) : super(key: key);
@@ -60,7 +60,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
     }
   }
 
-  // ✅ Handle navbar navigation
+
   void _onNavTap(int index) {
     setState(() => _currentIndex = index);
     switch (index) {
