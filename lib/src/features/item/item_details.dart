@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:your_app_name/src/core/widgets/nav/bottom_nav.dart';
-import 'package:your_app_name/src/core/theme/app_theme.dart';
+import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
+import 'package:sellefli/src/core/theme/app_theme.dart';
 
 class ItemDetailsPage extends StatefulWidget {
   const ItemDetailsPage({super.key});
