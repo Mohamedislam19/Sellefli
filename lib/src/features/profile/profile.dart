@@ -3,9 +3,36 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 // import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../core/widgets/nav/bottom_nav.dart';
+import '../../core/theme/app_theme.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  int _currentIndex = 3;
+
+  void _onNavTap(int index) {
+    setState(() => _currentIndex = index);
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/requests');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/mylistings');
+        break;
+      case 3:
+        // Already on Profile
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +108,7 @@ class ProfilePage extends StatelessWidget {
                 const CircleAvatar(
                   radius: 40,
                   backgroundImage: AssetImage(
-                    'assets/images/profile.jpg', // 👈 Local profile image
+                    'assets/images/profile.jpg',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -145,29 +172,9 @@ class ProfilePage extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3,
-        selectedItemColor: const Color(0xFF2563EB),
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.request_page_outlined),
-            label: 'Requests & Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt_outlined),
-            label: 'My Listings',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
-        ],
+      bottomNavigationBar: AnimatedBottomNav(
+        currentIndex: _currentIndex,
+        onTap: _onNavTap,
       ),
     );
   }
