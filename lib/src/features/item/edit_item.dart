@@ -25,6 +25,7 @@ class _EditItemPageState extends State<EditItemPage>
   List<XFile> _images = [];
   String? _title;
   String? _category;
+  String? _description;
   double? _value;
   double? _deposit;
   DateTime? _fromDate;
@@ -402,6 +403,32 @@ class _EditItemPageState extends State<EditItemPage>
                     selected: _category!,
                     scale: scale,
                     onChanged: (v) => setState(() => _category = v),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: 14 * scale,
+                      bottom: 4 * scale,
+                    ),
+                    child: Text(
+                      'Description',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15 * scale,
+                      ),
+                    ),
+                  ),
+                  TextFormField(
+                    decoration: fieldDecoration(
+                      label: null,
+                      hint: 'Describe your item in detail...',
+                    ),
+                    maxLines: 3,
+                    minLines: 3,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Required' : null,
+                    onSaved: (val) => _description = val,
                   ),
 
                   // Estimated Value

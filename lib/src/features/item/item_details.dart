@@ -264,7 +264,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-            ),
+            ), child: null,
           ),
         ),
       ],
