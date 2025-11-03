@@ -249,7 +249,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
             ),
             child: const Text(
               'Book Now',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600 , color: Colors.white),
             ),
           ),
         ),
@@ -263,14 +263,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              'Contact Owner',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
               ),
             ),
           ),
