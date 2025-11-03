@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -41,10 +41,7 @@ class ProfilePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'Profile',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -78,10 +75,7 @@ class ProfilePage extends StatelessWidget {
                 const SizedBox(height: 12),
                 const Text(
                   'Alex Johnson',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
                 ),
                 const SizedBox(height: 4),
                 const Text(
@@ -122,22 +116,21 @@ class ProfilePage extends StatelessWidget {
 
           const Text(
             'Recent Transactions',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 12),
 
           // Recent Transactions List
           Column(
             children: transactions
-                .map((t) => TransactionCard(
-                      title: t['title'],
-                      imageUrl: t['image'],
-                      status: t['status'],
-                      date: t['date'],
-                    ))
+                .map(
+                  (t) => TransactionCard(
+                    title: t['title'],
+                    imageUrl: t['image'],
+                    status: t['status'],
+                    date: t['date'],
+                  ),
+                )
                 .toList(),
           ),
         ],
@@ -239,10 +232,7 @@ class TransactionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   date,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 13,
-                  ),
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
                 ),
               ],
             ),

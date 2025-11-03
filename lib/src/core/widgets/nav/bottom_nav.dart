@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
-class AnimatedBottomNav extends StatefulWidget {
+class AnimatedBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
@@ -12,12 +12,7 @@ class AnimatedBottomNav extends StatefulWidget {
     required this.onTap,
   });
 
-  @override
-  State<AnimatedBottomNav> createState() => _AnimatedBottomNavState();
-}
-
-class _AnimatedBottomNavState extends State<AnimatedBottomNav> {
-  static const double _navHeight = 78;
+  static const double _navHeight = 80;
 
   @override
   Widget build(BuildContext context) {
@@ -48,71 +43,87 @@ class _AnimatedBottomNavState extends State<AnimatedBottomNav> {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(items.length, (index) {
-            final selected = widget.currentIndex == index;
-            return Expanded(
-              child: InkWell(
-                onTap: () => widget.onTap(index),
-                borderRadius: BorderRadius.circular(16),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 380),
-                  curve: Curves.easeOutCubic,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: selected ? 4 : 8,
-                  ),
+          children: List.generate(
+            items.length,
+            (index) => _NavItemWidget(
+              item: items[index],
+              isSelected: currentIndex == index,
+              onTap: () => onTap(index),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItemWidget extends StatelessWidget {
+  final _NavItem item;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _NavItemWidget({
+    required this.item,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          splashFactory: NoSplash.splashFactory,
+          highlightColor: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: isSelected ? 4 : 8,
+            ),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(isSelected ? 8 : 6),
                   decoration: BoxDecoration(
-                    color: selected ? AppColors.primary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
+                    color: isSelected ? AppColors.primary : Colors.transparent,
+                    shape: BoxShape.circle,
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primary,
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : [],
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.easeOutCubic,
-                        padding: EdgeInsets.all(selected ? 8 : 6),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? AppColors.primary
-                              : Colors.transparent,
-                          shape: BoxShape.circle,
-                          boxShadow: selected
-                              ? [
-                                  BoxShadow(
-                                    color: AppColors.primary,
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ]
-                              : [],
-                        ),
-                        child: Icon(
-                          items[index].icon,
-                          size: selected ? 24 : 22,
-                          color: selected ? Colors.white : Colors.grey.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 300),
-                        style: TextStyle(
-                          color: selected
-                              ? AppColors.primaryDark
-                              : Colors.grey.shade600,
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          fontSize: selected ? 12 : 11,
-                        ),
-                        child: Text(items[index].label),
-                      ),
-                    ],
+                  child: Icon(
+                    item.icon,
+                    size: isSelected ? 24 : 22,
+                    color: isSelected ? Colors.white : Colors.grey.shade700,
                   ),
                 ),
-              ),
-            );
-          }),
+                const SizedBox(height: 3),
+                Text(
+                  item.label,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.grey.shade600,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: isSelected ? 12 : 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
