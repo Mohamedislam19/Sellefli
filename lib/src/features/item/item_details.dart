@@ -3,9 +3,9 @@ import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
-import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart'; // ✅ Update to your real import path
-// ignore: depend_on_referenced_packages
-import 'package:sellefli/src/core/theme/app_theme.dart'; // ✅ Update if your theme is elsewhere
+import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart'; 
+
+import 'package:sellefli/src/core/theme/app_theme.dart'; 
 
 class ItemDetailsPage extends StatefulWidget {
   const ItemDetailsPage({super.key});
@@ -42,7 +42,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       'title': 'Professional Camera Kit',
       'description':
           'A high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
-      'image': 'assets/images/powerdrill.jpg', // local image
+      'image': 'assets/images/powerdrill.jpg', 
       'value': '€1200',
       'deposit': '€300',
       'availableFrom': '2023-11-20',
