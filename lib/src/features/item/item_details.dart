@@ -36,8 +36,8 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     final Map<String, String> item = {
       'title': 'Professional Camera Kit',
       'description':
-          'high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
-      'image': 'assets/images/powerdrill.jpg',
+          'A high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
+      'image': 'assets/images/powerdrill.jpg', // local image
       'value': '€1200',
       'deposit': '€300',
       'availableFrom': '2023-11-20',
@@ -51,7 +51,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     const int ownerReviews = 75;
 
     return Scaffold(
-      backgroundColor: AppColors.background, // uses your app theme
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           'Item Details',
@@ -71,32 +71,22 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Image section
+         
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              item['image']!,
-              height: 220,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+            child: _buildImage(item['image']!),
           ),
           const SizedBox(height: 16),
 
-          // Details Card
           _buildDetailsCard(item),
-
           const SizedBox(height: 16),
 
-          // Owner Info
           _buildOwnerInfo(item, ownerRating, ownerReviews),
-
           const SizedBox(height: 24),
 
-          // Action Buttons
           _buildActionButtons(),
-
           const SizedBox(height: 20),
+
           const Text(
             'Please refer to the Deposit Policy for more information on item rentals and returns.',
             style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -110,6 +100,29 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         onTap: _onNavTap,
       ),
     );
+  }
+
+ 
+  Widget _buildImage(String imageUrl) {
+    if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
+      return Image.network(
+        imageUrl,
+        height: 220,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.broken_image, size: 100, color: Colors.grey),
+      );
+    } else {
+      return Image.asset(
+        imageUrl,
+        height: 220,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.broken_image, size: 100, color: Colors.grey),
+      );
+    }
   }
 
   Widget _buildDetailsCard(Map<String, String> item) {
@@ -175,6 +188,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           CircleAvatar(
             radius: 24,
             backgroundImage: NetworkImage(item['ownerImage']!),
+            onBackgroundImageError: (_, __) {},
           ),
           const SizedBox(width: 12),
           Expanded(
