@@ -5,7 +5,8 @@ class ItemDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = {
+    // Strongly typed data
+    final Map<String, String> item = {
       'title': 'Professional Camera Kit',
       'description':
           'High-quality DSLR camera with a versatile zoom lens (24-70mm) and a sturdy tripod. Perfect for events, portraits, and landscape photography. Fully charged and ready for your next shoot.',
@@ -16,11 +17,12 @@ class ItemDetailsPage extends StatelessWidget {
       'availableFrom': '2023-11-20',
       'availableUntil': '2023-11-27',
       'ownerName': 'Sarah Jansen',
-      'ownerRating': 4.8,
-      'ownerReviews': 75,
       'ownerImage':
           'https://cdn.pixabay.com/photo/2017/09/12/13/18/woman-2745228_1280.jpg',
     };
+
+    const double ownerRating = 4.8;
+    const int ownerReviews = 75;
 
     return Scaffold(
       appBar: AppBar(
@@ -35,8 +37,10 @@ class ItemDetailsPage extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Colors.black87),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.black87,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -138,12 +142,14 @@ class ItemDetailsPage extends StatelessWidget {
                               color: Colors.amber, size: 16),
                           const SizedBox(width: 4),
                           Text(
-                            '${item['ownerRating']} ',
+                            '$ownerRating ',
                             style: const TextStyle(
-                                fontWeight: FontWeight.w500, fontSize: 13),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 13,
+                            ),
                           ),
                           Text(
-                            '(${item['ownerReviews']} reviews)',
+                            '($ownerReviews reviews)',
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
