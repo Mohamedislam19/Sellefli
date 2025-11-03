@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../../theme/app_theme.dart';
-import 'package:sellefli/src/core/theme/app_theme.dart';
 
 class CoordinatesDisplay extends StatelessWidget {
   final LatLng position;

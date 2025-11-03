@@ -1,15 +1,13 @@
 // lib/src/core/widgets/snack/top_snack.dart
 import 'package:flutter/material.dart';
-import 'package:sellefli/src/features/map/map_picker.dart';
 import '../../theme/app_theme.dart';
-import 'package:sellefli/src/core/theme/app_theme.dart';
+
 
 class TopSnack {
   /// Shows a temporary overlay at the top (below the AppBar).
   /// `success` chooses the background color: primaryBlue if true, redAccent if false.
   static void show(BuildContext context, String message, bool success) {
     final overlay = Overlay.of(context);
-    if (overlay == null) return;
 
     late OverlayEntry entry;
 

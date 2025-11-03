@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/features/auth/login_form.dart';
 import 'package:sellefli/src/features/auth/signup_form.dart';
 import 'package:sellefli/src/features/auth/reset_password_form.dart';
@@ -29,17 +30,20 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: currentView == 0
-                ? LoginForm(
-                    onToggleSignUp: showSignUp,
-                    onForgotPassword: showResetPassword,
-                  )
-                : currentView == 1
-                ? SignUpForm(onToggle: showLogin)
-                : ResetPasswordForm(onToggle: showLogin),
+        child: Container(
+          decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: currentView == 0
+                  ? LoginForm(
+                      onToggleSignUp: showSignUp,
+                      onForgotPassword: showResetPassword,
+                    )
+                  : currentView == 1
+                  ? SignUpForm(onToggle: showLogin)
+                  : ResetPasswordForm(onToggle: showLogin),
+            ),
           ),
         ),
       ),

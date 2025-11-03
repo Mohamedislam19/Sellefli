@@ -92,7 +92,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Settings & Help',
+            'Map',
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,

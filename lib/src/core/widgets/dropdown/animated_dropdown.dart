@@ -1,7 +1,6 @@
 // lib/src/core/widgets/dropdown/animated_dropdown.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:sellefli/src/features/item/create_item_page.dart';
 import '../../theme/app_theme.dart';
 
 class AnimatedDropdown extends StatefulWidget {

@@ -64,23 +64,7 @@ class _SignUpFormState extends State<SignUpForm>
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  const SizedBox(width: 12),
-                  const Text('Registration Successful!'),
-                ],
-              ),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
+          Navigator.pushNamed(context, '/home');
         }
       });
     }
@@ -89,12 +73,14 @@ class _SignUpFormState extends State<SignUpForm>
   @override
   Widget build(BuildContext context) {
     return Container(
+      
       alignment: Alignment.center,
       child: FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: _slideAnimation,
-          child: Card(
+          child: 
+          Card(
             color: AppColors.surface,
             elevation: 8,
             shadowColor: AppColors.primaryDark.withOpacity(0.2),
@@ -106,9 +92,11 @@ class _SignUpFormState extends State<SignUpForm>
               ),
             ),
             child: Container(
+              
               padding: const EdgeInsets.all(40.0),
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
+              child: 
+              Form(
                 key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

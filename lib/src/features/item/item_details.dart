@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
-import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
-import 'package:sellefli/src/core/theme/app_theme.dart';
-import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
-import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart'; 
-
-import 'package:sellefli/src/core/theme/app_theme.dart'; 
 
 class ItemDetailsPage extends StatefulWidget {
   const ItemDetailsPage({super.key});
@@ -17,26 +11,6 @@ class ItemDetailsPage extends StatefulWidget {
 }
 
 class _ItemDetailsPageState extends State<ItemDetailsPage> {
-  int _currentIndex = 0;
-
-  void _onNavTap(int index) {
-    setState(() => _currentIndex = index);
-
-    switch (index) {
-      case 0:
-        Navigator.pushNamed(context, '/home');
-        break;
-      case 1:
-        Navigator.pushNamed(context, '/requests');
-        break;
-      case 2:
-        Navigator.pushNamed(context, '/my_listings');
-        break;
-      case 3:
-        Navigator.pushNamed(context, '/profile');
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +44,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Settings & Help',
+            'Item Details',
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,
@@ -81,34 +55,34 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: _buildImage(item['image']!),
-          ),
-          const SizedBox(height: 16),
-
-          _buildDetailsCard(item),
-          const SizedBox(height: 16),
-
-          _buildOwnerInfo(item, ownerRating, ownerReviews),
-          const SizedBox(height: 24),
-
-          _buildActionButtons(),
-          const SizedBox(height: 20),
-
-          const Text(
-            'Please refer to the Deposit Policy for more information on item rentals and returns.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-      bottomNavigationBar: AnimatedBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onNavTap,
+      body: 
+      Container(
+        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: _buildImage(item['image']!),
+            ),
+            const SizedBox(height: 16),
+        
+            _buildDetailsCard(item),
+            const SizedBox(height: 16),
+        
+            _buildOwnerInfo(item, ownerRating, ownerReviews),
+            const SizedBox(height: 24),
+        
+            _buildActionButtons(),
+            const SizedBox(height: 20),
+        
+            const Text(
+              'Please refer to the Deposit Policy for more information on item rentals and returns.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -195,8 +169,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       ),
       child: GestureDetector(
         onTap: () {
-          // TODO: Add your navigation route later
-          // Example: Navigator.pushNamed(context, '/owner_profile');
+          Navigator.pushNamed(context, '/profile-page');
         },
         child: Row(
           children: [
@@ -254,7 +227,8 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 14),

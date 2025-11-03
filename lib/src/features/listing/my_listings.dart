@@ -14,6 +14,23 @@ class MyListingsPage extends StatefulWidget {
 class _MyListingsPageState extends State<MyListingsPage> {
   int _currentIndex = 2;
 
+  void _onNavTap(int index) {
+    setState(() => _currentIndex = index);
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/request-order');
+        break;
+      case 2:
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/profile-page');
+        break;
+    }
+  }
+
   final List<Map<String, dynamic>> listings = [
     {
       "title": "Cordless Power Drill Set",
@@ -62,23 +79,6 @@ class _MyListingsPageState extends State<MyListingsPage> {
     }
   }
 
-  void _onNavTap(int index) {
-    setState(() => _currentIndex = index);
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/home');
-        break;
-      case 1:
-        Navigator.pushReplacementNamed(context, '/requests');
-        break;
-      case 2:
-        // Already on My Listings
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/profile');
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +94,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Settings & Help',
+            'My Listings',
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,
@@ -105,17 +105,21 @@ class _MyListingsPageState extends State<MyListingsPage> {
           ),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: listings.length,
-        itemBuilder: (context, index) {
-          final item = listings[index];
-          return _buildListingCard(
-            title: item["title"],
-            status: item["status"],
-            imageUrl: item["image"],
-          );
-        },
+      body: 
+      Container(
+        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: listings.length,
+          itemBuilder: (context, index) {
+            final item = listings[index];
+            return _buildListingCard(
+              title: item["title"],
+              status: item["status"],
+              imageUrl: item["image"],
+            );
+          },
+        ),
       ),
       bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _currentIndex,
@@ -161,8 +165,10 @@ class _MyListingsPageState extends State<MyListingsPage> {
 
                   // Status badge
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _getStatusColor(status).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -186,25 +192,15 @@ class _MyListingsPageState extends State<MyListingsPage> {
                         label: "Edit",
                         color: Colors.grey.shade700,
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Edit $title"),
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
+                          Navigator.pushNamed(context, '/edit-item');
                         },
                       ),
                       const SizedBox(width: 8),
                       _actionButton(
-                        label: "View Bookings",
+                        label: "View Item",
                         color: Colors.blue,
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("View bookings for $title"),
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
+                          Navigator.pushNamed(context, '/item-details');
                         },
                       ),
                     ],

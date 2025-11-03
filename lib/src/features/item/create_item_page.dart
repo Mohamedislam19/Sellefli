@@ -1,5 +1,4 @@
 // lib/src/features/items/create_item_page.dart
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,10 +22,14 @@ class _CreateItemPageState extends State<CreateItemPage>
   final _formKey = GlobalKey<FormState>();
 
   List<XFile> _images = [];
+  // ignore: unused_field
   String? _title;
+  // ignore: unused_field
   String? _description;
   String? _category;
+  // ignore: unused_field
   double? _value;
+  // ignore: unused_field
   double? _deposit;
   DateTime? _fromDate;
   DateTime? _untilDate;
@@ -93,6 +96,7 @@ class _CreateItemPageState extends State<CreateItemPage>
     if (_images.length >= 5) return;
     final picker = ImagePicker();
     final picked = await picker.pickMultiImage();
+    // ignore: unnecessary_null_comparison
     if (picked != null && picked.isNotEmpty) {
       setState(() {
         _images = [..._images, ...picked].take(5).toList();
@@ -200,31 +204,7 @@ class _CreateItemPageState extends State<CreateItemPage>
     if (_images.isEmpty) return;
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.primaryBlue,
-          margin: const EdgeInsets.all(20),
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Item saved (demo only, no backend)',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      Navigator.pop(context);
     }
   }
 
@@ -242,7 +222,7 @@ class _CreateItemPageState extends State<CreateItemPage>
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Settings & Help',
+            'Create Item',
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,

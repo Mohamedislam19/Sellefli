@@ -1,5 +1,6 @@
-// lib/src/features/items/create_item_page.dart
-import 'dart:io';
+
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -92,6 +93,7 @@ class _EditItemPageState extends State<EditItemPage>
     if (_images.length >= 5) return;
     final picker = ImagePicker();
     final picked = await picker.pickMultiImage();
+    // ignore: unnecessary_null_comparison
     if (picked != null && picked.isNotEmpty) {
       setState(() {
         _images = [..._images, ...picked].take(5).toList();
@@ -199,31 +201,7 @@ class _EditItemPageState extends State<EditItemPage>
     if (_images.isEmpty) return;
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.primaryBlue,
-          margin: const EdgeInsets.all(20),
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Item saved (demo only, no backend)',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      Navigator.pop(context);
     }
   }
 
@@ -241,7 +219,7 @@ class _EditItemPageState extends State<EditItemPage>
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Settings & Help',
+            'Edit Item',
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,
@@ -253,7 +231,8 @@ class _EditItemPageState extends State<EditItemPage>
         ),
       ),
       // backgroundColor: AppColors.pageBackground,
-      body: Container(
+      body: 
+      Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: FadeTransition(
           opacity: CurvedAnimation(

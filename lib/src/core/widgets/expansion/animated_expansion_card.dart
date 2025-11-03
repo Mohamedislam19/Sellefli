@@ -1,7 +1,6 @@
 // lib/src/core/widgets/expansion/animated_expansion_card.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:sellefli/src/features/settings/settings_page.dart';
 import '../../theme/app_theme.dart'; // imports primaryBlue
 
 class AnimatedExpansionCard extends StatefulWidget {

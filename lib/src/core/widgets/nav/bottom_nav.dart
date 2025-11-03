@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
+
 class AnimatedBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;

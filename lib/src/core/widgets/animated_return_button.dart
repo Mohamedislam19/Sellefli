@@ -1,7 +1,5 @@
 // lib/src/core/widgets/animated_return_button.dart
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // optional, kept if you later add text
-import 'package:sellefli/src/features/settings/settings_page.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 
 class AnimatedReturnButton extends StatefulWidget {

@@ -4,7 +4,6 @@ import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 // import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../core/widgets/nav/bottom_nav.dart';
-import '../../core/theme/app_theme.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -23,10 +22,10 @@ class _ProfilePageState extends State<ProfilePage> {
         Navigator.pushReplacementNamed(context, '/home');
         break;
       case 1:
-        Navigator.pushReplacementNamed(context, '/requests');
+        Navigator.pushReplacementNamed(context, '/request-order');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/mylistings');
+        Navigator.pushReplacementNamed(context, '/listings');
         break;
       case 3:
         // Already on Profile
@@ -75,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Settings & Help',
+            'Profile',
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,
@@ -86,91 +85,105 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Profile Card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundImage: AssetImage(
-                    'assets/images/profile.jpg',
+      body: 
+      Container(
+        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Profile Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Alex Johnson',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  '+1 (555) 123-4567',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    5,
-                    (index) => const Icon(
-                      Icons.star_border,
-                      color: Colors.blueAccent,
-                      size: 20,
+                ],
+              ),
+              child: Column(
+                children: [
+                  const CircleAvatar(
+                    radius: 40,
+                    backgroundImage: AssetImage('assets/images/profile.jpg'),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Alex Johnson',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '+1 (555) 123-4567',
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      5,
+                      (index) => const Icon(
+                        Icons.star_border,
+                        color: Colors.blueAccent,
+                        size: 20,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-
-          // Edit Profile
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.edit_outlined, color: Colors.black87),
-            title: const Text('Edit Profile'),
-            onTap: () {},
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.settings_outlined, color: Colors.black87),
-            title: const Text('Settings / Help'),
-            onTap: () {},
-          ),
-          const SizedBox(height: 16),
-
-          const Text(
-            'Recent Transactions',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          const SizedBox(height: 12),
-
-          // Recent Transactions List
-          Column(
-            children: transactions
-                .map((t) => TransactionCard(
+            const SizedBox(height: 24),
+        
+            // Edit Profile
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.edit_outlined, color: Colors.black87),
+              title: const Text('Edit Profile'),
+              onTap: () {},
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.settings_outlined, color: Colors.black87),
+              title: const Text('Settings / Help'),
+              onTap: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.logout, color: Colors.black87),
+              title: const Text('Logout'),
+              onTap: () {
+                Navigator.pushNamed(context, '/auth');
+              },
+            ),
+            const SizedBox(height: 16),
+        
+            const Text(
+              'Recent Transactions',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+        
+            // Recent Transactions List
+            Column(
+              children: transactions
+                  .map(
+                    (t) => TransactionCard(
                       title: t['title'],
                       imagePath: t['image'],
                       status: t['status'],
                       date: t['date'],
-                    ))
-                .toList(),
-          ),
-        ],
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _currentIndex,

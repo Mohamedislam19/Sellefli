@@ -1,7 +1,6 @@
 // lib/src/core/widgets/inputs/field_decoration.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:sellefli/src/features/item/create_item_page.dart';
 import '../../theme/app_theme.dart';
 
 InputDecoration fieldDecoration({String? label, String? hint, IconData? icon}) {
