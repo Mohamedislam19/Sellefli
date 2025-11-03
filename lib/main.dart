@@ -1,15 +1,5 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-import 'package:sellefli/marketplace_home_page.dart';
-import 'package:sellefli/screens/auth_screen.dart';
->>>>>>> Stashed changes
-=======
-import 'package:sellefli/marketplace_home_page.dart';
-import 'package:sellefli/screens/auth_screen.dart';
->>>>>>> Stashed changes
 import 'package:sellefli/src/features/item/create_item_page.dart';
 import 'package:sellefli/src/features/item/edit_item.dart';
 import 'package:sellefli/src/features/item/item_details.dart';
@@ -36,15 +26,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
       ),
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-      home: const MyListingsPage(),
-=======
       home: const AuthScreen(),
->>>>>>> Stashed changes
-=======
-      home: const AuthScreen(),
->>>>>>> Stashed changes
       // To test Booking Details page, use:
       // home: const BookingDetailPage(),
     );
