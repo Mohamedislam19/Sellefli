@@ -12,11 +12,9 @@ class ItemDetailsPage extends StatefulWidget {
 class _ItemDetailsPageState extends State<ItemDetailsPage> {
   int _currentIndex = 0;
 
-  
   void _onNavTap(int index) {
     setState(() => _currentIndex = index);
 
-   
     switch (index) {
       case 0:
         Navigator.pushNamed(context, '/home');
@@ -39,8 +37,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       'title': 'Professional Camera Kit',
       'description':
           'high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
-      'image':
-          'assets/images/powerdrill.jpg',
+      'image': 'assets/images/powerdrill.jpg',
       'value': '€1200',
       'deposit': '€300',
       'availableFrom': '2023-11-20',
@@ -58,10 +55,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       appBar: AppBar(
         title: const Text(
           'Item Details',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -105,24 +99,18 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           const SizedBox(height: 20),
           const Text(
             'Please refer to the Deposit Policy for more information on item rentals and returns.',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],
       ),
 
-      
       bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _currentIndex,
         onTap: _onNavTap,
       ),
     );
   }
-
- 
 
   Widget _buildDetailsCard(Map<String, String> item) {
     return Container(
@@ -143,10 +131,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         children: [
           Text(
             item['title']!,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
@@ -168,7 +153,10 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
   }
 
   Widget _buildOwnerInfo(
-      Map<String, String> item, double ownerRating, int ownerReviews) {
+    Map<String, String> item,
+    double ownerRating,
+    int ownerReviews,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -214,10 +202,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                     ),
                     Text(
                       '($ownerReviews reviews)',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -283,17 +268,11 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.black54,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.black54, fontSize: 14),
           ),
           Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           ),
         ],
       ),

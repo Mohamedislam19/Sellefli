@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
+import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
 
 class MarketplaceHomePage extends StatefulWidget {
   const MarketplaceHomePage({super.key});
@@ -11,6 +12,7 @@ class MarketplaceHomePage extends StatefulWidget {
 class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
   double _radius = 5.0;
   bool _useLocation = false;
+  int _currentNavIndex = 0; // Added for bottom nav
   final List<String> _categories = [
     'All',
     'Tools',
@@ -389,61 +391,14 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
         ),
       ),
 
-      // Bottom Navigation Bar
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(Icons.home, 'Home', true),
-                _buildNavItem(Icons.receipt_long, 'My Orders', false),
-                _buildNavItem(Icons.sell, 'My Listings', false),
-                _buildNavItem(Icons.person, 'Profile', false),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return InkWell(
-      onTap: () {},
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isActive ? AppColors.primary : AppColors.muted,
-              size: 26,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTextStyles.body.copyWith(
-                fontSize: 12,
-                color: isActive ? AppColors.primary : AppColors.muted,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
+      // New Animated Bottom Navigation Bar
+      bottomNavigationBar: AnimatedBottomNav(
+        currentIndex: _currentNavIndex,
+        onTap: (index) {
+          setState(() => _currentNavIndex = index);
+          // Handle navigation based on index
+          // 0: Home, 1: Requests, 2: My Listings, 3: Profile
+        },
       ),
     );
   }

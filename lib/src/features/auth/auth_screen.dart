@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sellefli/screens/login_form.dart';
-import 'package:sellefli/screens/signup_form.dart';
-import 'package:sellefli/screens/reset_password_form.dart';
+import 'package:sellefli/src/features/auth/login_form.dart';
+import 'package:sellefli/src/features/auth/signup_form.dart';
+import 'package:sellefli/src/features/auth/reset_password_form.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
