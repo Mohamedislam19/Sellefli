@@ -119,23 +119,12 @@ class ProfilePage extends StatelessWidget {
           // Recent Transactions List
           Column(
             children: transactions
-<<<<<<< HEAD
-                .map(
-                  (t) => TransactionCard(
-                    title: t['title'],
-                    imageUrl: t['image'],
-                    status: t['status'],
-                    date: t['date'],
-                  ),
-                )
-=======
                 .map((t) => TransactionCard(
                       title: t['title'],
                       imagePath: t['image'],
                       status: t['status'],
                       date: t['date'],
                     ))
->>>>>>> 9693e0ffc930ff1880d5c63f656e3737df021bcc
                 .toList(),
           ),
         ],
