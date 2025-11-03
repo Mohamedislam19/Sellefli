@@ -26,15 +26,12 @@ class LandingPage extends StatelessWidget {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                   children: [
                     // Avatar / Logo + Tagline
-                    const SizedBox(height: 20),  // reduced from 8 to 4
-
                     Column(
                       children: [
                         CircleAvatar(
-                          radius: isWide ? 40 : 35,
+                          radius: isWide ? 50 : 35,
                           backgroundColor: const Color(0xFFD6E4FF),
                           child: Icon(
                             Icons.handshake,
@@ -42,7 +39,7 @@ class LandingPage extends StatelessWidget {
                             size: isWide ? 60 : 40,
                           ),
                         ),
-                        const SizedBox(height: 20),  // reduced from 8 to 4
+                        const SizedBox(height: 4),  // reduced from 8 to 4
                         Text(
                           "Borrow nearby · Share simply",
                           style: AppTextStyles.subtitle.copyWith(
