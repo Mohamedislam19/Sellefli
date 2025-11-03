@@ -261,7 +261,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),
-            ), child: null,
+            ),
           ),
         ),
       ],

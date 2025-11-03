@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const CreateItemPage(),
+      home: const ItemDetailsPage(),
       // To test Booking Details page, use:
       // home: const BookingDetailPage(),
     );
