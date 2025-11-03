@@ -16,7 +16,7 @@ dependencies:
   geolocator: ^10.1.0
   image_picker: ^1.0.4
   font_awesome_flutter: ^10.7.0   # ✅ Added this dependency for your icons
-  font_awesome_flutter: ^10.7.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
