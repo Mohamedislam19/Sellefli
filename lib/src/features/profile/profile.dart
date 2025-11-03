@@ -9,29 +9,25 @@ class ProfilePage extends StatelessWidget {
     final List<Map<String, dynamic>> transactions = [
       {
         'title': 'Power Drill',
-        'image':
-            'https://cdn.pixabay.com/photo/2017/09/04/18/15/drill-2718930_1280.jpg',
+        'image': 'assets/images/powerdrill.jpg',
         'status': 'Returned',
         'date': '2024-07-28',
       },
       {
         'title': 'Camping',
-        'image':
-            'https://cdn.pixabay.com/photo/2016/11/29/02/22/camping-1869139_1280.jpg',
+        'image': 'assets/images/camping.jpg',
         'status': 'Borrowed',
         'date': '2024-07-25',
       },
       {
         'title': 'Electric Guitar',
-        'image':
-            'https://cdn.pixabay.com/photo/2016/11/23/14/45/guitar-1859462_1280.jpg',
+        'image': 'assets/images/guitar.jpg',
         'status': 'Lent',
         'date': '2024-07-20',
       },
       {
-        'title': 'Pressure',
-        'image':
-            'https://cdn.pixabay.com/photo/2015/03/26/09/39/wash-690274_1280.jpg',
+        'title': 'Pressure Washer',
+        'image': 'assets/images/pressure.jpg',
         'status': 'Returned',
         'date': '2024-07-15',
       },
@@ -71,8 +67,8 @@ class ProfilePage extends StatelessWidget {
               children: [
                 const CircleAvatar(
                   radius: 40,
-                  backgroundImage: NetworkImage(
-                    'https://cdn.pixabay.com/photo/2016/03/27/22/22/woman-1284411_1280.jpg',
+                  backgroundImage: AssetImage(
+                    'assets/images/profile.jpg', // 👈 Local profile image
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -134,7 +130,7 @@ class ProfilePage extends StatelessWidget {
             children: transactions
                 .map((t) => TransactionCard(
                       title: t['title'],
-                      imageUrl: t['image'],
+                      imagePath: t['image'],
                       status: t['status'],
                       date: t['date'],
                     ))
@@ -172,14 +168,14 @@ class ProfilePage extends StatelessWidget {
 
 class TransactionCard extends StatelessWidget {
   final String title;
-  final String imageUrl;
+  final String imagePath;
   final String status;
   final String date;
 
   const TransactionCard({
     super.key,
     required this.title,
-    required this.imageUrl,
+    required this.imagePath,
     required this.status,
     required this.date,
   });
@@ -217,8 +213,8 @@ class TransactionCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
+            child: Image.asset(
+              imagePath,
               width: 60,
               height: 60,
               fit: BoxFit.cover,
