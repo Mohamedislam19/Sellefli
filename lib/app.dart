@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sellefli/src/features/Booking/booking_detail_page.dart';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import 'package:sellefli/src/features/auth/auth_screen.dart';
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 import 'package:sellefli/src/features/components_showcase/components_showcase_page.dart';
@@ -15,7 +18,10 @@ import 'screens/login_form.dart';
 import 'screens/reset_password_form.dart';
 import 'screens/signup_form.dart';
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

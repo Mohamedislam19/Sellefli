@@ -1,6 +1,11 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+import 'package:sellefli/marketplace_home_page.dart';
+import 'package:sellefli/screens/auth_screen.dart';
+>>>>>>> Stashed changes
 =======
 import 'package:sellefli/marketplace_home_page.dart';
 import 'package:sellefli/screens/auth_screen.dart';
@@ -32,7 +37,11 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
       ),
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       home: const MyListingsPage(),
+=======
+      home: const AuthScreen(),
+>>>>>>> Stashed changes
 =======
       home: const AuthScreen(),
 >>>>>>> Stashed changes
