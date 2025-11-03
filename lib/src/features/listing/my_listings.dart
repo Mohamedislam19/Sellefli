@@ -16,32 +16,32 @@ class _MyListingsPageState extends State<MyListingsPage> {
     {
       "title": "Cordless Power Drill Set",
       "status": "Active",
-      "image": "https://cdn-icons-png.flaticon.com/512/1048/1048943.png",
+      "image": "assets/images/powerdrill.jpg",
     },
     {
       "title": "4-Person Camping Tent",
       "status": "Rented",
-      "image": "https://cdn-icons-png.flaticon.com/512/1048/1048867.png",
+      "image": "assets/images/powerdrill.jpg",
     },
     {
       "title": "Stand Mixer - KitchenAid",
       "status": "Pending Approval",
-      "image": "https://cdn-icons-png.flaticon.com/512/1048/1048903.png",
+      "image": "assets/images/powerdrill.jpg",
     },
     {
       "title": "Mountain Bike - Size L",
       "status": "Active",
-      "image": "https://cdn-icons-png.flaticon.com/512/1048/1048890.png",
+      "image": "assets/images/powerdrill.jpg",
     },
     {
       "title": "Digital Camera - Canon EOS",
       "status": "Unavailable",
-      "image": "https://cdn-icons-png.flaticon.com/512/1048/1048888.png",
+      "image": "assets/images/powerdrill.jpg",
     },
     {
       "title": "Robotic Vacuum Cleaner",
       "status": "Active",
-      "image": "https://cdn-icons-png.flaticon.com/512/1048/1048859.png",
+      "image": "assets/images/powerdrill.jpg",
     },
   ];
 
@@ -102,7 +102,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
         },
       ),
 
-      // ✅ Add your custom bottom navbar
+     
       bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _currentIndex,
         onTap: _onNavTap,
