@@ -38,9 +38,9 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     final Map<String, String> item = {
       'title': 'Professional Camera Kit',
       'description':
-          'High-quality DSLR camera with a versatile zoom lens (24-70mm) and a sturdy tripod. Perfect for events, portraits, and landscape photography. Fully charged and ready for your next shoot.',
+          'high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
       'image':
-          'https://cdn.pixabay.com/photo/2016/03/05/19/02/camera-1239384_1280.jpg',
+          'assets/images/powerdrill.jpg',
       'value': '€1200',
       'deposit': '€300',
       'availableFrom': '2023-11-20',
