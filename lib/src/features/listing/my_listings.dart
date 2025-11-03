@@ -16,32 +16,32 @@ class _MyListingsPageState extends State<MyListingsPage> {
     {
       "title": "Cordless Power Drill Set",
       "status": "Active",
-      "image": "assets/images/powerdrill.jpg",
+      "image": 'assets/images/powerdrill.jpg',
     },
     {
       "title": "4-Person Camping Tent",
       "status": "Rented",
-      "image": "assets/images/powerdrill.jpg",
+      "image": 'assets/images/powerdrill.jpg',
     },
     {
       "title": "Stand Mixer - KitchenAid",
       "status": "Pending Approval",
-      "image": "assets/images/powerdrill.jpg",
+      "image": 'assets/images/powerdrill.jpg',
     },
     {
       "title": "Mountain Bike - Size L",
       "status": "Active",
-      "image": "assets/images/powerdrill.jpg",
+      "image": 'assets/images/powerdrill.jpg',
     },
     {
       "title": "Digital Camera - Canon EOS",
       "status": "Unavailable",
-      "image": "assets/images/powerdrill.jpg",
+      "image": 'assets/images/powerdrill.jpg',
     },
     {
       "title": "Robotic Vacuum Cleaner",
       "status": "Active",
-      "image": "assets/images/powerdrill.jpg",
+      "image": 'assets/images/powerdrill.jpg',
     },
   ];
 
