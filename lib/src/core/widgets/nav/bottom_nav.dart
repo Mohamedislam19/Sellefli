@@ -7,10 +7,10 @@ class AnimatedBottomNav extends StatefulWidget {
   final ValueChanged<int> onTap;
 
   const AnimatedBottomNav({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedBottomNav> createState() => _AnimatedBottomNavState();
@@ -18,7 +18,6 @@ class AnimatedBottomNav extends StatefulWidget {
 
 class _AnimatedBottomNavState extends State<AnimatedBottomNav> {
   static const double _navHeight = 78;
-  static const double _indicatorHeight = 40;
 
   @override
   Widget build(BuildContext context) {
@@ -36,19 +35,16 @@ class _AnimatedBottomNavState extends State<AnimatedBottomNav> {
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black12.withOpacity(0.08),
+              color: Colors.black12,
               blurRadius: 18,
               offset: const Offset(0, -2),
             ),
           ],
-          border: Border.all(
-            color: AppColors.border.withOpacity(0.6),
-            width: 0.6,
-          ),
+          border: Border.all(color: AppColors.border, width: 0.6),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -66,9 +62,7 @@ class _AnimatedBottomNavState extends State<AnimatedBottomNav> {
                     vertical: selected ? 4 : 8,
                   ),
                   decoration: BoxDecoration(
-                    color: selected
-                        ? AppColors.primary.withOpacity(0.1)
-                        : Colors.transparent,
+                    color: selected ? AppColors.primary : Colors.transparent,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -86,7 +80,7 @@ class _AnimatedBottomNavState extends State<AnimatedBottomNav> {
                           boxShadow: selected
                               ? [
                                   BoxShadow(
-                                    color: AppColors.primary.withOpacity(0.3),
+                                    color: AppColors.primary,
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -122,7 +116,6 @@ class _AnimatedBottomNavState extends State<AnimatedBottomNav> {
         ),
       ),
     );
-
   }
 }
 

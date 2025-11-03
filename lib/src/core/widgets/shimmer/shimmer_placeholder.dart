@@ -7,11 +7,11 @@ class Shimmer extends StatefulWidget {
   final Gradient? gradient;
 
   const Shimmer({
-    Key? key,
+    super.key,
     required this.child,
     this.period = const Duration(milliseconds: 1500),
     this.gradient,
-  }) : super(key: key);
+  });
 
   @override
   State<Shimmer> createState() => _ShimmerState();
@@ -58,7 +58,7 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
             final dx = _controller.value * (width + width * 0.3) - width * 0.2;
             return LinearGradient(
               colors: (gradient as LinearGradient).colors,
-              stops: (gradient as LinearGradient).stops,
+              stops: (gradient).stops,
               begin: Alignment(-1 + _controller.value * 2, 0),
               end: Alignment(-0.2 + _controller.value * 2.2, 0),
             ).createShader(Rect.fromLTWH(-dx, 0, width * 1.6, bounds.height));
@@ -77,11 +77,11 @@ class ShimmerBox extends StatelessWidget {
   final BorderRadius borderRadius;
 
   const ShimmerBox({
-    Key? key,
+    super.key,
     required this.height,
     this.width,
     this.borderRadius = const BorderRadius.all(Radius.circular(10)),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
