@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
 import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
+=======
+import 'package:sellefli/src/core/theme/app_theme.dart';
+import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
+import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart'; // ✅ Update to your real import path
+// ignore: depend_on_referenced_packages
+import 'package:sellefli/src/core/theme/app_theme.dart'; // ✅ Update if your theme is elsewhere
+>>>>>>> Stashed changes
 
 class ItemDetailsPage extends StatefulWidget {
   const ItemDetailsPage({super.key});
