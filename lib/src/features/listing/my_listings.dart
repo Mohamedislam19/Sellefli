@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/widgets/nav/bottom_nav.dart'; 
-import '../../core/theme/app_theme.dart'; 
+import '../../core/widgets/nav/bottom_nav.dart';
+import '../../core/theme/app_theme.dart';
 
 class MyListingsPage extends StatefulWidget {
   const MyListingsPage({Key? key}) : super(key: key);
@@ -10,7 +10,7 @@ class MyListingsPage extends StatefulWidget {
 }
 
 class _MyListingsPageState extends State<MyListingsPage> {
-  int _currentIndex = 2; // 
+  int _currentIndex = 2;
 
   final List<Map<String, dynamic>> listings = [
     {
@@ -60,7 +60,6 @@ class _MyListingsPageState extends State<MyListingsPage> {
     }
   }
 
-
   void _onNavTap(int index) {
     setState(() => _currentIndex = index);
     switch (index) {
@@ -71,7 +70,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
         Navigator.pushReplacementNamed(context, '/requests');
         break;
       case 2:
-        // Already on My Listings — do nothing
+        // Already on My Listings
         break;
       case 3:
         Navigator.pushReplacementNamed(context, '/profile');
@@ -101,8 +100,6 @@ class _MyListingsPageState extends State<MyListingsPage> {
           );
         },
       ),
-
-     
       bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _currentIndex,
         onTap: _onNavTap,
@@ -127,12 +124,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
             // Item image
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                imageUrl,
-                height: 60,
-                width: 60,
-                fit: BoxFit.cover,
-              ),
+              child: _buildImage(imageUrl),
             ),
             const SizedBox(width: 12),
 
@@ -141,9 +133,13 @@ class _MyListingsPageState extends State<MyListingsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 6),
 
                   // Status badge
@@ -173,9 +169,12 @@ class _MyListingsPageState extends State<MyListingsPage> {
                         label: "Edit",
                         color: Colors.grey.shade700,
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
                               content: Text("Edit $title"),
-                              duration: const Duration(seconds: 1)));
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(width: 8),
@@ -183,9 +182,12 @@ class _MyListingsPageState extends State<MyListingsPage> {
                         label: "View Bookings",
                         color: Colors.blue,
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
                               content: Text("View bookings for $title"),
-                              duration: const Duration(seconds: 1)));
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
                         },
                       ),
                     ],
@@ -197,6 +199,29 @@ class _MyListingsPageState extends State<MyListingsPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildImage(String imageUrl) {
+    // Detect if image is a network URL or local asset
+    if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
+      return Image.network(
+        imageUrl,
+        height: 60,
+        width: 60,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.broken_image, size: 60, color: Colors.grey),
+      );
+    } else {
+      return Image.asset(
+        imageUrl,
+        height: 60,
+        width: 60,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.broken_image, size: 60, color: Colors.grey),
+      );
+    }
   }
 
   Widget _actionButton({
