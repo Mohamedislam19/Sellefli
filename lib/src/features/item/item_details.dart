@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:your_app_name/src/core/widgets/nav/bottom_nav.dart'; // ✅ Update to your real import path
-import 'package:your_app_name/src/core/theme/app_theme.dart'; // ✅ Update if your theme is elsewhere
+import 'package:your_app_name/src/core/widgets/nav/bottom_nav.dart';
+import 'package:your_app_name/src/core/theme/app_theme.dart';
 
 class ItemDetailsPage extends StatefulWidget {
   const ItemDetailsPage({super.key});
@@ -12,11 +12,11 @@ class ItemDetailsPage extends StatefulWidget {
 class _ItemDetailsPageState extends State<ItemDetailsPage> {
   int _currentIndex = 0;
 
-  // Simulated navigation handler
+  
   void _onNavTap(int index) {
     setState(() => _currentIndex = index);
 
-    // Example navigation logic (replace with your routes/pages)
+   
     switch (index) {
       case 0:
         Navigator.pushNamed(context, '/home');
@@ -114,7 +114,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         ],
       ),
 
-      // ✅ Include your animated bottom navigation bar
+      
       bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _currentIndex,
         onTap: _onNavTap,
@@ -122,7 +122,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     );
   }
 
-  // --- Helper widgets ---
+ 
 
   Widget _buildDetailsCard(Map<String, String> item) {
     return Container(
