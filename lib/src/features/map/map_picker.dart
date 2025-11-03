@@ -140,7 +140,9 @@ class _MapPickerPageState extends State<MapPickerPage> {
                   color: AppColors.primaryBlue,
                   shadows: [
                     Shadow(
-                      color: AppColors.primaryBlue.withOpacity(0.2),
+                      color: AppColors.primaryBlue.withAlpha(
+                        ((0.2) * 255).toInt(),
+                      ),
                       blurRadius: 38,
                       offset: const Offset(0, 8),
                     ),
@@ -158,9 +160,9 @@ class _MapPickerPageState extends State<MapPickerPage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.white.withOpacity(0.97),
-                    Colors.white.withOpacity(0.7),
-                    Colors.white.withOpacity(0.1),
+                    Colors.white.withAlpha(((0.97) * 255).toInt()),
+                    Colors.white.withAlpha(((0.7) * 255).toInt()),
+                    Colors.white.withAlpha(((0.1) * 255).toInt()),
                   ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
@@ -189,11 +191,16 @@ class _MapPickerPageState extends State<MapPickerPage> {
                     style: ElevatedButton.styleFrom(
                       foregroundColor: AppColors.primaryBlue,
                       backgroundColor: Colors.white,
-                      shadowColor: AppColors.primaryBlue.withOpacity(0.12),
+                      shadowColor: AppColors.primaryBlue.withAlpha(
+                        ((0.12) * 255).toInt(),
+                      ),
                       elevation: 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: AppColors.primaryBlue, width: 1.4),
+                        side: BorderSide(
+                          color: AppColors.primaryBlue,
+                          width: 1.4,
+                        ),
                       ),
                       padding: const EdgeInsets.symmetric(
                         vertical: 15,
@@ -218,7 +225,9 @@ class _MapPickerPageState extends State<MapPickerPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
                       foregroundColor: Colors.white,
-                      shadowColor: AppColors.primaryBlue.withOpacity(0.22),
+                      shadowColor: AppColors.primaryBlue.withAlpha(
+                        ((0.22) * 255).toInt(),
+                      ),
                       elevation: 2,
                       textStyle: const TextStyle(
                         fontWeight: FontWeight.bold,

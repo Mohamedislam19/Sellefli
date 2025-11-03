@@ -48,52 +48,9 @@ class _RatingWidgetState extends State<RatingWidget>
   }
 
   void _handleSubmit() {
-    if (_selectedRating == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.info_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              const Text('Please select a rating'),
-            ],
-          ),
-          backgroundColor: AppColors.accent,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
-      return;
-    }
-
     setState(() => _isLoading = true);
 
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        widget.onSubmit?.call(_selectedRating);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 12),
-                const Text('Thank you for your rating!'),
-              ],
-            ),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
-      }
-    });
+    Navigator.pushNamed(context, "/home");
   }
 
   String _getRatingText() {
@@ -133,225 +90,246 @@ class _RatingWidgetState extends State<RatingWidget>
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: Card(
-            color: AppColors.surface,
-            elevation: 12,
-            shadowColor: AppColors.primaryDark.withOpacity(0.2),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-              side: BorderSide(
-                color: AppColors.border.withOpacity(0.5),
-                width: 1,
-              ),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(40.0),
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Icon
-                  Hero(
-                    tag: 'rating_icon',
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppColors.primaryDark, AppColors.primary],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(22),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.star_rounded,
-                        size: 48,
-                        color: Colors.white,
-                      ),
-                    ),
+    return Container(
+      decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+      child: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: ScaleTransition(
+              scale: _scaleAnimation,
+              child: Card(
+                color: AppColors.surface,
+                elevation: 12,
+                shadowColor: AppColors.primaryDark.withAlpha(
+                  ((0.2) * 255).toInt(),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  side: BorderSide(
+                    color: AppColors.border.withAlpha(((0.5) * 255).toInt()),
+                    width: 1,
                   ),
-                  const SizedBox(height: 28),
-
-                  // Title
-                  Text(
-                    'Rate Your Experience',
-                    style: AppTextStyles.title.copyWith(
-                      color: AppColors.primaryDark,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Subtitle with dynamic text
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: Text(
-                      _getRatingText(),
-                      key: ValueKey<String>(_getRatingText()),
-                      style: AppTextStyles.subtitle.copyWith(
-                        color: _getRatingColor(),
-                        fontSize: 16,
-                        height: 1.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-
-                  // Star Rating
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        final starNumber = index + 1;
-                        final isSelected = starNumber <= _selectedRating;
-                        final isHovered = starNumber <= _hoveredRating;
-                        final isActive = isHovered || isSelected;
-
-                        return MouseRegion(
-                          onEnter: (_) =>
-                              setState(() => _hoveredRating = starNumber),
-                          onExit: (_) => setState(() => _hoveredRating = 0),
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedRating = starNumber;
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              curve: Curves.easeOut,
-                              padding: const EdgeInsets.all(6),
-                              child: Icon(
-                                isActive
-                                    ? Icons.star_rounded
-                                    : Icons.star_outline_rounded,
-                                size: 44,
-                                color: isActive
-                                    ? _getRatingColor()
-                                    : AppColors.muted.withOpacity(0.3),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-
-                  // Buttons
-                  Row(
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(40.0),
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Cancel Button
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _isLoading ? null : widget.onCancel,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                      // Icon
+                      Hero(
+                        tag: 'rating_icon',
+                        child: Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primaryDark,
+                                AppColors.primary,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            side: BorderSide(
-                              color: AppColors.border,
-                              width: 1.5,
-                            ),
-                            foregroundColor: AppColors.muted,
+                            borderRadius: BorderRadius.circular(22),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withAlpha(
+                                  ((0.3) * 255).toInt(),
+                                ),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
-                          child: Text(
-                            'Cancel',
-                            style: AppTextStyles.subtitle.copyWith(
-                              color: AppColors.muted,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                            ),
+                          child: const Icon(
+                            Icons.star_rounded,
+                            size: 48,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(height: 28),
 
-                      // Submit Button
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleSubmit,
-                          style:
-                              ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                disabledBackgroundColor: AppColors.primary
-                                    .withOpacity(0.6),
-                                foregroundColor: Colors.white,
+                      // Title
+                      Text(
+                        'Rate Your Experience',
+                        style: AppTextStyles.title.copyWith(
+                          color: AppColors.primaryDark,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Subtitle with dynamic text
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Text(
+                          _getRatingText(),
+                          key: ValueKey<String>(_getRatingText()),
+                          style: AppTextStyles.subtitle.copyWith(
+                            color: _getRatingColor(),
+                            fontSize: 16,
+                            height: 1.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+
+                      // Star Rating
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(5, (index) {
+                            final starNumber = index + 1;
+                            final isSelected = starNumber <= _selectedRating;
+                            final isHovered = starNumber <= _hoveredRating;
+                            final isActive = isHovered || isSelected;
+
+                            return MouseRegion(
+                              onEnter: (_) =>
+                                  setState(() => _hoveredRating = starNumber),
+                              onExit: (_) => setState(() => _hoveredRating = 0),
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedRating = starNumber;
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.easeOut,
+                                  padding: const EdgeInsets.all(6),
+                                  child: Icon(
+                                    isActive
+                                        ? Icons.star_rounded
+                                        : Icons.star_outline_rounded,
+                                    size: 44,
+                                    color: isActive
+                                        ? _getRatingColor()
+                                        : AppColors.muted.withAlpha(
+                                            ((0.3) * 255).toInt(),
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+
+                      // Buttons
+                      Row(
+                        children: [
+                          // Cancel Button
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 18,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                elevation: 0,
-                                shadowColor: AppColors.primary.withOpacity(0.4),
-                              ).copyWith(
-                                elevation:
-                                    MaterialStateProperty.resolveWith<double>((
-                                      states,
-                                    ) {
-                                      if (states.contains(
-                                        MaterialState.pressed,
-                                      )) {
-                                        return 0;
-                                      }
-                                      if (states.contains(
-                                        MaterialState.hovered,
-                                      )) {
-                                        return 4;
-                                      }
-                                      return 2;
-                                    }),
-                              ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : Text(
-                                  'Submit Rating',
-                                  style: AppTextStyles.subtitle.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.3,
-                                  ),
+                                side: BorderSide(
+                                  color: AppColors.border,
+                                  width: 1.5,
                                 ),
-                        ),
+                                foregroundColor: AppColors.muted,
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: AppTextStyles.subtitle.copyWith(
+                                  color: AppColors.muted,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+
+                          // Submit Button
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _handleSubmit,
+                              style:
+                                  ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    disabledBackgroundColor: AppColors.primary
+                                        .withAlpha(((0.6) * 255).toInt()),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 18,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    elevation: 0,
+                                    shadowColor: AppColors.primary.withAlpha(
+                                      ((0.4) * 255).toInt(),
+                                    ),
+                                  ).copyWith(
+                                    elevation:
+                                        MaterialStateProperty.resolveWith<
+                                          double
+                                        >((states) {
+                                          if (states.contains(
+                                            MaterialState.pressed,
+                                          )) {
+                                            return 0;
+                                          }
+                                          if (states.contains(
+                                            MaterialState.hovered,
+                                          )) {
+                                            return 4;
+                                          }
+                                          return 2;
+                                        }),
+                                  ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : Text(
+                                      'Submit Rating',
+                                      style: AppTextStyles.subtitle.copyWith(
+                                        color: Colors.white,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -373,22 +351,17 @@ class RatingScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.primary.withOpacity(0.1), AppColors.surface],
+            colors: [
+              AppColors.primary.withAlpha(((0.1) * 255).toInt()),
+              AppColors.surface,
+            ],
           ),
         ),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
-              child: RatingWidget(
-                onCancel: () {
-                  Navigator.pop(context);
-                },
-                onSubmit: (rating) {
-                  print('Rating submitted: $rating');
-                  // Handle rating submission here
-                },
-              ),
+              child: RatingWidget(onCancel: () {}),
             ),
           ),
         ),

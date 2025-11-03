@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/src/core/widgets/rating_widget.dart';
 import 'package:sellefli/src/features/Booking/booking_detail_page.dart';
 import 'package:sellefli/src/features/auth/auth_screen.dart';
 import 'package:sellefli/src/features/home/marketplace_home_page.dart';
@@ -13,8 +14,6 @@ import 'package:sellefli/src/features/settings/settings_page.dart';
 import 'package:sellefli/src/features/item/create_item_page.dart'; // <-- Add this import
 import 'src/core/theme/app_theme.dart';
 
-
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -25,19 +24,20 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       initialRoute: '/',
-      routes: {'/': (context) => LandingPage(),
-       '/map-picker': (context) => const MapPickerPage(),
-       '/settings': (context) =>  SettingsHelpPage(),
-       '/create-item': (context) => const CreateItemPage(),
-       '/edit-item': (context) => const EditItemPage(),
-       '/auth': (context) => const AuthScreen(),
-       '/request-order': (context) => const RequestsOrdersPage(),
-       '/booking-details': (context) => const BookingDetailPage(),
-       '/item-details': (context) => const ItemDetailsPage(),
-       '/profile-page': (context) => const ProfilePage(),
-       '/listings': (context) => const MyListingsPage(),
-       '/home': (context) => const MarketplaceHomePage(),
-
+      routes: {
+        '/': (context) => LandingPage(),
+        '/map-picker': (context) => const MapPickerPage(),
+        '/settings': (context) => SettingsHelpPage(),
+        '/create-item': (context) => const CreateItemPage(),
+        '/edit-item': (context) => const EditItemPage(),
+        '/auth': (context) => const AuthScreen(),
+        '/request-order': (context) => const RequestsOrdersPage(),
+        '/booking-details': (context) => const BookingDetailPage(),
+        '/item-details': (context) => const ItemDetailsPage(),
+        '/profile-page': (context) => const ProfilePage(),
+        '/listings': (context) => const MyListingsPage(),
+        '/home': (context) => const MarketplaceHomePage(),
+        '/rating': (context) => RatingWidget(),
       },
     );
   }

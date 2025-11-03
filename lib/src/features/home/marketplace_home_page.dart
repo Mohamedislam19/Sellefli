@@ -33,7 +33,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
 
   double _radius = 5.0;
   bool _useLocation = false;
-// Added for bottom nav
+  // Added for bottom nav
   final List<String> _categories = [
     'All',
     'Tools',
@@ -71,24 +71,25 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
         ),
       ),
       backgroundColor: AppColors.surface,
-      body: 
-      Container(
+      body: Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: SafeArea(
           child: CustomScrollView(
             slivers: [
-            
-        
               // Search Bar
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.05),
+                      color: AppColors.primary.withAlpha(
+                        ((0.05) * 255).toInt(),
+                      ),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: AppColors.border.withOpacity(0.3),
+                        color: AppColors.border.withAlpha(
+                          ((0.3) * 255).toInt(),
+                        ),
                         width: 1,
                       ),
                     ),
@@ -97,7 +98,9 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                       decoration: InputDecoration(
                         hintText: 'Search for items...',
                         hintStyle: TextStyle(
-                          color: AppColors.muted.withOpacity(0.6),
+                          color: AppColors.muted.withAlpha(
+                            ((0.6) * 255).toInt(),
+                          ),
                         ),
                         prefixIcon: Icon(
                           Icons.search,
@@ -114,7 +117,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                   ),
                 ),
               ),
-        
+
               // Category Chips
               SliverToBoxAdapter(
                 child: SizedBox(
@@ -131,7 +134,9 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                           selected: isSelected,
                           label: Text(_categories[index]),
                           labelStyle: AppTextStyles.body.copyWith(
-                            color: isSelected ? Colors.white : AppColors.primary,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.primary,
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -140,7 +145,9 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                           side: BorderSide(
                             color: isSelected
                                 ? AppColors.primary
-                                : AppColors.primary.withOpacity(0.5),
+                                : AppColors.primary.withAlpha(
+                                    ((0.5) * 255).toInt(),
+                                  ),
                             width: 1.5,
                           ),
                           padding: const EdgeInsets.symmetric(
@@ -159,7 +166,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                   ),
                 ),
               ),
-        
+
               // Location & Search Controls
               SliverToBoxAdapter(
                 child: Padding(
@@ -175,11 +182,15 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                           ),
                           decoration: BoxDecoration(
                             color: _useLocation
-                                ? AppColors.primary.withOpacity(0.1)
+                                ? AppColors.primary.withAlpha(
+                                    ((0.1) * 255).toInt(),
+                                  )
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFF2F6CE6).withOpacity(0.5),
+                              color: const Color(
+                                0xFF2F6CE6,
+                              ).withAlpha(((0.5) * 255).toInt()),
                               width: 1,
                             ),
                           ),
@@ -217,7 +228,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                         ),
                       ),
                       const SizedBox(width: 12),
-        
+
                       // Search Button
                       ElevatedButton(
                         onPressed: () {
@@ -264,7 +275,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                   ),
                 ),
               ),
-        
+
               // Radius Slider
               SliverToBoxAdapter(
                 child: Padding(
@@ -296,9 +307,13 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                       SliderTheme(
                         data: SliderThemeData(
                           activeTrackColor: AppColors.primary,
-                          inactiveTrackColor: AppColors.primary.withOpacity(0.2),
+                          inactiveTrackColor: AppColors.primary.withAlpha(
+                            ((0.2) * 255).toInt(),
+                          ),
                           thumbColor: AppColors.primary,
-                          overlayColor: AppColors.primary.withOpacity(0.2),
+                          overlayColor: AppColors.primary.withAlpha(
+                            ((0.2) * 255).toInt(),
+                          ),
                           trackHeight: 4,
                           thumbShape: const RoundSliderThumbShape(
                             enabledThumbRadius: 10,
@@ -318,7 +333,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                   ),
                 ),
               ),
-        
+
               // Product Grid
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -369,7 +384,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                   ]),
                 ),
               ),
-        
+
               // Bottom spacing
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
@@ -390,7 +405,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.4),
+              color: AppColors.primary.withAlpha(((0.4) * 255).toInt()),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -427,7 +442,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
   }) {
     return Card(
       elevation: 2,
-      shadowColor: AppColors.primaryDark.withOpacity(0.1),
+      shadowColor: AppColors.primaryDark.withAlpha(((0.1) * 255).toInt()),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
@@ -441,7 +456,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
             Container(
               height: 140,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withAlpha(((0.1) * 255).toInt()),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
@@ -468,7 +483,9 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withAlpha(
+                              ((0.2) * 255).toInt(),
+                            ),
                             blurRadius: 8,
                           ),
                         ],
@@ -552,7 +569,9 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                       children: [
                         CircleAvatar(
                           radius: 12,
-                          backgroundColor: AppColors.primary.withOpacity(0.2),
+                          backgroundColor: AppColors.primary.withAlpha(
+                            ((0.2) * 255).toInt(),
+                          ),
                           child: Text(
                             seller[0],
                             style: AppTextStyles.body.copyWith(

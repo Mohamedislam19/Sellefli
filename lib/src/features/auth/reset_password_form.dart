@@ -72,11 +72,11 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
           child: Card(
             color: AppColors.surface,
             elevation: 8,
-            shadowColor: AppColors.primaryDark.withOpacity(0.2),
+            shadowColor: AppColors.primaryDark.withAlpha(((0.2) * 255).toInt()),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
               side: BorderSide(
-                color: AppColors.border.withOpacity(0.5),
+                color: AppColors.border.withAlpha(((0.5) * 255).toInt()),
                 width: 1,
               ),
             ),
@@ -104,7 +104,9 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                           borderRadius: BorderRadius.circular(22),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: AppColors.primary.withAlpha(
+                                ((0.3) * 255).toInt(),
+                              ),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -155,13 +157,17 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                         labelText: 'Phone number',
                         hintText: '06 12 34 56 78',
                         hintStyle: TextStyle(
-                          color: AppColors.muted.withOpacity(0.5),
+                          color: AppColors.muted.withAlpha(
+                            ((0.5) * 255).toInt(),
+                          ),
                         ),
                         prefixIcon: Container(
                           margin: const EdgeInsets.all(12),
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withAlpha(
+                              ((0.1) * 255).toInt(),
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
@@ -171,7 +177,9 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                           ),
                         ),
                         filled: true,
-                        fillColor: AppColors.primary.withOpacity(0.03),
+                        fillColor: AppColors.primary.withAlpha(
+                          ((0.03) * 255).toInt(),
+                        ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 18,
@@ -183,7 +191,9 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide(
-                            color: AppColors.border.withOpacity(0.3),
+                            color: AppColors.border.withAlpha(
+                              ((0.3) * 255).toInt(),
+                            ),
                             width: 1,
                           ),
                         ),
@@ -225,14 +235,16 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                           ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             disabledBackgroundColor: AppColors.primary
-                                .withOpacity(0.6),
+                                .withAlpha(((0.6) * 255).toInt()),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
                             elevation: 0,
-                            shadowColor: AppColors.primary.withOpacity(0.4),
+                            shadowColor: AppColors.primary.withAlpha(
+                              ((0.4) * 255).toInt(),
+                            ),
                           ).copyWith(
                             elevation:
                                 MaterialStateProperty.resolveWith<double>((
@@ -275,7 +287,9 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                       children: [
                         Expanded(
                           child: Divider(
-                            color: AppColors.border.withOpacity(0.5),
+                            color: AppColors.border.withAlpha(
+                              ((0.5) * 255).toInt(),
+                            ),
                             thickness: 1,
                           ),
                         ),
@@ -292,7 +306,9 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                         ),
                         Expanded(
                           child: Divider(
-                            color: AppColors.border.withOpacity(0.5),
+                            color: AppColors.border.withAlpha(
+                              ((0.5) * 255).toInt(),
+                            ),
                             thickness: 1,
                           ),
                         ),

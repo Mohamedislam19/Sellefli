@@ -22,11 +22,11 @@ class CoordinatesDisplay extends StatelessWidget {
     return Center(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.97),
+          color: Colors.white.withAlpha(((0.97) * 255).toInt()),
           borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryBlue.withOpacity(0.11),
+              color: AppColors.primaryBlue.withAlpha(((0.11) * 255).toInt()),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),

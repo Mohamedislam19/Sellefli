@@ -6,7 +6,7 @@ import '../../core/widgets/expansion/animated_expansion_card.dart';
 import '../../core/widgets/animated_return_button.dart';
 
 class SettingsHelpPage extends StatelessWidget {
-  SettingsHelpPage({Key? key}) : super(key: key);
+  SettingsHelpPage({super.key});
 
   final List<Map<String, String>> faqData = [
     {
@@ -52,8 +52,7 @@ class SettingsHelpPage extends StatelessWidget {
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
 
-    return 
-    Scaffold(
+    return Scaffold(
       // backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
         backgroundColor: Color.fromARGB(255, 207, 225, 255),
@@ -74,11 +73,8 @@ class SettingsHelpPage extends StatelessWidget {
           ),
         ),
       ),
-      body: 
-      Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.primaryGradient
-        ),
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: ListView(
           padding: EdgeInsets.only(
             bottom: 9 * scale,
@@ -231,7 +227,10 @@ class SettingsHelpPage extends StatelessWidget {
                   "Communicate honestly and respectfully with other users.",
                   scale,
                 ),
-                bulletPoint("Avoid prohibited, unsafe, or illegal items.", scale),
+                bulletPoint(
+                  "Avoid prohibited, unsafe, or illegal items.",
+                  scale,
+                ),
                 bulletPoint(
                   "Report any suspicious or inappropriate behavior to the support team.",
                   scale,
@@ -320,7 +319,7 @@ class SettingsHelpPage extends StatelessWidget {
 
   InlineSpan subtitleText(String text, double scale) {
     return TextSpan(
-      text: text + " ",
+      text: "$text ",
       style: GoogleFonts.outfit(
         fontSize: 16 * scale,
         color: AppColors.primaryBlue,

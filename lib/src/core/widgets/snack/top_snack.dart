@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
-
 class TopSnack {
   /// Shows a temporary overlay at the top (below the AppBar).
   /// `success` chooses the background color: primaryBlue if true, redAccent if false.
@@ -33,7 +32,9 @@ class TopSnack {
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withAlpha(
+                    ((0.2) * 255).toInt(),
+                  ),
                   child: Icon(
                     success ? Icons.check_circle_rounded : Icons.error_rounded,
                     color: Colors.white,

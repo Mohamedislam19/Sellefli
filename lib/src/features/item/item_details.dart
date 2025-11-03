@@ -11,7 +11,6 @@ class ItemDetailsPage extends StatefulWidget {
 }
 
 class _ItemDetailsPageState extends State<ItemDetailsPage> {
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -55,8 +54,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           ),
         ),
       ),
-      body: 
-      Container(
+      body: Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -66,16 +64,16 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
               child: _buildImage(item['image']!),
             ),
             const SizedBox(height: 16),
-        
+
             _buildDetailsCard(item),
             const SizedBox(height: 16),
-        
+
             _buildOwnerInfo(item, ownerRating, ownerReviews),
             const SizedBox(height: 24),
-        
+
             _buildActionButtons(),
             const SizedBox(height: 20),
-        
+
             const Text(
               'Please refer to the Deposit Policy for more information on item rentals and returns.',
               style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -117,7 +115,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12.withOpacity(0.05),
+            color: Colors.black12.withAlpha(((0.05) * 255).toInt()),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -161,7 +159,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12.withOpacity(0.05),
+            color: Colors.black12.withAlpha(((0.05) * 255).toInt()),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -176,11 +174,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
             const CircleAvatar(
               radius: 24,
               backgroundColor: Colors.grey,
-              child: Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 28,
-              ),
+              child: Icon(Icons.person, color: Colors.white, size: 28),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -208,7 +202,10 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                       ),
                       Text(
                         '($ownerReviews reviews)',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -227,8 +224,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-            },
+            onPressed: () {},
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 14),

@@ -79,7 +79,6 @@ class _MyListingsPageState extends State<MyListingsPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -105,8 +104,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
           ),
         ),
       ),
-      body: 
-      Container(
+      body: Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
@@ -170,7 +168,9 @@ class _MyListingsPageState extends State<MyListingsPage> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(status).withOpacity(0.1),
+                      color: _getStatusColor(
+                        status,
+                      ).withAlpha(((0.1) * 255).toInt()),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -245,7 +245,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: color.withOpacity(0.1),
+        backgroundColor: color.withAlpha(((0.1) * 255).toInt()),
         foregroundColor: color,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         elevation: 0,

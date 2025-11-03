@@ -85,8 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-      body: 
-      Container(
+      body: Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -99,7 +98,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12.withOpacity(0.05),
+                    color: Colors.black12.withAlpha(((0.05) * 255).toInt()),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -137,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 24),
-        
+
             // Edit Profile
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -147,7 +146,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.settings_outlined, color: Colors.black87),
+              leading: const Icon(
+                Icons.settings_outlined,
+                color: Colors.black87,
+              ),
               title: const Text('Settings / Help'),
               onTap: () {
                 Navigator.pushNamed(context, '/settings');
@@ -162,13 +164,13 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
             const SizedBox(height: 16),
-        
+
             const Text(
               'Recent Transactions',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 12),
-        
+
             // Recent Transactions List
             Column(
               children: transactions
@@ -230,7 +232,7 @@ class TransactionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12.withOpacity(0.05),
+            color: Colors.black12.withAlpha(((0.05) * 255).toInt()),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -270,7 +272,7 @@ class TransactionCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: getStatusColor(status).withOpacity(0.1),
+              color: getStatusColor(status).withAlpha(((0.1) * 255).toInt()),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(

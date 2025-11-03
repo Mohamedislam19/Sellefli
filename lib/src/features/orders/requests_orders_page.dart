@@ -32,6 +32,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage> {
         break;
     }
   }
+
   bool _showIncoming = true;
 
   @override
@@ -62,8 +63,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage> {
         ),
       ),
 
-      body: 
-      Container(
+      body: Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: Column(
           children: [
@@ -90,7 +90,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage> {
                 ],
               ),
             ),
-        
+
             // List
             Expanded(
               child: ListView(
@@ -183,7 +183,7 @@ class _TabButton extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
+                    color: AppColors.primary.withAlpha(((0.2) * 255).toInt()),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),
@@ -236,7 +236,7 @@ class _RequestCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withAlpha(((0.05) * 255).toInt()),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

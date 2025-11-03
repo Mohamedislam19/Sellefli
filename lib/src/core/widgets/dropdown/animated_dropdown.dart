@@ -71,13 +71,15 @@ class _AnimatedDropdownState extends State<AnimatedDropdown>
               color: Colors.white,
               borderRadius: BorderRadius.circular(13 * widget.scale),
               border: Border.all(
-                color: AppColors.primaryBlue.withOpacity(0.4),
+                color: AppColors.primaryBlue.withAlpha(((0.4) * 255).toInt()),
                 width: 1.1,
               ),
               boxShadow: _expanded
                   ? [
                       BoxShadow(
-                        color: AppColors.primaryBlue.withOpacity(0.11),
+                        color: AppColors.primaryBlue.withAlpha(
+                          ((0.11) * 255).toInt(),
+                        ),
                         blurRadius: 12 * widget.scale,
                         offset: Offset(0, 4 * widget.scale),
                       ),
@@ -131,7 +133,9 @@ class _AnimatedDropdownState extends State<AnimatedDropdown>
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(
-                  color: AppColors.primaryBlue.withOpacity(0.22),
+                  color: AppColors.primaryBlue.withAlpha(
+                    ((0.22) * 255).toInt(),
+                  ),
                   width: 1,
                 ),
                 borderRadius: BorderRadius.vertical(
@@ -139,7 +143,9 @@ class _AnimatedDropdownState extends State<AnimatedDropdown>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryBlue.withOpacity(0.09),
+                    color: AppColors.primaryBlue.withAlpha(
+                      ((0.09) * 255).toInt(),
+                    ),
                     blurRadius: 10 * widget.scale,
                     offset: Offset(0, 5 * widget.scale),
                   ),

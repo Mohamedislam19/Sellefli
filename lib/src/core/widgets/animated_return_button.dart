@@ -42,7 +42,7 @@ class _AnimatedReturnButtonState extends State<AnimatedReturnButton>
           margin: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.primaryBlue.withOpacity(0),
+            color: AppColors.primaryBlue.withAlpha(((0) * 255).toInt()),
           ),
           child: Icon(
             Icons.arrow_back_rounded,

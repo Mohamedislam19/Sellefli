@@ -6,7 +6,7 @@ import '../../core/widgets/chips/chip_badge.dart';
 import '../../core/widgets/avatar/avatar.dart';
 
 class BookingDetailPage extends StatelessWidget {
-  const BookingDetailPage({Key? key}) : super(key: key);
+  const BookingDetailPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,28 +15,24 @@ class BookingDetailPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: 
-      SafeArea(
+      body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             // keeps card scrollable only if screen is too small
             child: ConstrainedBox(
-              
               constraints: BoxConstraints(
                 maxWidth: screenWidth * 0.95,
                 maxHeight: screenHeight * 0.95,
               ),
               child: Container(
-                
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                
-                    gradient: AppColors.primaryGradient,
-                  
+                  gradient: AppColors.primaryGradient,
+
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withAlpha(((0.04) * 255).toInt()),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -66,7 +62,7 @@ class BookingDetailPage extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 24),
-      
+
                     const Text(
                       'Item & Booking Summary',
                       style: TextStyle(
@@ -75,7 +71,7 @@ class BookingDetailPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-      
+
                     /// Product info
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +90,7 @@ class BookingDetailPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-      
+
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,8 +123,11 @@ class BookingDetailPage extends StatelessWidget {
                               const SizedBox(height: 12),
                               Row(
                                 children: const [
-                                  Icon(Icons.calendar_today_outlined,
-                                      size: 14, color: Colors.grey),
+                                  Icon(
+                                    Icons.calendar_today_outlined,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
                                   SizedBox(width: 6),
                                   Text(
                                     'Oct 20 - Oct 25',
@@ -142,8 +141,11 @@ class BookingDetailPage extends StatelessWidget {
                               const SizedBox(height: 8),
                               Row(
                                 children: const [
-                                  Icon(Icons.attach_money,
-                                      size: 14, color: Colors.grey),
+                                  Icon(
+                                    Icons.attach_money,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     'Total Cost: ',
@@ -166,9 +168,9 @@ class BookingDetailPage extends StatelessWidget {
                         ),
                       ],
                     ),
-      
+
                     const SizedBox(height: 20),
-      
+
                     Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Row(
@@ -176,11 +178,16 @@ class BookingDetailPage extends StatelessWidget {
                           Expanded(
                             child: Row(
                               children: const [
-                                Icon(Icons.account_balance_wallet_outlined,
-                                    size: 18, color: Colors.grey),
+                                Icon(
+                                  Icons.account_balance_wallet_outlined,
+                                  size: 18,
+                                  color: Colors.grey,
+                                ),
                                 SizedBox(width: 8),
-                                Text('Deposit:',
-                                    style: TextStyle(fontSize: 14)),
+                                Text(
+                                  'Deposit:',
+                                  style: TextStyle(fontSize: 14),
+                                ),
                               ],
                             ),
                           ),
@@ -207,9 +214,9 @@ class BookingDetailPage extends StatelessWidget {
                         ],
                       ),
                     ),
-      
+
                     const SizedBox(height: 24),
-      
+
                     const Text(
                       'Booking Status',
                       style: TextStyle(
@@ -218,7 +225,7 @@ class BookingDetailPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-      
+
                     /// Status
                     Padding(
                       padding: const EdgeInsets.all(12.0),
@@ -242,20 +249,20 @@ class BookingDetailPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                            
+
                           const ChipBadge(
                             label: 'Accepted',
                             type: ChipType.primary,
                           ),
-                            
+
                           const Spacer(),
-                            
+
                           const Text(
                             'Booking Code:',
                             style: TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                           const SizedBox(width: 8),
-                            
+
                           const Text(
                             'SF-XYZ-123',
                             style: TextStyle(
@@ -266,9 +273,9 @@ class BookingDetailPage extends StatelessWidget {
                         ],
                       ),
                     ),
-      
+
                     const SizedBox(height: 24),
-      
+
                     const Text(
                       'Owner Actions',
                       style: TextStyle(
@@ -277,19 +284,21 @@ class BookingDetailPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-      
+
                     AdvancedButton(
                       label: 'Mark Deposit as Returned',
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, "/rating");
+                      },
                       gradient: const LinearGradient(
                         colors: [AppColors.primary, AppColors.primaryDark],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                     ),
-      
+
                     const SizedBox(height: 12),
-      
+
                     AdvancedButton(
                       label: 'Keep Deposit',
                       onPressed: () {},

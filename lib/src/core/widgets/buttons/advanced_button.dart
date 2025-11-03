@@ -86,7 +86,9 @@ class _AdvancedButtonState extends State<AdvancedButton>
                 ? []
                 : [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.18),
+                      color: AppColors.primary.withAlpha(
+                        ((0.18) * 255).toInt(),
+                      ),
                       offset: Offset(0, widget.elevation / 2),
                       blurRadius: widget.elevation,
                     ),

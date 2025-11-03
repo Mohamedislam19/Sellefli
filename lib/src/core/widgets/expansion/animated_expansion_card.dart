@@ -75,13 +75,15 @@ class _AnimatedExpansionCardState extends State<AnimatedExpansionCard>
         borderRadius: BorderRadius.circular(18 * widget.scale),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withOpacity(0.07),
+            color: AppColors.primaryBlue.withAlpha(((0.07) * 255).toInt()),
             blurRadius: 14 * widget.scale,
             offset: Offset(0, 6 * widget.scale),
           ),
         ],
         border: Border.all(
-          color: AppColors.primaryBlue.withOpacity(expanded ? 0.25 : 0.11),
+          color: AppColors.primaryBlue.withAlpha(
+            ((expanded ? 0.25 : 0.11) * 255).toInt(),
+          ),
           width: expanded ? 2 * widget.scale : 1 * widget.scale,
         ),
       ),
@@ -89,7 +91,7 @@ class _AnimatedExpansionCardState extends State<AnimatedExpansionCard>
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(18 * widget.scale),
-          splashColor: AppColors.primaryBlue.withOpacity(0.11),
+          splashColor: AppColors.primaryBlue.withAlpha(((0.11) * 255).toInt()),
           onTap: toggleExpand,
           child: Padding(
             padding: EdgeInsets.symmetric(
@@ -102,7 +104,9 @@ class _AnimatedExpansionCardState extends State<AnimatedExpansionCard>
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                      backgroundColor: AppColors.primaryBlue.withAlpha(
+                        ((0.1) * 255).toInt(),
+                      ),
                       foregroundColor: AppColors.primaryBlue,
                       radius: 22 * widget.scale,
                       child: Icon(widget.icon, size: 26 * widget.scale),

@@ -19,7 +19,7 @@ class RatingStars extends StatelessWidget {
           Icon(
             Icons.star_border,
             size: size,
-            color: AppColors.star.withOpacity(0.4),
+            color: AppColors.star.withAlpha(((0.4) * 255).toInt()),
           ),
         );
       }
