@@ -42,7 +42,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       'title': 'Professional Camera Kit',
       'description':
           'A high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
-      'image': 'assets/images/powerdrill.jpg', 
+      'image': 'assets/images/powerdrill.jpg',
       'value': '€1200',
       'deposit': '€300',
       'availableFrom': '2023-11-20',
@@ -76,7 +76,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-         
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: _buildImage(item['image']!),
@@ -99,7 +98,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           ),
         ],
       ),
-
       bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _currentIndex,
         onTap: _onNavTap,
@@ -107,7 +105,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     );
   }
 
- 
   Widget _buildImage(String imageUrl) {
     if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
       return Image.network(
@@ -188,47 +185,57 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundImage: NetworkImage(item['ownerImage']!),
-            onBackgroundImageError: (_, __) {},
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item['ownerName']!,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$ownerRating ',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                    ),
-                    Text(
-                      '($ownerReviews reviews)',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ],
+      child: GestureDetector(
+        onTap: () {
+          // TODO: Add your navigation route later
+          // Example: Navigator.pushNamed(context, '/owner_profile');
+        },
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.grey,
+              child: Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 28,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['ownerName']!,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$ownerRating ',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                      Text(
+                        '($ownerReviews reviews)',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -249,20 +256,10 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
             ),
             child: const Text(
               'Book Now',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600 , color: Colors.white),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.primary),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
             ), child: null,
           ),
