@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sellefli/src/core/theme/app_theme.dart';
-import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
-import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart'; // ✅ Update to your real import path
-// ignore: depend_on_referenced_packages
-import 'package:sellefli/src/core/theme/app_theme.dart'; // ✅ Update if your theme is elsewhere
+import 'package:your_app_name/src/core/widgets/nav/bottom_nav.dart'; // ✅ Update to your real import path
+import 'package:your_app_name/src/core/theme/app_theme.dart'; // ✅ Update if your theme is elsewhere
 
 class ItemDetailsPage extends StatefulWidget {
   const ItemDetailsPage({super.key});
@@ -15,11 +12,11 @@ class ItemDetailsPage extends StatefulWidget {
 class _ItemDetailsPageState extends State<ItemDetailsPage> {
   int _currentIndex = 0;
 
-  // Simulated navigation handler
+  
   void _onNavTap(int index) {
     setState(() => _currentIndex = index);
 
-    // Example navigation logic (replace with your routes/pages)
+   
     switch (index) {
       case 0:
         Navigator.pushNamed(context, '/home');
@@ -41,9 +38,9 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     final Map<String, String> item = {
       'title': 'Professional Camera Kit',
       'description':
-          'High-quality DSLR camera with a versatile zoom lens (24-70mm) and a sturdy tripod. Perfect for events, portraits, and landscape photography. Fully charged and ready for your next shoot.',
+          'high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
       'image':
-          'https://cdn.pixabay.com/photo/2016/03/05/19/02/camera-1239384_1280.jpg',
+          'assets/images/powerdrill.jpg',
       'value': '€1200',
       'deposit': '€300',
       'availableFrom': '2023-11-20',
@@ -117,7 +114,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         ],
       ),
 
-      // ✅ Include your animated bottom navigation bar
+      
       bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _currentIndex,
         onTap: _onNavTap,
@@ -125,7 +122,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     );
   }
 
-  // --- Helper widgets ---
+ 
 
   Widget _buildDetailsCard(Map<String, String> item) {
     return Container(
