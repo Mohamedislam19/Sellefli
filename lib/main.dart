@@ -1,5 +1,12 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:sellefli/marketplace_home_page.dart';
+import 'package:sellefli/screens/auth_screen.dart';
+import 'package:sellefli/src/features/item/create_item_page.dart';
+import 'package:sellefli/src/features/item/edit_item.dart';
+import 'package:sellefli/src/features/item/item_details.dart';
+import 'package:sellefli/src/features/listing/my_listings.dart';
+import 'package:sellefli/src/features/profile/profile.dart';
 import 'src/features/orders/requests_orders_page.dart';
 import 'src/features/landing/landing_page.dart';
 import 'src/features/Booking/booking_detail_page.dart';
@@ -25,7 +32,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const BookingDetailPage(),
+      home: const AuthScreen(),
       // To test Booking Details page, use:
       // home: const BookingDetailPage(),
     );
