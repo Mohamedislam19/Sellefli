@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const AuthScreen(),
+      home: const MyListingsPage(),
       // To test Booking Details page, use:
       // home: const BookingDetailPage(),
     );

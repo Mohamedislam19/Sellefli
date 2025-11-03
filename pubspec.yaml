@@ -15,15 +15,12 @@ dependencies:
   latlong2: ^0.9.0
   geolocator: ^10.1.0
   image_picker: ^1.0.4
-<<<<<<< Updated upstream
-  font_awesome_flutter: ^10.7.0   # ✅ Added this dependency for your icons
+  # font_awesome_flutter: ^10.7.0   # ✅ Added this dependency for your icons
   
-=======
   font_awesome_flutter: ^10.12.0
 
 
 
->>>>>>> Stashed changes
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -31,5 +28,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true  # ✅ Removed the semicolon (it breaks YAML)
-  # assets:
-    # - assets/images/          # ✅ Added this so your local images work
+  assets:
+    - assets/images/          # ✅ Added this so your local images work
