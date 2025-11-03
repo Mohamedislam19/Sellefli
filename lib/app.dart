@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sellefli/marketplace_home_page.dart';
+import 'package:sellefli/src/features/components_showcase/components_showcase_page.dart';
+import 'package:sellefli/src/features/map/map_picker.dart';
+import 'package:sellefli/src/features/settings/settings_page.dart';
+import 'package:sellefli/src/features/item/create_item_page.dart'; // <-- Add this import
 import 'src/core/theme/app_theme.dart';
 
 class MyApp extends StatelessWidget {
@@ -12,7 +15,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       initialRoute: '/',
-      home: MarketplaceHomePage(),
+      routes: {'/': (context) => SettingsHelpPage(),
+       '/map-picker': (context) => const MapPickerPage(),
+      },
     );
   }
 }
