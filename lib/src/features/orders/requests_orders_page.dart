@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/buttons/advanced_button.dart';
 import '../../core/widgets/chips/chip_badge.dart';
@@ -17,35 +19,31 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
+    final scale = (screenWidth / 350).clamp(0.7, 1.0);
     return Scaffold(
       backgroundColor: AppColors.background,
 
       appBar: AppBar(
-  toolbarHeight: 90,
-  title: Container(
-    margin: const EdgeInsets.only(top: 8, bottom: 8),
-    padding: const EdgeInsets.symmetric(horizontal: 8),
-    child: const Text(
-      'Requests & Orders',
-      style: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w700,
+        backgroundColor: Color.fromARGB(255, 207, 225, 255),
+        elevation: 1,
+        centerTitle: true,
+        leading: const AnimatedReturnButton(),
+        title: Padding(
+          padding: EdgeInsets.symmetric(vertical: 12 * scale),
+          child: Text(
+            'Settings & Help',
+            style: GoogleFonts.outfit(
+              fontSize: 22 * scale,
+              color: AppColors.primaryBlue,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
-    ),
-  ),
-  centerTitle: true,
-  backgroundColor: AppColors.surface,
-  elevation: 0,
-  surfaceTintColor: Colors.transparent,
-
-  bottom: PreferredSize(
-    preferredSize: Size.fromHeight(1),
-    child: Container(
-      height: 1,
-      color: AppColors.border,
-    ),
-  ),
-),
 
     
 

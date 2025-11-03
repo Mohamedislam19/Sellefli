@@ -56,7 +56,7 @@ class SettingsHelpPage extends StatelessWidget {
     Scaffold(
       // backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.appBarBackground,
+        backgroundColor: Color.fromARGB(255, 207, 225, 255),
         elevation: 1,
         centerTitle: true,
         leading: const AnimatedReturnButton(),

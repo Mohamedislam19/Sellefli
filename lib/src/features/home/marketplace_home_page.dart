@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
+import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
 
 class MarketplaceHomePage extends StatefulWidget {
@@ -26,7 +28,29 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
+    final scale = (screenWidth / 350).clamp(0.7, 1.0);
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 207, 225, 255),
+        elevation: 1,
+        centerTitle: true,
+        leading: const AnimatedReturnButton(),
+        title: Padding(
+          padding: EdgeInsets.symmetric(vertical: 12 * scale),
+          child: Text(
+            'Settings & Help',
+            style: GoogleFonts.outfit(
+              fontSize: 22 * scale,
+              color: AppColors.primaryBlue,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
       backgroundColor: AppColors.surface,
       body: SafeArea(
         child: CustomScrollView(

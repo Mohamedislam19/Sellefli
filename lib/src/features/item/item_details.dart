@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
@@ -38,6 +40,9 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
+    final scale = (screenWidth / 350).clamp(0.7, 1.0);
     final Map<String, String> item = {
       'title': 'Professional Camera Kit',
       'description':
@@ -58,19 +63,22 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'Item Details',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Color.fromARGB(255, 207, 225, 255),
         elevation: 1,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.black87,
+        centerTitle: true,
+        leading: const AnimatedReturnButton(),
+        title: Padding(
+          padding: EdgeInsets.symmetric(vertical: 12 * scale),
+          child: Text(
+            'Settings & Help',
+            style: GoogleFonts.outfit(
+              fontSize: 22 * scale,
+              color: AppColors.primaryBlue,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
           ),
-          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: ListView(

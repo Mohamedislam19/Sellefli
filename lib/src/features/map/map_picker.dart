@@ -85,16 +85,16 @@ class _MapPickerPageState extends State<MapPickerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.appBarBackground,
+        backgroundColor: Color.fromARGB(255, 207, 225, 255),
         elevation: 1,
         centerTitle: true,
         leading: const AnimatedReturnButton(),
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Map Picker',
+            'Settings & Help',
             style: GoogleFonts.outfit(
-              fontSize: 20 * scale,
+              fontSize: 22 * scale,
               color: AppColors.primaryBlue,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,

@@ -6,6 +6,7 @@ import 'package:sellefli/src/features/item/item_details.dart';
 import 'package:sellefli/src/features/listing/my_listings.dart';
 import 'package:sellefli/src/features/map/map_picker.dart';
 import 'package:sellefli/src/features/profile/profile.dart';
+import 'package:sellefli/src/features/settings/settings_page.dart';
 import 'src/features/orders/requests_orders_page.dart';
 import 'src/features/landing/landing_page.dart';
 import 'package:sellefli/src/features/auth/auth_screen.dart';
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const ItemDetailsPage(),
+      home: SettingsHelpPage(),
       // To test Booking Details page, use:
       // home: const BookingDetailPage(),
     );
