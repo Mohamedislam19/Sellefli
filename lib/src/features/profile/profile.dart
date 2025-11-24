@@ -142,7 +142,9 @@ class _ProfilePageState extends State<ProfilePage> {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.edit_outlined, color: Colors.black87),
               title: const Text('Edit Profile'),
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, '/edit-profile');
+              },
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,

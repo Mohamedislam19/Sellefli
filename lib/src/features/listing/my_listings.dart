@@ -131,85 +131,100 @@ class _MyListingsPageState extends State<MyListingsPage> {
     required String status,
     required String imageUrl,
   }) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Item image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: _buildImage(imageUrl),
-            ),
-            const SizedBox(width: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12.withAlpha(((0.05) * 255).toInt()),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Item image
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: _buildImage(imageUrl),
+          ),
+          const SizedBox(width: 12),
 
-            // Info + Buttons
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+          // Info + Buttons
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
-                  const SizedBox(height: 6),
+                ),
+                const SizedBox(height: 6),
 
-                  // Status badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(
-                        status,
-                      ).withAlpha(((0.1) * 255).toInt()),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
+                // Status badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(
                       status,
-                      style: TextStyle(
-                        color: _getStatusColor(status),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
+                    ).withAlpha(((0.1) * 255).toInt()),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    status,
+                    style: GoogleFonts.outfit(
+                      color: _getStatusColor(status),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 8),
+                const SizedBox(height: 12),
 
-                  // Action buttons
-                  Row(
-                    children: [
-                      _actionButton(
+                // Action buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: _actionButton(
                         label: "Edit",
                         color: Colors.grey.shade700,
+                        icon: Icons.edit_outlined,
                         onPressed: () {
                           Navigator.pushNamed(context, '/edit-item');
                         },
                       ),
-                      const SizedBox(width: 8),
-                      _actionButton(
-                        label: "View Item",
-                        color: Colors.blue,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _actionButton(
+                        label: "View",
+                        color: AppColors.primaryBlue,
+                        icon: Icons.visibility_outlined,
+                        isPrimary: true,
                         onPressed: () {
                           Navigator.pushNamed(context, '/item-details');
                         },
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -219,8 +234,8 @@ class _MyListingsPageState extends State<MyListingsPage> {
     if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
       return Image.network(
         imageUrl,
-        height: 60,
-        width: 60,
+        height: 80,
+        width: 80,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) =>
             const Icon(Icons.broken_image, size: 60, color: Colors.grey),
@@ -228,8 +243,8 @@ class _MyListingsPageState extends State<MyListingsPage> {
     } else {
       return Image.asset(
         imageUrl,
-        height: 60,
-        width: 60,
+        height: 80,
+        width: 80,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) =>
             const Icon(Icons.broken_image, size: 60, color: Colors.grey),
@@ -241,17 +256,33 @@ class _MyListingsPageState extends State<MyListingsPage> {
     required String label,
     required Color color,
     required VoidCallback onPressed,
+    required IconData icon,
+    bool isPrimary = false,
   }) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: color.withAlpha(((0.1) * 255).toInt()),
-        foregroundColor: color,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        elevation: 0,
-        textStyle: const TextStyle(fontSize: 13),
+        backgroundColor: isPrimary ? color : Colors.white,
+        foregroundColor: isPrimary ? Colors.white : color,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        elevation: isPrimary ? 2 : 0,
+        side: isPrimary ? null : BorderSide(color: color.withOpacity(0.3)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      child: Text(label),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

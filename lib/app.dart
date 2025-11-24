@@ -11,6 +11,7 @@ import 'package:sellefli/src/features/map/map_picker.dart';
 import 'package:sellefli/src/features/orders/requests_orders_page.dart';
 import 'package:sellefli/src/features/profile/profile.dart';
 import 'package:sellefli/src/features/settings/settings_page.dart';
+import 'package:sellefli/src/features/profile/edit_profile_page.dart';
 import 'package:sellefli/src/features/item/create_item_page.dart'; // <-- Add this import
 import 'src/core/theme/app_theme.dart';
 
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
         '/booking-details': (context) => const BookingDetailPage(),
         '/item-details': (context) => const ItemDetailsPage(),
         '/profile-page': (context) => const ProfilePage(),
+        '/edit-profile': (context) => const EditProfilePage(),
         '/listings': (context) => const MyListingsPage(),
         '/home': (context) => const MarketplaceHomePage(),
         '/rating': (context) => RatingWidget(),
