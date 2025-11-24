@@ -21,8 +21,8 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       'description':
           'A high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
       'image': 'assets/images/powerdrill.jpg',
-      'value': '€1200',
-      'deposit': '€300',
+      'value': 'DA 1200',
+      'deposit': 'DA 300',
       'availableFrom': '2023-11-20',
       'availableUntil': '2023-11-27',
       'ownerName': 'Sarah Jansen',
@@ -71,7 +71,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
             _buildOwnerInfo(item, ownerRating, ownerReviews),
             const SizedBox(height: 24),
 
-            _buildActionButtons(),
+            _buildActionButtons(item),
             const SizedBox(height: 20),
 
             const Text(
@@ -218,13 +218,15 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(Map<String, String> item) {
     return Column(
       children: [
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              _showBookingDialog(item);
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -259,6 +261,353 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           Text(
             value,
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBookingDialog(Map<String, String> item) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return BookingDialog(item: item);
+      },
+    );
+  }
+}
+
+class BookingDialog extends StatefulWidget {
+  final Map<String, String> item;
+
+  const BookingDialog({required this.item, super.key});
+
+  @override
+  State<BookingDialog> createState() => _BookingDialogState();
+}
+
+class _BookingDialogState extends State<BookingDialog>
+    with SingleTickerProviderStateMixin {
+  late DateTime availableFrom;
+  late DateTime availableUntil;
+  DateTime? startDate;
+  DateTime? endDate;
+  int numDays = 0;
+  int itemValue = 0;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _parseItemData();
+    _initializeAnimations();
+  }
+
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    _animationController.forward();
+  }
+
+  void _parseItemData() {
+    availableFrom = DateTime.parse(widget.item['availableFrom']!);
+    availableUntil = DateTime.parse(widget.item['availableUntil']!);
+    itemValue = int.parse(widget.item['value']!.replaceAll('DA', ''));
+  }
+
+  Future<void> _selectDate(bool isStartDate) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: isStartDate ? availableFrom : (startDate ?? availableFrom),
+      firstDate: availableFrom,
+      lastDate: availableUntil,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              surface: Colors.white,
+              onSurface: AppColors.primaryBlue,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        if (isStartDate) {
+          startDate = picked;
+          if (endDate != null && endDate!.isBefore(startDate!)) {
+            endDate = null;
+          }
+        } else {
+          endDate = picked;
+        }
+        _calculateTotalCost();
+      });
+    }
+  }
+
+  void _calculateTotalCost() {
+    if (startDate != null && endDate != null) {
+      numDays = endDate!.difference(startDate!).inDays + 1;
+      if (numDays < 1) {
+        numDays = 0;
+        endDate = null;
+      }
+    } else {
+      numDays = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacityAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.white,
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Booking Details',
+                          style: GoogleFonts.outfit(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryBlue,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _buildDateField('Start Date', startDate, true),
+                    const SizedBox(height: 16),
+                    _buildDateField('End Date', endDate, false),
+                    const SizedBox(height: 24),
+                    _buildTotalCostField(),
+                    const SizedBox(height: 28),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[100],
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: numDays > 0
+                                ? () {
+                                    // Handle booking confirmation
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Booking confirmed for $numDays days!',
+                                        ),
+                                        backgroundColor: AppColors.primary,
+                                      ),
+                                    );
+                                  }
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              disabledBackgroundColor: Colors.grey[300],
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              'Confirm',
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: numDays > 0 ? Colors.white : Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateField(String label, DateTime? date, bool isStartDate) {
+    return GestureDetector(
+      onTap: () => _selectDate(isStartDate),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!, width: 1),
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.grey[50],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  date != null
+                      ? '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'
+                      : 'Select date',
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: date != null ? AppColors.primaryBlue : Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+            Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTotalCostField() {
+    final totalCost = numDays > 0 ? itemValue * numDays : 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.primary.withAlpha(100), width: 1.5),
+        borderRadius: BorderRadius.circular(10),
+        color: Color.fromARGB(255, 207, 225, 255),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Total Cost',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                numDays > 0 ? 'DA$totalCost' : 'DA 0',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryBlue,
+                ),
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Days',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$numDays',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryBlue,
+                ),
+              ),
+            ],
           ),
         ],
       ),
