@@ -9,9 +9,9 @@ class ItemRepository {
 
   ItemRepository(this.supabase);
 
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
   // CREATE ITEM
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
   Future<String> createItem(Item item) async {
     final response = await supabase
         .from('items')
@@ -22,33 +22,31 @@ class ItemRepository {
     return response['id'] as String;
   }
 
-  // ---------------------------------------------------------------------------
-  // UPLOAD IMAGES
-  // storage: items/<itemId>/<filename>
-  // Also inserts into ITEM_IMAGES table
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
+  // UPLOAD IMAGES  (items/<itemId>/<filename>)
+  // ===========================================================================
   Future<void> uploadItemImages(String itemId, List<File> images) async {
     for (int i = 0; i < images.length; i++) {
       final file = images[i];
-      final fileExt = file.path.split('.').last;
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExt';
-      final filePath = 'items/$itemId/$fileName';
+      final ext = file.path.split('.').last;
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
+      final storagePath = 'items/$itemId/$fileName';
 
       // Upload to storage
-      final storageResponse = await supabase.storage
+      final uploadResponse = await supabase.storage
           .from('item-images')
-          .upload(filePath, file);
+          .upload(storagePath, file);
 
-      if (storageResponse.isEmpty) {
-        throw Exception('Failed to upload image');
+      if (uploadResponse.isEmpty) {
+        throw Exception("Image upload failed");
       }
 
-      // Get public URL
+      // Public URL
       final publicUrl = supabase.storage
           .from('item-images')
-          .getPublicUrl(filePath);
+          .getPublicUrl(storagePath);
 
-      // Insert into ITEM_IMAGES table
+      // Insert DB record
       await supabase.from('item_images').insert({
         'item_id': itemId,
         'image_url': publicUrl,
@@ -57,85 +55,112 @@ class ItemRepository {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // GET ITEM BY ID
-  // ---------------------------------------------------------------------------
-  Future<Item?> getItemById(String id) async {
-    final response = await supabase
+  // ===========================================================================
+  // GET ITEM
+  // ===========================================================================
+  Future<Item?> getItemById(String itemId) async {
+    final data = await supabase
         .from('items')
         .select()
-        .eq('id', id)
+        .eq('id', itemId)
         .maybeSingle();
 
-    if (response == null) return null;
+    if (data == null) return null;
 
-    return Item.fromJson(response);
+    return Item.fromJson(data);
   }
 
-  // ---------------------------------------------------------------------------
-  // GET ITEM IMAGES BY ITEM ID
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
+  // GET IMAGES
+  // ===========================================================================
   Future<List<ItemImage>> getItemImages(String itemId) async {
-    final response = await supabase
+    final data = await supabase
         .from('item_images')
         .select()
         .eq('item_id', itemId)
-        .order('position', ascending: true);
+        .order('position');
 
-    return response.map<ItemImage>((json) => ItemImage.fromJson(json)).toList();
+    return data.map<ItemImage>((json) => ItemImage.fromJson(json)).toList();
   }
 
-  // ---------------------------------------------------------------------------
-  // UPDATE ITEM
-  // ---------------------------------------------------------------------------
-  Future<void> updateItem(String id, Map<String, dynamic> updates) async {
+  // ===========================================================================
+  // UPDATE ITEM FIELDS
+  // ===========================================================================
+  Future<void> updateItem(String itemId, Map<String, dynamic> updates) async {
     updates['updated_at'] = DateTime.now().toIso8601String();
 
-    await supabase.from('items').update(updates).eq('id', id);
+    await supabase.from('items').update(updates).eq('id', itemId);
   }
 
-  // ---------------------------------------------------------------------------
-  // DELETE A SPECIFIC IMAGE (both storage + DB)
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
+  // DELETE A SPECIFIC IMAGE (Storage + DB)
+  // ===========================================================================
   Future<void> deleteImage(String imageUrl) async {
-    // extract filename from public URL
-    final path = imageUrl.split('/item-images/').last;
+    // Storage public URL → internal path
+    // ignore: unused_local_variable
+    final bucketPrefix = supabase.storage
+        .from('item-images')
+        .getPublicUrl('')
+        .replaceAll('/storage/v1/object/public/item-images/', '');
 
-    // Delete from storage
-    await supabase.storage.from('item-images').remove([path]);
+    final internalPath = imageUrl.replaceFirst(
+      supabase.storage
+          .from('item-images')
+          .getPublicUrl('')
+          .replaceAll('%2F', '/'),
+      '',
+    );
 
-    // Delete from DB table
+    // Remove from storage
+    await supabase.storage.from('item-images').remove([internalPath]);
+
+    // Remove DB row
     await supabase.from('item_images').delete().eq('image_url', imageUrl);
   }
 
-  // ---------------------------------------------------------------------------
-  // REPLACE ALL IMAGES (used during editing)
-  // Deletes old images, uploads new ones
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
+  // REPLACE ALL IMAGES (Used when user re-uploads everything)
+  // ===========================================================================
   Future<void> replaceItemImages(String itemId, List<File> newImages) async {
-    // Fetch existing images
-    final oldImgs = await getItemImages(itemId);
+    final oldImages = await getItemImages(itemId);
 
-    // Delete all old images
-    for (var img in oldImgs) {
+    for (final img in oldImages) {
       await deleteImage(img.imageUrl);
     }
 
-    // Upload new images
     await uploadItemImages(itemId, newImages);
   }
 
-  // ---------------------------------------------------------------------------
-  // DELETE ITEM (optional, future use)
-  // Also deletes images
-  // ---------------------------------------------------------------------------
-  Future<void> deleteItem(String id) async {
-    final oldImgs = await getItemImages(id);
-
-    for (var img in oldImgs) {
+  // ===========================================================================
+  // UPDATE ONLY SOME IMAGES (partial update)
+  // ===========================================================================
+  Future<void> updateItemImages({
+    required String itemId,
+    required List<ItemImage> oldImages,
+    required List<File> newAddedImages,
+    required List<ItemImage> removedImages,
+  }) async {
+    // Remove deleted images
+    for (final img in removedImages) {
       await deleteImage(img.imageUrl);
     }
 
-    await supabase.from('items').delete().eq('id', id);
+    // Add new ones
+    if (newAddedImages.isNotEmpty) {
+      await uploadItemImages(itemId, newAddedImages);
+    }
+  }
+
+  // ===========================================================================
+  // DELETE ITEM
+  // ===========================================================================
+  Future<void> deleteItem(String itemId) async {
+    final oldImages = await getItemImages(itemId);
+
+    for (final img in oldImages) {
+      await deleteImage(img.imageUrl);
+    }
+
+    await supabase.from('items').delete().eq('id', itemId);
   }
 }
