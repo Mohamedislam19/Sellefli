@@ -114,6 +114,7 @@ class _CreateItemPageState extends State<CreateItemPage>
   }
 
   List<XFile> _images = [];
+  static const int _maxImages = 3;
   String? _title;
   String? _description;
   String? _category;
@@ -181,19 +182,33 @@ class _CreateItemPageState extends State<CreateItemPage>
   }
 
   Future<void> _pickImages() async {
-    if (_images.length >= 5) return;
+    if (_images.length >= _maxImages) {
+      SnackbarHelper.showSnackBar(
+        context,
+        message: 'You can upload up to $_maxImages images.',
+        isSuccess: false,
+      );
+      return;
+    }
     final picker = ImagePicker();
     final picked = await picker.pickMultiImage();
     if (picked.isNotEmpty) {
       setState(() {
-        _images = [..._images, ...picked].take(5).toList();
+        _images = [..._images, ...picked].take(_maxImages).toList();
         _showImageError = false;
       });
     }
   }
 
   Future<void> _pickImageCamera() async {
-    if (_images.length >= 5) return;
+    if (_images.length >= _maxImages) {
+      SnackbarHelper.showSnackBar(
+        context,
+        message: 'You can upload up to $_maxImages images.',
+        isSuccess: false,
+      );
+      return;
+    }
     final picker = ImagePicker();
     final taken = await picker.pickImage(
       source: ImageSource.camera,
@@ -333,7 +348,7 @@ class _CreateItemPageState extends State<CreateItemPage>
   @override
   Widget build(BuildContext context) {
     final double screenW = MediaQuery.of(context).size.width;
-    final scale = (screenW / 350).clamp(0.8, 1.0);
+    final double scale = ((screenW / 350).clamp(0.8, 1.0)).toDouble();
 
     return BlocProvider(
       create: (_) => CreateItemCubit(),
@@ -353,7 +368,7 @@ class _CreateItemPageState extends State<CreateItemPage>
             messenger.clearSnackBars();
             SnackbarHelper.showSnackBar(
               context,
-              message: 'Error: Item could not be published.',
+              message: 'Error: Item could not be published.${state.message}',
               isSuccess: false, // Triggers the red color
             );
           }

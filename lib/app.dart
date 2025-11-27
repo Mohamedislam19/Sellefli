@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
         '/map-picker': (context) => const MapPickerPage(),
         '/settings': (context) => SettingsHelpPage(),
         '/create-item': (context) => const CreateItemPage(),
-        '/edit-item': (context) => const EditItemPage(),
+        '/edit-item': (context) => const EditItemPage(itemId: '5fcded9a-298e-4c46-962a-f00c1bafa70b',),
         '/auth': (context) => const AuthScreen(),
         '/request-order': (context) => const RequestsOrdersPage(),
         '/booking-details': (context) => const BookingDetailPage(),
