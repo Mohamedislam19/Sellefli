@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/buttons/advanced_button.dart';
 import '../../core/widgets/chips/chip_badge.dart';
 import '../../core/widgets/nav/bottom_nav.dart';
+import '../../data/models/booking_model.dart';
+import '../Booking/logic/booking_cubit.dart';
 
-class RequestsOrdersPage extends StatefulWidget {
+class RequestsOrdersPage extends StatelessWidget {
   const RequestsOrdersPage({Key? key}) : super(key: key);
 
   @override
-  State<RequestsOrdersPage> createState() => _RequestsOrdersPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => BookingCubit(),
+      child: const _RequestsOrdersPageContent(),
+    );
+  }
 }
 
-class _RequestsOrdersPageState extends State<RequestsOrdersPage> {
+class _RequestsOrdersPageContent extends StatefulWidget {
+  const _RequestsOrdersPageContent({Key? key}) : super(key: key);
+
+  @override
+  State<_RequestsOrdersPageContent> createState() => _RequestsOrdersPageState();
+}
+
+class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
   int _currentIndex = 1;
 
   void _onNavTap(int index) {
@@ -36,112 +52,229 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage> {
   bool _showIncoming = true;
 
   @override
+  void initState() {
+    super.initState();
+    _loadBookings();
+  }
+
+  void _loadBookings() {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      if (_showIncoming) {
+        context.read<BookingCubit>().fetchIncomingRequests(userId);
+      } else {
+        context.read<BookingCubit>().fetchMyRequests(userId);
+      }
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.month}/${date.day}/${date.year}';
+  }
+
+  RequestStatus _mapBookingStatusToRequestStatus(BookingStatus status) {
+    switch (status) {
+      case BookingStatus.pending:
+        return RequestStatus.pending;
+      case BookingStatus.accepted:
+      case BookingStatus.active:
+      case BookingStatus.completed:
+        return RequestStatus.accepted;
+      case BookingStatus.declined:
+      case BookingStatus.closed:
+        return RequestStatus.declined;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
-    final scale = (screenWidth / 350).clamp(0.7, 1.0);
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isSmallMobile = width < 360;
+        final isMobile = width < 600;
+        
+        // Responsive scaling
+        final scale = isSmallMobile ? 0.85 : (isMobile ? 0.95 : 1.0);
+        
+        return Scaffold(
+          backgroundColor: AppColors.background,
 
-      appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 207, 225, 255),
-        elevation: 1,
-        centerTitle: true,
-        leading: const AnimatedReturnButton(),
-        title: Padding(
-          padding: EdgeInsets.symmetric(vertical: 12 * scale),
-          child: Text(
-            'Requests & Orders',
-            style: GoogleFonts.outfit(
-              fontSize: 22 * scale,
-              color: AppColors.primaryBlue,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
+          appBar: AppBar(
+            backgroundColor: Color.fromARGB(255, 207, 225, 255),
+            elevation: 1,
+            centerTitle: true,
+            leading: const AnimatedReturnButton(),
+            title: Padding(
+              padding: EdgeInsets.symmetric(vertical: 12 * scale),
+              child: Text(
+                'Requests & Orders',
+                style: GoogleFonts.outfit(
+                  fontSize: (isSmallMobile ? 18 : 22) * scale,
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-            textAlign: TextAlign.center,
           ),
-        ),
-      ),
 
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        child: Column(
-          children: [
-            // Tabs
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _TabButton(
-                      label: 'Incoming',
-                      isSelected: _showIncoming,
-                      onTap: () => setState(() => _showIncoming = true),
-                    ),
+          body: Container(
+            decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+            child: Column(
+              children: [
+                // Tabs
+                Padding(
+                  padding: EdgeInsets.all(isSmallMobile ? 12 : 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _TabButton(
+                          label: 'Incoming',
+                          isSelected: _showIncoming,
+                          onTap: () {
+                            setState(() => _showIncoming = true);
+                            _loadBookings();
+                          },
+                          isSmallMobile: isSmallMobile,
+                        ),
+                      ),
+                      SizedBox(width: isSmallMobile ? 8 : 12),
+                      Expanded(
+                        child: _TabButton(
+                          label: 'My Requests',
+                          isSelected: !_showIncoming,
+                          onTap: () {
+                            setState(() => _showIncoming = false);
+                            _loadBookings();
+                          },
+                          isSmallMobile: isSmallMobile,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _TabButton(
-                      label: 'My Requests',
-                      isSelected: !_showIncoming,
-                      onTap: () => setState(() => _showIncoming = false),
-                    ),
+                ),
+
+                // List with BlocBuilder
+                Expanded(
+                  child: BlocConsumer<BookingCubit, BookingState>(
+                    listener: (context, state) {
+                      if (state is BookingActionSuccess) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.message)),
+                        );
+                        _loadBookings(); // Refresh list after action
+                      } else if (state is BookingError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.error),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is BookingLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (state is BookingError) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Error: ${state.error}',
+                                style: const TextStyle(color: Colors.red),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _loadBookings,
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      if (state is BookingListLoaded) {
+                        if (state.bookings.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _showIncoming ? Icons.inbox : Icons.send_outlined,
+                                  size: 64,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _showIncoming
+                                      ? 'No incoming requests'
+                                      : 'No requests sent yet',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          padding: EdgeInsets.all(isSmallMobile ? 12 : 16),
+                          itemCount: state.bookings.length,
+                          separatorBuilder: (context, index) => 
+                              SizedBox(height: isSmallMobile ? 8 : 12),
+                          itemBuilder: (context, index) {
+                            final data = state.bookings[index];
+                            final booking = data['booking'] as Booking;
+                            final item = data['item'];
+                            final otherUser = _showIncoming 
+                                ? data['borrower'] 
+                                : data['owner'];
+                            final imageUrl = data['imageUrl'] as String?;
+
+                            return _RequestCard(
+                              bookingId: booking.id,
+                              imageUrl: imageUrl ?? 
+                                  'https://via.placeholder.com/150',
+                              title: item?.title ?? 'Item',
+                              sender: otherUser?.username ?? 'Unknown User',
+                              dateRange:
+                                  '${_formatDate(booking.startDate)} - ${_formatDate(booking.returnByDate)}',
+                              status: _mapBookingStatusToRequestStatus(booking.status),
+                              isSmallMobile: isSmallMobile,
+                              isMobile: isMobile,
+                              isOwnerView: _showIncoming,
+                              onAccept: () => context.read<BookingCubit>().acceptBooking(booking.id),
+                              onDecline: () => context.read<BookingCubit>().declineBooking(booking.id),
+                            );
+                          },
+                        );
+                      }
+
+                      // Initial state
+                      return const Center(child: CircularProgressIndicator());
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
-            // List
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: const [
-                  _RequestCard(
-                    imageUrl:
-                        'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=400',
-                    title: 'Electric Drill Set',
-                    sender: 'Alice Johnson',
-                    dateRange: 'Jul 10 - Jul 12',
-                    status: RequestStatus.pending,
-                  ),
-                  SizedBox(height: 12),
-                  _RequestCard(
-                    imageUrl:
-                        'https://m.media-amazon.com/images/I/61qzcUy7S8L._AC_SL1500_.jpg',
-                    title: 'High-Pressure Washer',
-                    sender: 'Bob Smith',
-                    dateRange: 'Aug 01 - Aug 05',
-                    status: RequestStatus.accepted,
-                  ),
-                  SizedBox(height: 12),
-                  _RequestCard(
-                    imageUrl:
-                        'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400',
-                    title: 'Camping Tent (4-person)',
-                    sender: 'Charlie Brown',
-                    dateRange: 'Aug 15 - Aug 17',
-                    status: RequestStatus.declined,
-                  ),
-                  SizedBox(height: 12),
-                  _RequestCard(
-                    imageUrl:
-                        'https://m.media-amazon.com/images/I/71EzghTdyKL.jpg',
-                    title: 'Stand Mixer',
-                    sender: 'Diana Prince',
-                    dateRange: 'Sep 01 - Sep 03',
-                    status: RequestStatus.pending,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      bottomNavigationBar: AnimatedBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onNavTap,
-      ),
+          bottomNavigationBar: AnimatedBottomNav(
+            currentIndex: _currentIndex,
+            onTap: _onNavTap,
+          ),
+        );
+      },
     );
   }
 }
@@ -152,11 +285,13 @@ class _TabButton extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool isSmallMobile;
 
   const _TabButton({
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.isSmallMobile = false,
   });
 
   @override
@@ -165,7 +300,7 @@ class _TabButton extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: isSmallMobile ? 10 : 12),
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
@@ -196,6 +331,7 @@ class _TabButton extends StatelessWidget {
             style: AppTextStyles.body.copyWith(
               color: isSelected ? Colors.white : AppColors.primaryBlue,
               fontWeight: FontWeight.w600,
+              fontSize: isSmallMobile ? 13 : null,
             ),
           ),
         ),
@@ -209,28 +345,40 @@ class _TabButton extends StatelessWidget {
 enum RequestStatus { pending, accepted, declined }
 
 class _RequestCard extends StatelessWidget {
+  final String bookingId;
   final String imageUrl;
   final String title;
   final String sender;
   final String dateRange;
   final RequestStatus status;
+  final bool isSmallMobile;
+  final bool isMobile;
+  final bool isOwnerView;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
 
   const _RequestCard({
+    required this.bookingId,
     required this.imageUrl,
     required this.title,
     required this.sender,
     required this.dateRange,
     required this.status,
+    this.isSmallMobile = false,
+    this.isMobile = true,
+    required this.isOwnerView,
+    required this.onAccept,
+    required this.onDecline,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        Navigator.pushNamed(context, '/booking-details');
+        Navigator.pushNamed(context, '/booking-details', arguments: bookingId);
       },
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(isSmallMobile ? 10 : 14),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
@@ -249,8 +397,8 @@ class _RequestCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 64,
-                  height: 64,
+                  width: isSmallMobile ? 56 : 64,
+                  height: isSmallMobile ? 56 : 64,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     image: DecorationImage(
@@ -259,34 +407,54 @@ class _RequestCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: isSmallMobile ? 8 : 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: AppTextStyles.subtitle),
-                      const SizedBox(height: 6),
+                      Text(
+                        title,
+                        style: AppTextStyles.subtitle.copyWith(
+                          fontSize: isSmallMobile ? 14 : null,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: isSmallMobile ? 4 : 6),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.person_outline,
-                            size: 14,
+                            size: isSmallMobile ? 12 : 14,
                             color: AppColors.muted,
                           ),
-                          const SizedBox(width: 4),
-                          Text('From $sender', style: AppTextStyles.caption),
+                          SizedBox(width: isSmallMobile ? 3 : 4),
+                          Flexible(
+                            child: Text(
+                              'From $sender',
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: isSmallMobile ? 11 : null,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: isSmallMobile ? 3 : 4),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.calendar_today_outlined,
-                            size: 14,
+                            size: isSmallMobile ? 12 : 14,
                             color: AppColors.muted,
                           ),
-                          const SizedBox(width: 4),
-                          Text(dateRange, style: AppTextStyles.caption),
+                          SizedBox(width: isSmallMobile ? 3 : 4),
+                          Text(
+                            dateRange,
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: isSmallMobile ? 11 : null,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -294,45 +462,99 @@ class _RequestCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: isSmallMobile ? 8 : 12),
 
-            Row(
-              children: [
-                _buildStatusBadge(status), // badge
-
-                const Spacer(),
-
-                SizedBox(
-                  width: 90,
-                  child: AdvancedButton(
-                    label: 'Accept',
-                    onPressed: () {},
-                    fullWidth: true,
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.primaryDark],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
+            // Show different UI based on owner vs borrower view
+            if (isOwnerView)
+              // OWNER VIEW: Show Accept/Decline buttons
+              isMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 36,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: _buildStatusBadge(status),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AdvancedButton(
+                                label: 'Accept',
+                                onPressed: status == RequestStatus.pending ? onAccept : null,
+                                fullWidth: true,
+                                gradient: const LinearGradient(
+                                  colors: [AppColors.primary, AppColors.primaryDark],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: isSmallMobile ? 6 : 8),
+                            Expanded(
+                              child: AdvancedButton(
+                                label: 'Decline',
+                                onPressed: status == RequestStatus.pending ? onDecline : null,
+                                fullWidth: true,
+                                gradient: const LinearGradient(
+                                  colors: [AppColors.danger, Color(0xFFB63A2D)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        SizedBox(
+                          height: 36,
+                          child: _buildStatusBadge(status),
+                        ),
+                        const Spacer(),
+                        SizedBox(
+                          width: 100,
+                          child: AdvancedButton(
+                            label: 'Accept',
+                            onPressed: status == RequestStatus.pending ? onAccept : null,
+                            fullWidth: true,
+                            gradient: const LinearGradient(
+                              colors: [AppColors.primary, AppColors.primaryDark],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 100,
+                          child: AdvancedButton(
+                            label: 'Decline',
+                            onPressed: status == RequestStatus.pending ? onDecline : null,
+                            fullWidth: true,
+                            gradient: const LinearGradient(
+                              colors: [AppColors.danger, Color(0xFFB63A2D)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                        ),
+                    ],
+                  )
+            else
+              // BORROWER VIEW: Show status only (no action buttons)
+              SizedBox(
+                height: 36,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: _buildStatusBadge(status),
                 ),
-
-                const SizedBox(width: 8),
-
-                SizedBox(
-                  width: 90,
-                  child: AdvancedButton(
-                    label: 'Decline',
-                    onPressed: () {},
-                    fullWidth: true,
-                    gradient: const LinearGradient(
-                      colors: [AppColors.danger, Color(0xFFB63A2D)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
           ],
         ),
       ),
