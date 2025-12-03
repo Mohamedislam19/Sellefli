@@ -138,8 +138,9 @@ class _EditItemPageState extends State<EditItemPage>
               onPrimary: Colors.white, // header & selected text color
               onSurface: Colors.black87, // default text color
             ),
-            dialogBackgroundColor:
-                AppColors.pageBackground, // dialog card background
+            dialogTheme: DialogThemeData(
+              backgroundColor: AppColors.pageBackground,
+            ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primaryBlue,
@@ -153,10 +154,10 @@ class _EditItemPageState extends State<EditItemPage>
               // rangeSelectionOverlayColor: AppColors.primaryBlue.withOpacity(
               //   0.12,
               // ),
-              dayForegroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected))
+              dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected))
                   return Colors.white;
-                if (states.contains(MaterialState.disabled))
+                if (states.contains(WidgetState.disabled))
                   return Colors.grey.shade400;
                 return Colors.black87;
               }),
