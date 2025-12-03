@@ -38,6 +38,15 @@ class BookingRepository {
         .eq('id', booking.itemId)
         .maybeSingle();
 
+    // Fetch first image for item (if any)
+    final imageData = await supabase
+      .from('item_images')
+      .select()
+      .eq('item_id', booking.itemId)
+      .order('position')
+      .limit(1)
+      .maybeSingle();
+
     // Fetch borrower details
     final borrowerData = await supabase
         .from('users')
@@ -57,6 +66,7 @@ class BookingRepository {
       'item': itemData != null ? Item.fromJson(itemData) : null,
       'borrower': borrowerData != null ? models.User.fromJson(borrowerData) : null,
       'owner': ownerData != null ? models.User.fromJson(ownerData) : null,
+      'imageUrl': imageData?['image_url'] as String?,
     };
   }
 

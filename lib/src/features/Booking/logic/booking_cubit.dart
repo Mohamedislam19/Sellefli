@@ -12,9 +12,7 @@ class BookingCubit extends Cubit<BookingState> {
       : bookingRepository = BookingRepository(Supabase.instance.client),
         super(BookingInitial());
 
-  // ===========================================================================
   // FETCH BOOKING DETAILS
-  // ===========================================================================
   Future<void> fetchBookingDetails(String bookingId) async {
     try {
       emit(BookingLoading());
@@ -32,9 +30,7 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  // ===========================================================================
   // FETCH INCOMING REQUESTS (for owner)
-  // ===========================================================================
   Future<void> fetchIncomingRequests(String ownerId) async {
     try {
       emit(BookingLoading());
@@ -47,9 +43,7 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  // ===========================================================================
   // FETCH MY REQUESTS (for borrower)
-  // ===========================================================================
   Future<void> fetchMyRequests(String borrowerId) async {
     try {
       emit(BookingLoading());
@@ -62,9 +56,7 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  // ===========================================================================
   // ACCEPT BOOKING
-  // ===========================================================================
   Future<void> acceptBooking(String bookingId) async {
     try {
       emit(BookingActionLoading());
@@ -78,9 +70,7 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  // ===========================================================================
   // DECLINE BOOKING
-  // ===========================================================================
   Future<void> declineBooking(String bookingId) async {
     try {
       emit(BookingActionLoading());
@@ -93,9 +83,7 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  // ===========================================================================
   // MARK DEPOSIT AS RETURNED
-  // ===========================================================================
   Future<void> markDepositReturned(String bookingId) async {
     try {
       emit(BookingActionLoading());
@@ -109,9 +97,7 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  // ===========================================================================
   // KEEP DEPOSIT
-  // ===========================================================================
   Future<void> keepDeposit(String bookingId) async {
     try {
       emit(BookingActionLoading());
@@ -125,11 +111,9 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  // ===========================================================================
   // MARK DEPOSIT AS RECEIVED
   // (Owner acknowledges they have received the deposit and booking becomes active)
   // Allowed only when booking status is accepted & depositStatus is none.
-  // ===========================================================================
   Future<void> markDepositReceived(String bookingId) async {
     try {
       emit(BookingActionLoading());
@@ -156,9 +140,7 @@ class BookingCubit extends Cubit<BookingState> {
       emit(BookingError(e.toString()));
     }
   }
-  // ===========================================================================
   // CREATE BOOKING REQUEST
-  // ===========================================================================
   Future<void> createBookingRequest({
     required String itemId,
     required String ownerId,
