@@ -13,8 +13,8 @@ class ResetPasswordForm extends StatefulWidget {
 class _ResetPasswordFormState extends State<ResetPasswordForm>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController();
-  final _phoneFocusNode = FocusNode();
+  final _emailController = TextEditingController();
+  final _emailFocusNode = FocusNode();
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -39,8 +39,8 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
 
   @override
   void dispose() {
-    _phoneController.dispose();
-    _phoneFocusNode.dispose();
+    _emailController.dispose();
+    _emailFocusNode.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -134,7 +134,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Enter your phone number to receive\na password reset link',
+                      'Enter your email to receive\na password reset link',
                       style: AppTextStyles.subtitle.copyWith(
                         color: AppColors.muted,
                         fontSize: 16,
@@ -144,18 +144,18 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                     ),
                     const SizedBox(height: 40),
 
-                    // Phone Field with improved styling
+                    // Email Field with improved styling
                     TextFormField(
-                      controller: _phoneController,
-                      focusNode: _phoneFocusNode,
-                      keyboardType: TextInputType.phone,
+                      controller: _emailController,
+                      focusNode: _emailFocusNode,
+                      keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _resetPassword(),
                       autofocus: true,
                       style: AppTextStyles.body.copyWith(fontSize: 16),
                       decoration: InputDecoration(
-                        labelText: 'Phone number',
-                        hintText: '06 12 34 56 78',
+                        labelText: 'Email',
+                        hintText: 'example@email.com',
                         hintStyle: TextStyle(
                           color: AppColors.muted.withAlpha(
                             ((0.5) * 255).toInt(),
@@ -171,7 +171,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
-                            Icons.phone_outlined,
+                            Icons.email_outlined,
                             color: AppColors.primary,
                             size: 22,
                           ),
@@ -221,7 +221,10 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your phone number';
+                          return 'Please enter your email';
+                        }
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          return 'Please enter a valid email';
                         }
                         return null;
                       },

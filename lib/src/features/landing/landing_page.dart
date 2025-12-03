@@ -120,7 +120,11 @@ class LandingPage extends StatelessWidget {
                           AdvancedButton(
                             label: "Get Started",
                             onPressed: () {
-                              Navigator.pushNamed(context, '/auth');
+                              Navigator.pushNamed(
+                                context,
+                                '/auth',
+                                arguments: {'initialView': 1}, // 1 = SignUp
+                              );
                             },
                             fullWidth: true,
                           ),
@@ -128,7 +132,11 @@ class LandingPage extends StatelessWidget {
                           AdvancedButton(
                             label: "Sign In",
                             onPressed: () {
-                              Navigator.pushNamed(context, '/auth');
+                              Navigator.pushNamed(
+                                context,
+                                '/auth',
+                                arguments: {'initialView': 0}, // 0 = Login
+                              );
                             },
                             fullWidth: true,
                             gradient: const LinearGradient(

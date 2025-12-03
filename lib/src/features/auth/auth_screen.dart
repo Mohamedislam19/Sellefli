@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/features/auth/login_form.dart';
+import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
+import 'package:sellefli/src/features/auth/logic/auth_state.dart';
 import 'package:sellefli/src/features/auth/signup_form.dart';
 import 'package:sellefli/src/features/auth/reset_password_form.dart';
 
@@ -13,6 +17,19 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   int currentView = 0; // 0 = Login, 1 = SignUp, 2 = ResetPassword
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Read route arguments to set initial view
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null && args.containsKey('initialView')) {
+      setState(() {
+        currentView = args['initialView'] as int;
+      });
+    }
+  }
 
   void showLogin() {
     setState(() => currentView = 0);
@@ -28,21 +45,57 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Container(
-          decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: currentView == 0
-                  ? LoginForm(
-                      onToggleSignUp: showSignUp,
-                      onForgotPassword: showResetPassword,
-                    )
-                  : currentView == 1
-                  ? SignUpForm(onToggle: showLogin)
-                  : ResetPasswordForm(onToggle: showLogin),
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          // Show success message based on which form was used
+          String message = currentView == 1
+              ? 'Account created successfully! Welcome to Sellefli.'
+              : 'Welcome back! Login successful.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          // Navigate to home on successful authentication
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          });
+        } else if (state is AuthError) {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.danger,
+              duration: const Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: AppColors.primaryGradient,
+            ),
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: currentView == 0
+                    ? LoginForm(
+                        onToggleSignUp: showSignUp,
+                        onForgotPassword: showResetPassword,
+                      )
+                    : currentView == 1
+                    ? SignUpForm(onToggle: showLogin)
+                    : ResetPasswordForm(onToggle: showLogin),
+              ),
             ),
           ),
         ),

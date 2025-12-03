@@ -21,6 +21,10 @@ dependencies:
   supabase_flutter: ^2.8.0
   flutter_bloc: ^8.1.6
   equatable: ^2.0.5
+  connectivity_plus: ^6.0.0
+  uuid: ^4.5.2
+  bloc: ^8.1.4
+  meta: ^1.16.0
 
 
 
@@ -28,8 +32,10 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  mocktail: ^1.0.4
+  bloc_test: ^9.1.7
 
 flutter:
-  uses-material-design: true  # ✅ Removed the semicolon (it breaks YAML)
+  uses-material-design: true
   assets:
-    - assets/images/          # ✅ Added this so your local images work
+    - assets/images/

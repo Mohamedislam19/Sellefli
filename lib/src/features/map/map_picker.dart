@@ -108,16 +108,18 @@ class _MapPickerPageState extends State<MapPickerPage> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              center: selectedLatLng,
-              zoom: 16.0,
+              initialCenter: selectedLatLng,
+              initialZoom: 16.0,
               maxZoom: 18,
               minZoom: 2,
-              interactiveFlags: InteractiveFlag.all,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all,
+              ),
               onPositionChanged: _onMapMove,
               onTap: (tapPosition, point) {
                 setState(() {
                   selectedLatLng = point;
-                  _mapController.move(point, _mapController.zoom);
+                  _mapController.move(point, _mapController.camera.zoom);
                 });
               },
             ),
@@ -125,7 +127,6 @@ class _MapPickerPageState extends State<MapPickerPage> {
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 subdomains: const ['a', 'b', 'c'],
-                backgroundColor: Colors.white,
                 userAgentPackageName: 'com.sellefli.map',
               ),
             ],
