@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sellefli/src/data/local/db_helper.dart';
+import 'package:sellefli/src/data/local/local_item_repository.dart';
 
 import '../../../data/models/item_model.dart';
 import '../../../data/repositories/item_repository.dart';
@@ -13,6 +13,7 @@ part 'create_item_state.dart';
 
 class CreateItemCubit extends Cubit<CreateItemState> {
   final ItemRepository itemRepository;
+  final LocalItemRepository _localRepo = LocalItemRepository();
 
   CreateItemCubit()
     : itemRepository = ItemRepository(Supabase.instance.client),
@@ -71,15 +72,15 @@ class CreateItemCubit extends Cubit<CreateItemState> {
           ? supabaseImages.first.imageUrl
           : null;
       print('[CreateItemCubit] Local DB: upsert item ${item.id}');
-      await DbHelper.upsertLocalItem(item: item, thumbnailUrl: thumbUrl);
+      await _localRepo.upsertLocalItem(item: item, thumbnailUrl: thumbUrl);
       print(
         '[CreateItemCubit] Local DB: replace images for ${item.id} (count=${supabaseImages.length})',
       );
-      await DbHelper.replaceItemImages(itemId, supabaseImages);
+      await _localRepo.replaceItemImages(itemId, supabaseImages);
       // Debug dump of local cache for this item
-      await DbHelper.debugLogItemCache(itemId);
+      await _localRepo.debugLogItemCache(itemId);
       // Debug: full local DB snapshot (all items and image counts)
-      await DbHelper.debugLogAllItems();
+      await _localRepo.debugLogAllItems();
 
       emit(CreateItemSuccess(itemId));
     } catch (e) {
