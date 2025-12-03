@@ -192,18 +192,24 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
                               color: AppColors.primary.withOpacity(0.1),
-                              image: item != null
-                                  ? DecorationImage(
-                                      image: NetworkImage(
-                                        'https://via.placeholder.com/150',
-                                      ),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
+                              image: () {
+                                final imageUrl = state.bookingDetails['imageUrl'] as String?;
+                                if (imageUrl != null && imageUrl.isNotEmpty) {
+                                  return DecorationImage(
+                                    image: NetworkImage(imageUrl),
+                                    fit: BoxFit.cover,
+                                  );
+                                }
+                                return null;
+                              }(),
                             ),
-                            child: item == null
-                                ? const Icon(Icons.image, size: 40, color: Colors.grey)
-                                : null,
+                            child: (() {
+                              final imageUrl = state.bookingDetails['imageUrl'] as String?;
+                              if (imageUrl == null || imageUrl.isEmpty) {
+                                return const Icon(Icons.image, size: 40, color: Colors.grey);
+                              }
+                              return null;
+                            })(),
                           ),
                           SizedBox(width: isSmallMobile ? 8 : 12),
 
