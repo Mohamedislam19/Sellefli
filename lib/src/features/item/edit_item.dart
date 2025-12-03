@@ -35,56 +35,8 @@ class _EditItemPageState extends State<EditItemPage>
 
   final supabase = Supabase.instance.client;
 
-  // State variable to hold the test user ID
-  String? _testUserId;
+  String? _userId;
 
-  /// TEMPORARY RLS TESTING FUNCTION:
-  /// Signs in as a fixed, pre-existing user to establish a session/JWT.
-  ///
-  /// !!! IMPORTANT: This user (testuser@example.com) MUST exist in Supabase Auth
-  /// AND have a profile entry in the 'users' table.
-  Future<String?> testUserSetup() async {
-    // --- TESTING CONSTANTS (FIXED) ---
-    const String testEmail = 'testuser_1764248817123@example.com';
-    const String testPassword = 'TestPassword123';
-    // ------------------------------------
-
-    String? authenticatedUserId;
-
-    try {
-      // 1. --- Sign In with existing credentials ---
-      print('TEST AUTH: Attempting to sign IN with existing user: $testEmail');
-
-      final AuthResponse signInResponse = await supabase.auth
-          .signInWithPassword(email: testEmail, password: testPassword);
-
-      authenticatedUserId = signInResponse.user?.id;
-
-      if (authenticatedUserId == null) {
-        print(
-          'TEST FAILED: Sign in failed. Could not get authenticated user ID.',
-        );
-        return null;
-      }
-
-      print(
-        'TEST SUCCESS: Session active for User ID: $authenticatedUserId. Email: $testEmail',
-      );
-
-      // 2. --- Return the authenticated ID ---
-      return authenticatedUserId;
-    } on AuthException catch (e) {
-      print('TEST FAILED (AUTH): Could not sign in. Error: ${e.message}');
-      print(
-        'HINT: Check if the user exists in the Supabase Authentication list and if the password is correct.',
-      );
-    } catch (e) {
-      print('TEST FAILED (GENERAL): General Error during setup: $e');
-    }
-
-    // Return null on any failure
-    return null;
-  }
 
   // We'll keep controllers so fields are editable & show initial values
   final TextEditingController _titleController = TextEditingController();
@@ -138,6 +90,18 @@ class _EditItemPageState extends State<EditItemPage>
 
   late EditItemCubit _cubit;
 
+  void setUserId() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      print('No user is currently signed in.');
+    } else {
+      setState(() {
+        _userId = user.id;
+      });
+      print('Current signed-in user ID: ${user.id}');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -155,11 +119,7 @@ class _EditItemPageState extends State<EditItemPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _cubit.loadItem(widget.itemId);
     });
-    testUserSetup().then((userId) {
-      setState(() {
-        _testUserId = userId;
-      });
-    });
+    setUserId();
   }
 
   @override
@@ -291,10 +251,12 @@ class _EditItemPageState extends State<EditItemPage>
               //   0.12,
               // ),
               dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected))
+                if (states.contains(WidgetState.selected)) {
                   return Colors.white;
-                if (states.contains(WidgetState.disabled))
+                }
+                if (states.contains(WidgetState.disabled)) {
                   return Colors.grey.shade400;
+                }
                 return Colors.black87;
               }),
             ),

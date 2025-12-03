@@ -28,89 +28,22 @@ class _CreateItemPageState extends State<CreateItemPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
-  String? _testUserId; 
+  String? _userId; 
 
   final supabase = Supabase.instance.client;
 
-  /// Creates a new test user, signs them in, and returns their authenticated User ID (UID).
-  Future<String?> testUserSetup() async {
-    // --- TESTING CONSTANTS (TEMPORARY) ---
-    final String uniqueSuffix = DateTime.now().millisecondsSinceEpoch
-        .toString();
-    final String testEmail = 'testuser_$uniqueSuffix@example.com';
-    const String testPassword = 'TestPassword123';
-    final String testUsername = 'TestUser$uniqueSuffix';
-    final String testPhone =
-        '000-555-${uniqueSuffix.substring(uniqueSuffix.length - 4)}';
-    // ------------------------------------
-
-    String? authenticatedUserId;
-
-    try {
-      // 1. --- Sign Up and Sign In (Auth generates the JWT session) ---
-      print('TEST AUTH: Attempting to sign up new user: $testEmail');
-
-      // Sign up automatically signs the user in.
-      final AuthResponse signUpResponse = await supabase.auth.signUp(
-        email: testEmail,
-        password: testPassword,
-      );
-
-      authenticatedUserId = signUpResponse.user?.id;
-
-      if (authenticatedUserId == null) {
-        print(
-          'TEST FAILED: Sign up failed. Could not get authenticated user ID.',
-        );
-        return null;
-      }
-
-      // 2. --- Insert User Profile into 'users' table (MANDATORY for RLS) ---
-      print('TEST AUTH: Inserting profile into "users" table...');
-
-      // Note on RLS/Constraints: The next line is likely the source of error.
-      // Check your 'users' table RLS (INSERT policy) and NOT NULL constraints.
-      await supabase.from('users').insert({
-        'id': authenticatedUserId,
-        'username': testUsername,
-        'phone': testPhone,
-        'email': testEmail,
-        // rating_sum (0), rating_count (0), created_at/updated_at use defaults
-        // If 'password_hash' is required, this insert will fail.
-      }).select(); // .select() ensures we get confirmation of insertion
-
-      print('TEST AUTH: Profile insertion successful.');
-
-      print(
-        'TEST SUCCESS: Session active for User ID: $authenticatedUserId. Profile created and RLS checks should now pass.',
-      );
-
-      // 3. --- Return the authenticated ID ---
-      return authenticatedUserId;
-    } on AuthException catch (e) {
-      print(
-        'TEST FAILED (AUTH): Could not sign up or sign in. Error: ${e.message}',
-      );
-    } on PostgrestException catch (e) {
-      // This is the CRITICAL catch for database errors (RLS or constraint violations)
-      print(
-        'TEST FAILED (DB/RLS): Profile insert failed for user ID $authenticatedUserId. CODE: ${e.code}, MESSAGE: ${e.message}, DETAILS: ${e.details}',
-      );
-      print(
-        'HINT: Check RLS INSERT policy on "users" table or NOT NULL constraints (e.g., password_hash).',
-      );
-    } catch (e) {
-      print('TEST FAILED (GENERAL): General Error during setup: $e');
+  
+  void setUserId() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      print('No user is currently signed in.');
+    } else {
+      setState(() {
+        _userId = user.id;
+      });
+      print('Current signed-in user ID: ${user.id}');
     }
 
-    // Return null on any failure
-    return null;
-  }
-  void setUserId() async {
-    final userId = await testUserSetup();
-    setState(() {
-      _testUserId = userId;
-    });
   }
 
   List<XFile> _images = [];
@@ -172,7 +105,7 @@ class _CreateItemPageState extends State<CreateItemPage>
       vsync: this,
       duration: const Duration(milliseconds: 730),
     )..forward();
-    setUserId();// TEMPORARY FOR TESTING
+    setUserId();
   }
 
   @override
@@ -258,10 +191,12 @@ class _CreateItemPageState extends State<CreateItemPage>
               //   0.12,
               // ),
               dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected))
+                if (states.contains(WidgetState.selected)) {
                   return Colors.white;
-                if (states.contains(WidgetState.disabled))
+                }
+                if (states.contains(WidgetState.disabled)) {
                   return Colors.grey.shade400;
+                }
                 return Colors.black87;
               }),
             ),
@@ -306,7 +241,7 @@ class _CreateItemPageState extends State<CreateItemPage>
 
   Future<void> _submit(BuildContext context) async {
     print('object');
-    print(_testUserId);
+    print(_userId);
     _prepareImageErrorFlag();
     if (_images.isEmpty) return;
 
@@ -316,8 +251,7 @@ class _CreateItemPageState extends State<CreateItemPage>
     form.save();
 
     // Get current authenticated user id
-    final user = Supabase.instance.client.auth.currentUser;
-    final ownerId = _testUserId; // TEMPORARY FOR TESTING
+    final ownerId = _userId; 
     if (ownerId == null) {
       SnackbarHelper.showSnackBar(
         context,
