@@ -10,6 +10,7 @@ import 'package:meta/meta.dart';
 import '../../../data/models/item_image_model.dart';
 import '../../../data/models/item_model.dart';
 import '../../../data/repositories/item_repository.dart';
+import '../../../data/local/db_helper.dart';
 
 part 'edit_item_state.dart';
 
@@ -290,6 +291,24 @@ class EditItemCubit extends Cubit<EditItemState> {
         }
       }
       _item = refreshedItem;
+
+      // Update local cache to reflect latest state
+      if (refreshedItem != null) {
+        final thumbUrl = refreshedImages.isNotEmpty
+            ? refreshedImages.first.imageUrl
+            : null;
+        print('[EditItemCubit] Local DB: upsert item ${refreshedItem.id}');
+        await DbHelper.upsertLocalItem(
+          item: refreshedItem,
+          thumbnailUrl: thumbUrl,
+        );
+        print(
+          '[EditItemCubit] Local DB: replace images for ${refreshedItem.id} (count=${refreshedImages.length})',
+        );
+        await DbHelper.replaceItemImages(_itemId, refreshedImages);
+        await DbHelper.debugLogItemCache(_itemId);
+        await DbHelper.debugLogAllItems();
+      }
 
       if (uploadFailures > 0) {
         emit(
