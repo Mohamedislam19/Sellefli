@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
 // import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../core/widgets/nav/bottom_nav.dart';
 
@@ -162,7 +164,12 @@ class _ProfilePageState extends State<ProfilePage> {
               leading: const Icon(Icons.logout, color: Colors.black87),
               title: const Text('Logout'),
               onTap: () {
-                Navigator.pushNamed(context, '/auth');
+                context.read<AuthCubit>().logout();
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/auth',
+                  (route) => false,
+                );
               },
             ),
             const SizedBox(height: 16),

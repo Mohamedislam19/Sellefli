@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sellefli/src/core/widgets/rating_widget.dart';
 import 'package:sellefli/src/data/repositories/auth_repository.dart';
 import 'package:sellefli/src/features/Booking/booking_detail_page.dart';
-import 'package:sellefli/src/features/auth/auth_screen.dart';
+import 'package:sellefli/src/features/auth/auth_page.dart';
 import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
 import 'package:sellefli/src/features/auth/logic/auth_state.dart';
 import 'package:sellefli/src/features/home/marketplace_home_page.dart';
@@ -17,6 +17,7 @@ import 'package:sellefli/src/features/profile/profile.dart';
 import 'package:sellefli/src/features/settings/settings_page.dart';
 import 'package:sellefli/src/features/profile/edit_profile_page.dart';
 import 'package:sellefli/src/features/item/create_item_page.dart';
+import 'package:sellefli/src/core/widgets/protected_route.dart';
 import 'src/core/theme/app_theme.dart';
 
 class MyApp extends StatelessWidget {
@@ -35,19 +36,32 @@ class MyApp extends StatelessWidget {
           home: const AuthWrapper(),
           routes: {
             '/landing': (context) => const LandingPage(),
-            '/map-picker': (context) => const MapPickerPage(),
-            '/settings': (context) => SettingsHelpPage(),
-            '/create-item': (context) => const CreateItemPage(),
-            '/edit-item': (context) => const EditItemPage(itemId: '5fcded9a-298e-4c46-962a-f00c1bafa70b'),
-            '/auth': (context) => const AuthScreen(),
-            '/request-order': (context) => const RequestsOrdersPage(),
-            '/booking-details': (context) => const BookingDetailPage(),
-            '/item-details': (context) => const ItemDetailsPage(),
-            '/profile-page': (context) => const ProfilePage(),
-            '/edit-profile': (context) => const EditProfilePage(),
-            '/listings': (context) => const MyListingsPage(),
-            '/home': (context) => const MarketplaceHomePage(),
-            '/rating': (context) => RatingWidget(),
+            '/map-picker': (context) =>
+                const ProtectedRoute(child: MapPickerPage()),
+            '/settings': (context) => ProtectedRoute(child: SettingsHelpPage()),
+            '/create-item': (context) =>
+                const ProtectedRoute(child: CreateItemPage()),
+            '/edit-item': (context) => const ProtectedRoute(
+              child: EditItemPage(
+                itemId: '5fcded9a-298e-4c46-962a-f00c1bafa70b',
+              ),
+            ),
+            '/auth': (context) => const AuthPage(),
+            '/request-order': (context) =>
+                const ProtectedRoute(child: RequestsOrdersPage()),
+            '/booking-details': (context) =>
+                const ProtectedRoute(child: BookingDetailPage()),
+            '/item-details': (context) =>
+                const ProtectedRoute(child: ItemDetailsPage()),
+            '/profile-page': (context) =>
+                const ProtectedRoute(child: ProfilePage()),
+            '/edit-profile': (context) =>
+                const ProtectedRoute(child: EditProfilePage()),
+            '/listings': (context) =>
+                const ProtectedRoute(child: MyListingsPage()),
+            '/home': (context) =>
+                const ProtectedRoute(child: MarketplaceHomePage()),
+            '/rating': (context) => ProtectedRoute(child: RatingWidget()),
           },
         ),
       ),
