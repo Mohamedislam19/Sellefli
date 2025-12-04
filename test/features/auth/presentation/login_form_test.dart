@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
 import 'package:sellefli/src/features/auth/logic/auth_state.dart';
-import 'package:sellefli/src/features/auth/login_form.dart';
+import 'package:sellefli/src/core/widgets/auth/login_form.dart';
 
 class MockAuthCubit extends MockCubit<AuthState> implements AuthCubit {}
 
