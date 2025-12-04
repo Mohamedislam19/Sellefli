@@ -1,9 +1,11 @@
 // ignore_for_file: unused_import
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../data/models/item_model.dart';
 import '../../data/models/item_image_model.dart';
@@ -24,6 +26,11 @@ class DbHelper {
   }
 
   static Future<Database> _initDb() async {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+
     final dbPath = await getDatabasesPath();
     final path = p.join(dbPath, _dbName);
     return await openDatabase(
