@@ -175,6 +175,37 @@ class _HomePageViewState extends State<_HomePageView> {
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           if (index >= state.items.length) {
+                            if (state.isOfflineMode) {
+                              return Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.wifi_off_rounded,
+                                      color: AppColors.muted,
+                                      size: 32,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      "You are currently offline",
+                                      style: AppTextStyles.body.copyWith(
+                                        color: AppColors.primaryDark,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      "Connect to the internet to see more items",
+                                      style: AppTextStyles.body.copyWith(
+                                        color: AppColors.muted,
+                                        fontSize: 12,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
                             // Trigger pagination
                             context.read<HomeCubit>().loadItems();
                             return const Center(
@@ -206,7 +237,9 @@ class _HomePageViewState extends State<_HomePageView> {
                           );
                         },
                         childCount: state.hasReachedMax
-                            ? state.items.length
+                            ? (state.isOfflineMode
+                                  ? state.items.length + 1
+                                  : state.items.length)
                             : state.items.length + 1,
                       ),
                     );

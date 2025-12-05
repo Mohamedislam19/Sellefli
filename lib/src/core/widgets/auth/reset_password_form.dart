@@ -104,32 +104,33 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                     const SizedBox(height: 32),
                     ElevatedButton(
                       onPressed: _isLoading ? null : _resetPassword,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        disabledBackgroundColor:
-                            AppColors.primary.withAlpha(((0.6) * 255).toInt()),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 0,
-                        shadowColor: AppColors.primary.withAlpha(
-                          ((0.4) * 255).toInt(),
-                        ),
-                      ).copyWith(
-                        elevation: MaterialStateProperty.resolveWith<double>((
-                          states,
-                        ) {
-                          if (states.contains(MaterialState.pressed)) {
-                            return 0;
-                          }
-                          if (states.contains(MaterialState.hovered)) {
-                            return 4;
-                          }
-                          return 2;
-                        }),
-                      ),
+                      style:
+                          ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            disabledBackgroundColor: AppColors.primary
+                                .withAlpha(((0.6) * 255).toInt()),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 0,
+                            shadowColor: AppColors.primary.withAlpha(
+                              ((0.4) * 255).toInt(),
+                            ),
+                          ).copyWith(
+                            elevation: WidgetStateProperty.resolveWith<double>((
+                              states,
+                            ) {
+                              if (states.contains(WidgetState.pressed)) {
+                                return 0;
+                              }
+                              if (states.contains(WidgetState.hovered)) {
+                                return 4;
+                              }
+                              return 2;
+                            }),
+                          ),
                       child: _isLoading
                           ? const SizedBox(
                               height: 22,

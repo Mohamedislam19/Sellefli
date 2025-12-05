@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:sellefli/src/data/models/item_model.dart';
@@ -20,6 +21,10 @@ class HomeCubit extends Cubit<HomeState> {
     final isInitial = state.status == HomeStatus.initial || refresh;
     final page = isInitial ? 1 : state.page;
 
+    // Check connectivity
+    final connectivityResult = await Connectivity().checkConnectivity();
+    final isOffline = connectivityResult.contains(ConnectivityResult.none);
+
     if (isInitial) {
       emit(
         state.copyWith(
@@ -27,6 +32,7 @@ class HomeCubit extends Cubit<HomeState> {
           items: [],
           hasReachedMax: false,
           page: 1,
+          isOfflineMode: isOffline,
         ),
       );
     }
@@ -41,7 +47,8 @@ class HomeCubit extends Cubit<HomeState> {
         searchQuery: state.searchQuery,
       );
 
-      final hasReachedMax = items.length < _pageSize;
+      // If we are offline and got items, we assume we reached max because we only cache one page
+      final hasReachedMax = items.length < _pageSize || isOffline;
 
       // Apply Location Filter if enabled
       List<Item> filteredItems = [];

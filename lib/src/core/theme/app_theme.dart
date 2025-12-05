@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const primary = Color(0xFF2F6CE6); // blue from screenshot
+  static const primary = Color(0xFF2F6CE6);
   static const appBarBackground = Color(0xFFDCEBFF);
   static const primaryDark = Color(0xFF1F4FD6);
   static const accent = Color(0xFFFFC107);
@@ -15,7 +15,7 @@ class AppColors {
   static const success = Color(0xFF2ECC71);
   static const star = Color(0xFFFFC107);
 
-  /// 🌈 Main App Gradient (Sellefli Sky)
+  /// Main App Gradient (Sellefli Sky)
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [
       Color(0xFFBFD9FF), // very soft blue (top)

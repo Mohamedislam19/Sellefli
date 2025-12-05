@@ -7,9 +7,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/item_model.dart';
 import '../models/item_image_model.dart';
+import '../local/local_item_repository.dart';
 
 class ItemRepository {
   final SupabaseClient supabase;
+  final LocalItemRepository _localRepo = LocalItemRepository();
 
   ItemRepository(this.supabase);
 
@@ -187,35 +189,60 @@ class ItemRepository {
     List<String>? categories,
     String? searchQuery,
   }) async {
-    dynamic query = supabase.from('items').select('*, item_images(image_url)');
+    try {
+      dynamic query = supabase
+          .from('items')
+          .select('*, item_images(image_url)');
 
-    // Exclude current user's items
-    if (excludeUserId != null) {
-      query = query.neq('owner_id', excludeUserId);
+      // Exclude current user's items
+      if (excludeUserId != null) {
+        query = query.neq('owner_id', excludeUserId);
+      }
+
+      // Category Filter
+      if (categories != null &&
+          categories.isNotEmpty &&
+          !categories.contains('All')) {
+        query = query.inFilter('category', categories);
+      }
+
+      // Search Filter (Partial match)
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        query = query.ilike('title', '%$searchQuery%');
+      }
+
+      // Order by creation date (newest first)
+      query = query.order('created_at', ascending: false);
+
+      // Pagination
+      final from = (page - 1) * pageSize;
+      final to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      final data = await query;
+      final items = (data as List).map((json) => Item.fromJson(json)).toList();
+
+      // Cache first page if no filters are applied
+      if (page == 1 &&
+          (searchQuery == null || searchQuery.isEmpty) &&
+          (categories == null ||
+              categories.isEmpty ||
+              categories.contains('All'))) {
+        // Fire and forget caching
+        _localRepo.cacheItems(items.take(10).toList());
+      }
+
+      return items;
+    } catch (e) {
+      // If network fails and it's the first page, try local cache
+      if (page == 1) {
+        final cachedItems = await _localRepo.getCachedItems();
+        if (cachedItems.isNotEmpty) {
+          return cachedItems;
+        }
+      }
+      rethrow;
     }
-
-    // Category Filter
-    if (categories != null &&
-        categories.isNotEmpty &&
-        !categories.contains('All')) {
-      query = query.inFilter('category', categories);
-    }
-
-    // Search Filter (Partial match)
-    if (searchQuery != null && searchQuery.isNotEmpty) {
-      query = query.ilike('title', '%$searchQuery%');
-    }
-
-    // Order by creation date (newest first)
-    query = query.order('created_at', ascending: false);
-
-    // Pagination
-    final from = (page - 1) * pageSize;
-    final to = from + pageSize - 1;
-    query = query.range(from, to);
-
-    final data = await query;
-    return (data as List).map((json) => Item.fromJson(json)).toList();
   }
 
   // ===========================================================================

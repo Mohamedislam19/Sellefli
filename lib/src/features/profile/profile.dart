@@ -40,32 +40,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final screenWidth = MediaQuery.of(context).size.width;
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
-    final List<Map<String, dynamic>> transactions = [
-      {
-        'title': 'Power Drill',
-        'image': 'assets/images/powerdrill.jpg',
-        'status': 'Returned',
-        'date': '2024-07-28',
-      },
-      {
-        'title': 'Camping',
-        'image': 'assets/images/camping.jpg',
-        'status': 'Borrowed',
-        'date': '2024-07-25',
-      },
-      {
-        'title': 'Electric Guitar',
-        'image': 'assets/images/guitar.jpg',
-        'status': 'Lent',
-        'date': '2024-07-20',
-      },
-      {
-        'title': 'Pressure Washer',
-        'image': 'assets/images/pressure.jpg',
-        'status': 'Returned',
-        'date': '2024-07-15',
-      },
-    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -177,21 +151,6 @@ class _ProfilePageState extends State<ProfilePage> {
             const Text(
               'Recent Transactions',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 12),
-
-            // Recent Transactions List
-            Column(
-              children: transactions
-                  .map(
-                    (t) => TransactionCard(
-                      title: t['title'],
-                      imagePath: t['image'],
-                      status: t['status'],
-                      date: t['date'],
-                    ),
-                  )
-                  .toList(),
             ),
           ],
         ),

@@ -17,7 +17,6 @@ class ProtectedRoute extends StatelessWidget {
           return child;
         } else if (state is AuthUnauthenticated || state is AuthError) {
           // Redirect to landing page or auth page if not authenticated
-          // Using a microtask to avoid "setState() or markNeedsBuild() called during build"
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.of(
               context,

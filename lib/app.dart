@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:sellefli/src/core/widgets/rating_widget.dart';
 import 'package:sellefli/src/data/repositories/auth_repository.dart';
 import 'package:sellefli/src/data/repositories/item_repository.dart';
+import 'package:sellefli/src/data/repositories/rating_repository.dart';
 import 'package:sellefli/src/features/Booking/booking_detail_page.dart';
 import 'package:sellefli/src/features/auth/auth_page.dart';
 import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
@@ -32,6 +33,9 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(create: (context) => AuthRepository()),
         RepositoryProvider(
           create: (context) => ItemRepository(Supabase.instance.client),
+        ),
+        RepositoryProvider(
+          create: (context) => RatingRepository(Supabase.instance.client),
         ),
       ],
       child: BlocProvider(

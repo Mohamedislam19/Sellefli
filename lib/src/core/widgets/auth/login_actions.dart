@@ -61,13 +61,11 @@ class LoginActions extends StatelessWidget {
                     ((0.4) * 255).toInt(),
                   ),
                 ).copyWith(
-                  elevation: MaterialStateProperty.resolveWith<double>((
-                    states,
-                  ) {
-                    if (states.contains(MaterialState.pressed)) {
+                  elevation: WidgetStateProperty.resolveWith<double>((states) {
+                    if (states.contains(WidgetState.pressed)) {
                       return 0;
                     }
-                    if (states.contains(MaterialState.hovered)) {
+                    if (states.contains(WidgetState.hovered)) {
                       return 4;
                     }
                     return 2;

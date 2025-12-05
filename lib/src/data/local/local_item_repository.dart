@@ -93,6 +93,77 @@ class LocalItemRepository {
     );
   }
 
+  // Get cached items for home feed
+  Future<List<Item>> getCachedItems({int limit = 10}) async {
+    final db = await DbHelper.database;
+    final rows = await db.query(
+      DbHelper.tableItems,
+      orderBy: 'cached_at DESC',
+      limit: limit,
+    );
+
+    List<Item> items = [];
+    for (var row in rows) {
+      // Fetch images for each item
+      final imageRows = await getLocalItemImages(row['id'] as String);
+      final images = imageRows
+          .map((img) => img['image_url'] as String)
+          .toList();
+
+      items.add(
+        Item(
+          id: row['id'] as String,
+          ownerId: row['owner_id'] as String,
+          title: row['title'] as String,
+          category: row['category'] as String,
+          estimatedValue: (row['estimated_value'] as num?)?.toDouble(),
+          depositAmount: (row['deposit_amount'] as num?)?.toDouble(),
+          isAvailable: (row['is_available'] as int) == 1,
+          createdAt: DateTime.parse(row['created_at'] as String),
+          updatedAt: DateTime.parse(row['updated_at'] as String),
+          images: images,
+        ),
+      );
+    }
+    return items;
+  }
+
+  // Cache a list of items (clears old cache first if needed, or just upserts)
+  Future<void> cacheItems(List<Item> items) async {
+    // For simplicity, we can just upsert them.
+    // If we want to strictly keep only 10, we might want to clear the table first
+    // or delete old ones. For now, let's just upsert the new ones.
+    for (var item in items) {
+      await upsertLocalItem(
+        item: item,
+        thumbnailUrl: item.images.isNotEmpty ? item.images.first : null,
+      );
+
+      // Also cache images
+      if (item.images.isNotEmpty) {
+        final db = await DbHelper.database;
+        final batch = db.batch();
+        // Delete old images for this item
+        batch.delete(
+          DbHelper.tableItemImages,
+          where: 'item_id = ?',
+          whereArgs: [item.id],
+        );
+
+        for (int i = 0; i < item.images.length; i++) {
+          batch.insert(DbHelper.tableItemImages, {
+            'id': '${item.id}_$i', // Generate a simple ID
+            'item_id': item.id,
+            'image_url': item.images[i],
+            'position': i,
+            'cached_at': DateTime.now().millisecondsSinceEpoch,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+        await batch.commit(noResult: true);
+      }
+    }
+  }
+
   // Debugging: log current cached state for a given item
   Future<void> debugLogItemCache(String itemId) async {
     try {

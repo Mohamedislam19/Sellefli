@@ -1,5 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
+import 'package:sellefli/src/data/repositories/auth_repository.dart';
+import 'package:sellefli/src/data/repositories/rating_repository.dart';
+
+class RatingPageArguments {
+  final String bookingId;
+  final String targetUserId;
+
+  RatingPageArguments({required this.bookingId, required this.targetUserId});
+}
 
 class RatingWidget extends StatefulWidget {
   final VoidCallback? onCancel;
@@ -47,10 +57,51 @@ class _RatingWidgetState extends State<RatingWidget>
     super.dispose();
   }
 
-  void _handleSubmit() {
+  void _handleSubmit() async {
+    if (_selectedRating == 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a rating')));
+      return;
+    }
+
     setState(() => _isLoading = true);
 
-    Navigator.pushNamed(context, "/home");
+    try {
+      final args =
+          ModalRoute.of(context)!.settings.arguments as RatingPageArguments;
+      final authRepo = context.read<AuthRepository>();
+      final ratingRepo = context.read<RatingRepository>();
+      final currentUser = authRepo.currentUser;
+
+      if (currentUser == null) {
+        throw Exception('User not logged in');
+      }
+
+      await ratingRepo.createRating(
+        bookingId: args.bookingId,
+        raterUserId: currentUser.id,
+        targetUserId: args.targetUserId,
+        stars: _selectedRating,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Rating submitted successfully!')),
+        );
+        Navigator.pushNamedAndRemoveUntil(context, "/home", (route) => false);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error submitting rating: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   String _getRatingText() {
@@ -286,21 +337,21 @@ class _RatingWidgetState extends State<RatingWidget>
                                     ),
                                   ).copyWith(
                                     elevation:
-                                        MaterialStateProperty.resolveWith<
-                                          double
-                                        >((states) {
-                                          if (states.contains(
-                                            MaterialState.pressed,
-                                          )) {
-                                            return 0;
-                                          }
-                                          if (states.contains(
-                                            MaterialState.hovered,
-                                          )) {
-                                            return 4;
-                                          }
-                                          return 2;
-                                        }),
+                                        WidgetStateProperty.resolveWith<double>(
+                                          (states) {
+                                            if (states.contains(
+                                              WidgetState.pressed,
+                                            )) {
+                                              return 0;
+                                            }
+                                            if (states.contains(
+                                              WidgetState.hovered,
+                                            )) {
+                                              return 4;
+                                            }
+                                            return 2;
+                                          },
+                                        ),
                                   ),
                               child: _isLoading
                                   ? const SizedBox(

@@ -15,6 +15,7 @@ class HomeState extends Equatable {
   final bool hasReachedMax;
   final int page;
   final String? errorMessage;
+  final bool isOfflineMode;
 
   const HomeState({
     this.status = HomeStatus.initial,
@@ -27,6 +28,7 @@ class HomeState extends Equatable {
     this.hasReachedMax = false,
     this.page = 1,
     this.errorMessage,
+    this.isOfflineMode = false,
   });
 
   HomeState copyWith({
@@ -40,6 +42,7 @@ class HomeState extends Equatable {
     bool? hasReachedMax,
     int? page,
     String? errorMessage,
+    bool? isOfflineMode,
   }) {
     return HomeState(
       status: status ?? this.status,
@@ -52,6 +55,7 @@ class HomeState extends Equatable {
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
       page: page ?? this.page,
       errorMessage: errorMessage ?? this.errorMessage,
+      isOfflineMode: isOfflineMode ?? this.isOfflineMode,
     );
   }
 
@@ -67,5 +71,6 @@ class HomeState extends Equatable {
     hasReachedMax,
     page,
     errorMessage,
+    isOfflineMode,
   ];
 }

@@ -1,5 +1,3 @@
-// lib/src/core/utils/validators.dart
-
 class Validators {
   // Full Name Validator
   // Rules: Only letters, spaces, hyphens, apostrophes; 3–50 chars; no numbers/emojis
