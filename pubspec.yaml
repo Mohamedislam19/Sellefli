@@ -26,6 +26,7 @@ dependencies:
   sqflite: ^2.3.2
   path: ^1.9.0
   sqflite_common_ffi: ^2.3.6
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:

@@ -57,6 +57,21 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
     _loadBookings();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null && args['initialTab'] == 'my_requests') {
+      if (_showIncoming) {
+        setState(() {
+          _showIncoming = false;
+        });
+        _loadBookings();
+      }
+    }
+  }
+
   void _loadBookings() {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId != null) {
@@ -81,10 +96,10 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
         final width = constraints.maxWidth;
         final isSmallMobile = width < 360;
         final isMobile = width < 600;
-        
+
         // Responsive scaling
         final scale = isSmallMobile ? 0.85 : (isMobile ? 0.95 : 1.0);
-        
+
         return Scaffold(
           backgroundColor: AppColors.background,
 
@@ -109,7 +124,9 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
           ),
 
           body: Container(
-            decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+            decoration: const BoxDecoration(
+              gradient: AppColors.primaryGradient,
+            ),
             child: Column(
               children: [
                 // Tabs
@@ -149,9 +166,9 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                   child: BlocConsumer<BookingCubit, BookingState>(
                     listener: (context, state) {
                       if (state is BookingActionSuccess) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(state.message)),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(state.message)));
                         _loadBookings(); // Refresh list after action
                       } else if (state is BookingError) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -161,7 +178,6 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                           ),
                         );
                       }
-
                     },
                     builder: (context, state) {
                       if (state is BookingLoading) {
@@ -172,6 +188,11 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                         return Center(
                           child: Column(
                             children: [
+                              const Icon(
+                                Icons.error_outline,
+                                size: 64,
+                                color: Colors.red,
+                              ),
                               const SizedBox(height: 16),
                               Text(
                                 'Error: ${state.error}',
@@ -195,7 +216,9 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  _showIncoming ? Icons.inbox : Icons.send_outlined,
+                                  _showIncoming
+                                      ? Icons.inbox
+                                      : Icons.send_outlined,
                                   size: 64,
                                   color: Colors.grey,
                                 ),
@@ -217,22 +240,22 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                         return ListView.separated(
                           padding: EdgeInsets.all(isSmallMobile ? 12 : 16),
                           itemCount: state.bookings.length,
-                          separatorBuilder: (context, index) => 
+                          separatorBuilder: (context, index) =>
                               SizedBox(height: isSmallMobile ? 8 : 12),
                           itemBuilder: (context, index) {
                             final data = state.bookings[index];
                             final booking = data['booking'] as Booking;
                             final item = data['item'];
-                            final otherUser = _showIncoming 
-                                ? data['borrower'] 
+                            final otherUser = _showIncoming
+                                ? data['borrower']
                                 : data['owner'];
                             final imageUrl = data['imageUrl'] as String?;
-                              final avatarUrl = otherUser?.avatarUrl as String?;
+                            final avatarUrl = otherUser?.avatarUrl as String?;
 
                             return _RequestCard(
                               bookingId: booking.id,
-                              imageUrl: imageUrl ?? 
-                                  'https://via.placeholder.com/150',
+                              imageUrl:
+                                  imageUrl ?? 'https://via.placeholder.com/150',
                               title: item?.title ?? 'Item',
                               sender: otherUser?.username ?? 'Unknown User',
                               senderAvatarUrl: avatarUrl,
@@ -242,8 +265,12 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                               isSmallMobile: isSmallMobile,
                               isMobile: isMobile,
                               isOwnerView: _showIncoming,
-                              onAccept: () => context.read<BookingCubit>().acceptBooking(booking.id),
-                              onDecline: () => context.read<BookingCubit>().declineBooking(booking.id),
+                              onAccept: () => context
+                                  .read<BookingCubit>()
+                                  .acceptBooking(booking.id),
+                              onDecline: () => context
+                                  .read<BookingCubit>()
+                                  .declineBooking(booking.id),
                             );
                           },
                         );
@@ -415,7 +442,8 @@ class _RequestCard extends StatelessWidget {
                       Row(
                         children: [
                           // Sender avatar (fallback to icon if missing)
-                          if (senderAvatarUrl != null && senderAvatarUrl!.isNotEmpty) ...[
+                          if (senderAvatarUrl != null &&
+                              senderAvatarUrl!.isNotEmpty) ...[
                             Container(
                               width: isSmallMobile ? 16 : 18,
                               height: isSmallMobile ? 16 : 18,
@@ -491,10 +519,15 @@ class _RequestCard extends StatelessWidget {
                             Expanded(
                               child: AdvancedButton(
                                 label: 'Accept',
-                                onPressed: status == BookingStatus.pending ? onAccept : null,
+                                onPressed: status == BookingStatus.pending
+                                    ? onAccept
+                                    : null,
                                 fullWidth: true,
                                 gradient: const LinearGradient(
-                                  colors: [AppColors.primary, AppColors.primaryDark],
+                                  colors: [
+                                    AppColors.primary,
+                                    AppColors.primaryDark,
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
@@ -504,7 +537,9 @@ class _RequestCard extends StatelessWidget {
                             Expanded(
                               child: AdvancedButton(
                                 label: 'Decline',
-                                onPressed: status == BookingStatus.pending ? onDecline : null,
+                                onPressed: status == BookingStatus.pending
+                                    ? onDecline
+                                    : null,
                                 fullWidth: true,
                                 gradient: const LinearGradient(
                                   colors: [AppColors.danger, Color(0xFFB63A2D)],
@@ -519,19 +554,21 @@ class _RequestCard extends StatelessWidget {
                     )
                   : Row(
                       children: [
-                        SizedBox(
-                          height: 36,
-                          child: _buildStatusBadge(status),
-                        ),
+                        SizedBox(height: 36, child: _buildStatusBadge(status)),
                         const Spacer(),
                         SizedBox(
                           width: 100,
                           child: AdvancedButton(
                             label: 'Accept',
-                            onPressed: status == BookingStatus.pending ? onAccept : null,
+                            onPressed: status == BookingStatus.pending
+                                ? onAccept
+                                : null,
                             fullWidth: true,
                             gradient: const LinearGradient(
-                              colors: [AppColors.primary, AppColors.primaryDark],
+                              colors: [
+                                AppColors.primary,
+                                AppColors.primaryDark,
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -542,7 +579,9 @@ class _RequestCard extends StatelessWidget {
                           width: 100,
                           child: AdvancedButton(
                             label: 'Decline',
-                            onPressed: status == BookingStatus.pending ? onDecline : null,
+                            onPressed: status == BookingStatus.pending
+                                ? onDecline
+                                : null,
                             fullWidth: true,
                             gradient: const LinearGradient(
                               colors: [AppColors.danger, Color(0xFFB63A2D)],
@@ -551,8 +590,8 @@ class _RequestCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                    ],
-                  )
+                      ],
+                    )
             else
               // BORROWER VIEW: Show status only (no action buttons)
               SizedBox(

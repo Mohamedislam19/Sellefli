@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -133,6 +134,11 @@ class HomeCubit extends Cubit<HomeState> {
     emit(state.copyWith(isLocationEnabled: isEnabled));
     if (isEnabled) {
       await _getUserLocation();
+      if (state.userLocation != null) {
+        _startLocationUpdates();
+      }
+    } else {
+      _stopLocationUpdates();
     }
     loadItems(refresh: true);
   }
@@ -172,5 +178,36 @@ class HomeCubit extends Cubit<HomeState> {
     } catch (e) {
       // Handle error
     }
+  }
+
+  StreamSubscription<Position>? _positionSubscription;
+
+  void _startLocationUpdates() {
+    _positionSubscription?.cancel();
+    _positionSubscription =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 50,
+          ),
+        ).listen((position) {
+          emit(
+            state.copyWith(
+              userLocation: LatLng(position.latitude, position.longitude),
+            ),
+          );
+          loadItems(refresh: true);
+        });
+  }
+
+  void _stopLocationUpdates() {
+    _positionSubscription?.cancel();
+    _positionSubscription = null;
+  }
+
+  @override
+  Future<void> close() {
+    _stopLocationUpdates();
+    return super.close();
   }
 }

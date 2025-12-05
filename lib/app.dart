@@ -42,14 +42,13 @@ class MyApp extends StatelessWidget {
           create: (context) => RatingRepository(Supabase.instance.client),
         ),
         RepositoryProvider(
-          create: (context) => ProfileRepository(supabase: Supabase.instance.client),
+          create: (context) =>
+              ProfileRepository(supabase: Supabase.instance.client),
         ),
         RepositoryProvider(
           create: (context) => BookingRepository(Supabase.instance.client),
         ),
-        RepositoryProvider(
-          create: (context) => LocalItemRepository(),
-        ),
+        RepositoryProvider(create: (context) => LocalItemRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -59,6 +58,7 @@ class MyApp extends StatelessWidget {
           BlocProvider(
             create: (context) => ProfileCubit(
               profileRepository: context.read<ProfileRepository>(),
+              bookingRepository: context.read<BookingRepository>(),
             ),
           ),
         ],
@@ -74,11 +74,8 @@ class MyApp extends StatelessWidget {
             '/settings': (context) => ProtectedRoute(child: SettingsHelpPage()),
             '/create-item': (context) =>
                 const ProtectedRoute(child: CreateItemPage()),
-            '/edit-item': (context) => const ProtectedRoute(
-              child: EditItemPage(
-                itemId: '5fcded9a-298e-4c46-962a-f00c1bafa70b',
-              ),
-            ),
+            '/edit-item': (context) =>
+                const ProtectedRoute(child: EditItemPage()),
             '/auth': (context) => const AuthPage(),
             '/request-order': (context) =>
                 const ProtectedRoute(child: RequestsOrdersPage()),

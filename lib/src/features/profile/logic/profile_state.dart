@@ -10,7 +10,8 @@ class ProfileLoading extends ProfileState {}
 
 class ProfileLoaded extends ProfileState {
   final User profile;
-  const ProfileLoaded(this.profile);
+  final List<Map<String, dynamic>> transactions;
+  const ProfileLoaded(this.profile, {this.transactions = const []});
 }
 
 class ProfileError extends ProfileState {

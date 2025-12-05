@@ -40,12 +40,12 @@ class BookingRepository {
 
     // Fetch first image for item (if any)
     final imageData = await supabase
-      .from('item_images')
-      .select()
-      .eq('item_id', booking.itemId)
-      .order('position')
-      .limit(1)
-      .maybeSingle();
+        .from('item_images')
+        .select()
+        .eq('item_id', booking.itemId)
+        .order('position')
+        .limit(1)
+        .maybeSingle();
 
     // Fetch borrower details
     final borrowerData = await supabase
@@ -64,7 +64,9 @@ class BookingRepository {
     return {
       'booking': booking,
       'item': itemData != null ? Item.fromJson(itemData) : null,
-      'borrower': borrowerData != null ? models.User.fromJson(borrowerData) : null,
+      'borrower': borrowerData != null
+          ? models.User.fromJson(borrowerData)
+          : null,
       'owner': ownerData != null ? models.User.fromJson(ownerData) : null,
       'imageUrl': imageData?['image_url'] as String?,
     };
@@ -109,14 +111,15 @@ class BookingRepository {
       results.add({
         'booking': booking,
         'item': itemData != null ? Item.fromJson(itemData) : null,
-        'borrower': borrowerData != null ? models.User.fromJson(borrowerData) : null,
+        'borrower': borrowerData != null
+            ? models.User.fromJson(borrowerData)
+            : null,
         'imageUrl': imageData?['image_url'] as String?,
       });
     }
 
     return results;
   }
-
 
   // GET MY REQUESTS (For Borrower)
   Future<List<Map<String, dynamic>>> getMyRequests(String borrowerId) async {
@@ -166,34 +169,91 @@ class BookingRepository {
   }
 
   // UPDATE BOOKING STATUS (Accept/Decline)
-  Future<void> updateBookingStatus(String bookingId, BookingStatus status) async {
-    await supabase.from('bookings').update({
-      'status': status.name,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', bookingId);
+  Future<void> updateBookingStatus(
+    String bookingId,
+    BookingStatus status,
+  ) async {
+    await supabase
+        .from('bookings')
+        .update({
+          'status': status.name,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', bookingId);
   }
 
   // UPDATE DEPOSIT STATUS
-  Future<void> updateDepositStatus(String bookingId, DepositStatus depositStatus) async {
-    await supabase.from('bookings').update({
-      'deposit_status': depositStatus.name,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', bookingId);
+  Future<void> updateDepositStatus(
+    String bookingId,
+    DepositStatus depositStatus,
+  ) async {
+    await supabase
+        .from('bookings')
+        .update({
+          'deposit_status': depositStatus.name,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', bookingId);
   }
 
   // GENERATE BOOKING CODE
   Future<void> generateBookingCode(String bookingId) async {
     // Generate a unique code (SF-XXX-XXX format)
-    final code = 'SF-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
-    
-    await supabase.from('bookings').update({
-      'booking_code': code,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', bookingId);
+    final code =
+        'SF-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+
+    await supabase
+        .from('bookings')
+        .update({
+          'booking_code': code,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', bookingId);
   }
 
   // DELETE BOOKING
   Future<void> deleteBooking(String bookingId) async {
     await supabase.from('bookings').delete().eq('id', bookingId);
+  }
+
+  // GET USER TRANSACTIONS (History)
+  Future<List<Map<String, dynamic>>> getUserTransactions(String userId) async {
+    final bookingsData = await supabase
+        .from('bookings')
+        .select()
+        .or('borrower_id.eq.$userId,owner_id.eq.$userId')
+        .order('created_at', ascending: false)
+        .limit(10); // Limit to recent 10
+
+    List<Map<String, dynamic>> results = [];
+
+    for (var bookingJson in bookingsData) {
+      final booking = Booking.fromJson(bookingJson);
+
+      // Fetch item details
+      final itemData = await supabase
+          .from('items')
+          .select()
+          .eq('id', booking.itemId)
+          .maybeSingle();
+
+      // Get first image
+      final imageData = await supabase
+          .from('item_images')
+          .select()
+          .eq('item_id', booking.itemId)
+          .order('position')
+          .limit(1)
+          .maybeSingle();
+
+      results.add({
+        'booking': booking,
+        'item': itemData != null ? Item.fromJson(itemData) : null,
+        'imageUrl': imageData?['image_url'] as String?,
+        'isBorrower': booking.borrowerId == userId,
+      });
+    }
+
+    return results;
   }
 }

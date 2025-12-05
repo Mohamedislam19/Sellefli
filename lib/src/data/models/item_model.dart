@@ -16,6 +16,9 @@ class Item {
   final double? distance; // Distance in km from user
   final List<String> images;
   final String? ownerUsername; // Owner's username
+  final String? ownerAvatarUrl; // Owner's avatar
+  final int ownerRatingSum; // Owner's rating sum
+  final int ownerRatingCount; // Owner's rating count
 
   Item({
     required this.id,
@@ -35,6 +38,9 @@ class Item {
     this.distance,
     this.images = const [],
     this.ownerUsername,
+    this.ownerAvatarUrl,
+    this.ownerRatingSum = 0,
+    this.ownerRatingCount = 0,
   });
 
   Item copyWith({
@@ -55,6 +61,9 @@ class Item {
     double? distance,
     List<String>? images,
     String? ownerUsername,
+    String? ownerAvatarUrl,
+    int? ownerRatingSum,
+    int? ownerRatingCount,
   }) {
     return Item(
       id: id ?? this.id,
@@ -74,21 +83,38 @@ class Item {
       distance: distance ?? this.distance,
       images: images ?? this.images,
       ownerUsername: ownerUsername ?? this.ownerUsername,
+      ownerAvatarUrl: ownerAvatarUrl ?? this.ownerAvatarUrl,
+      ownerRatingSum: ownerRatingSum ?? this.ownerRatingSum,
+      ownerRatingCount: ownerRatingCount ?? this.ownerRatingCount,
     );
   }
 
   factory Item.fromJson(Map<String, dynamic> json) {
-    // Parse images if available from join
+    // Parse images if available from join, sorted by position
     List<String> imagesList = [];
     if (json['item_images'] != null) {
-      final imagesData = json['item_images'] as List;
+      final imagesData = List<Map<String, dynamic>>.from(
+        json['item_images'] as List,
+      );
+      // Sort by position to ensure first image is at index 0
+      imagesData.sort(
+        (a, b) => ((a['position'] as int?) ?? 0).compareTo(
+          (b['position'] as int?) ?? 0,
+        ),
+      );
       imagesList = imagesData.map((img) => img['image_url'] as String).toList();
     }
 
-    // Parse owner username if available from join
+    // Parse owner data if available from join
     String? ownerUsername;
+    String? ownerAvatarUrl;
+    int ownerRatingSum = 0;
+    int ownerRatingCount = 0;
     if (json['users'] != null && json['users'] is Map) {
       ownerUsername = json['users']['username'] as String?;
+      ownerAvatarUrl = json['users']['avatar_url'] as String?;
+      ownerRatingSum = json['users']['rating_sum'] as int? ?? 0;
+      ownerRatingCount = json['users']['rating_count'] as int? ?? 0;
     }
 
     return Item(
@@ -112,6 +138,9 @@ class Item {
       updatedAt: DateTime.parse(json['updated_at'] as String),
       images: imagesList,
       ownerUsername: ownerUsername,
+      ownerAvatarUrl: ownerAvatarUrl,
+      ownerRatingSum: ownerRatingSum,
+      ownerRatingCount: ownerRatingCount,
     );
   }
 

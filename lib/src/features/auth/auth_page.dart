@@ -62,6 +62,7 @@ class _AuthPageState extends State<AuthPage> {
           // Navigate to home on successful authentication
           Future.delayed(const Duration(milliseconds: 200), () {
             if (mounted) {
+              ScaffoldMessenger.of(context).clearSnackBars();
               Navigator.pushReplacementNamed(context, '/home');
             }
           });

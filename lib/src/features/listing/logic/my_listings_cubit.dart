@@ -16,10 +16,10 @@ class MyListingsCubit extends Cubit<MyListingsState> {
     required ItemRepository itemRepository,
     required LocalItemRepository localItemRepository,
     Connectivity? connectivity,
-  })  : _itemRepository = itemRepository,
-        _localRepo = localItemRepository,
-        _connectivity = connectivity ?? Connectivity(),
-        super(MyListingsInitial());
+  }) : _itemRepository = itemRepository,
+       _localRepo = localItemRepository,
+       _connectivity = connectivity ?? Connectivity(),
+       super(MyListingsInitial());
 
   Future<bool> _isOnline() async {
     final result = await _connectivity.checkConnectivity();
@@ -36,22 +36,25 @@ class MyListingsCubit extends Cubit<MyListingsState> {
       }
 
       if (await _isOnline()) {
-        // Online: fetch from Supabase, then cache locally, return fresh
-        final rows = await Supabase.instance.client
-            .from('items')
-            .select()
-            .eq('owner_id', userId)
-            .order('updated_at', ascending: false) as List<dynamic>;
+        // Online: fetch from Supabase with images join, then cache locally
+        final rows =
+            await Supabase.instance.client
+                    .from('items')
+                    .select('*, item_images(*)')
+                    .eq('owner_id', userId)
+                    .order('updated_at', ascending: false)
+                as List<dynamic>;
 
         final items = rows
             .map<Item>((e) => Item.fromJson(e as Map<String, dynamic>))
             .toList();
 
-        // For each item, cache into local DB with first image as thumbnail
+        // Cache items locally for offline use
         for (final item in items) {
-          final images = await _itemRepository.getItemImages(item.id);
-          final thumb = images.isNotEmpty ? images.first.imageUrl : null;
+          final thumb = item.images.isNotEmpty ? item.images.first : null;
           await _localRepo.upsertLocalItem(item: item, thumbnailUrl: thumb);
+          // Also cache the images
+          final images = await _itemRepository.getItemImages(item.id);
           await _localRepo.replaceItemImages(item.id, images);
         }
         emit(MyListingsLoaded(items: items, isOffline: false));

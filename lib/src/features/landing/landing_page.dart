@@ -10,8 +10,7 @@ class LandingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: 
-      Container(
+      body: Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: SafeArea(
           child: LayoutBuilder(
@@ -22,17 +21,19 @@ class LandingPage extends StatelessWidget {
               final isMobile = width < 600;
               final isTablet = width >= 600 && width < 900;
               final isDesktop = width >= 900;
-              
+
               // Responsive padding
               double horizontalPadding = isMobile ? 20 : (isTablet ? 40 : 60);
               if (isSmallMobile) horizontalPadding = 16;
-              
+
               // Responsive avatar size
-              double avatarRadius = isSmallMobile ? 30 : (isMobile ? 35 : (isTablet ? 45 : 55));
-              
+              double avatarRadius = isSmallMobile
+                  ? 30
+                  : (isMobile ? 35 : (isTablet ? 45 : 55));
+
               // Maximum content width for large screens
               double maxContentWidth = isDesktop ? 1200 : double.infinity;
-              
+
               return Center(
                 child: Container(
                   constraints: BoxConstraints(maxWidth: maxContentWidth),
@@ -48,91 +49,96 @@ class LandingPage extends StatelessWidget {
                           // Avatar / Logo + Tagline
                           Column(
                             children: [
-                            CircleAvatar(
-                              radius: avatarRadius,
-                              backgroundColor: const Color(0xFFD6E4FF),
-                              child: Icon(
-                                Icons.handshake,
-                                color: Colors.blue,
-                                size: avatarRadius * 1.2,
+                              CircleAvatar(
+                                radius: avatarRadius,
+                                backgroundColor: const Color(0xFFD6E4FF),
+                                child: Icon(
+                                  Icons.handshake,
+                                  color: Colors.blue,
+                                  size: avatarRadius * 1.2,
+                                ),
                               ),
-                            ),
-                            SizedBox(height: isMobile ? 4 : 8),
-                            Text(
-                              "Borrow nearby · Share simply",
-                              style: AppTextStyles.subtitle.copyWith(
-                                fontSize: isSmallMobile
-                                    ? 12
-                                    : isMobile
-                                        ? AppTextStyles.subtitle.fontSize
-                                        : AppTextStyles.subtitle.fontSize! * 1.2,
+                              SizedBox(height: isMobile ? 4 : 8),
+                              Text(
+                                "Borrow nearby · Share simply",
+                                style: AppTextStyles.subtitle.copyWith(
+                                  fontSize: isSmallMobile
+                                      ? 12
+                                      : isMobile
+                                      ? AppTextStyles.subtitle.fontSize
+                                      : AppTextStyles.subtitle.fontSize! * 1.2,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                        
-                        SizedBox(height: isMobile ? 20 : 32),
-                        
-                        // Feature Cards - Responsive Layout
-                        _buildFeatureCards(
-                          isMobile: isMobile,
-                          isTablet: isTablet,
-                          isDesktop: isDesktop,
-                        ),
-                        
-                        SizedBox(height: isMobile ? 20 : 32),
-          
-                        // Buttons + Footer
-                        Column(
-                        children: [
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: isDesktop ? 500 : double.infinity,
-                            ),
-                            child: AdvancedButton(
-                              label: "Get Started",
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/auth');
-                              },
-                              fullWidth: true,
-                            ),
+                            ],
                           ),
-                          SizedBox(height: isMobile ? 8 : 12),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: isDesktop ? 500 : double.infinity,
-                            ),
-                            child: AdvancedButton(
-                              label: "Sign In",
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/auth');
-                              },
-                              fullWidth: true,
-                              gradient: const LinearGradient(
-                                colors: [Colors.white, Colors.white],
-                              ),
-                              foregroundColor: Colors.black87,
-                              borderRadius: 12,
-                              elevation: 0,
-                            ),
+
+                          SizedBox(height: isMobile ? 20 : 32),
+
+                          // Feature Cards - Responsive Layout
+                          _buildFeatureCards(
+                            isMobile: isMobile,
+                            isTablet: isTablet,
+                            isDesktop: isDesktop,
                           ),
-                          SizedBox(height: isMobile ? 8 : 12),
-                          Text(
-                            "Terms & Conditions",
-                            style: AppTextStyles.caption.copyWith(
-                              fontSize: isDesktop
-                                  ? AppTextStyles.caption.fontSize! * 1.1
-                                  : AppTextStyles.caption.fontSize,
-                            ),
+
+                          SizedBox(height: isMobile ? 20 : 32),
+
+                          // Buttons + Footer
+                          Column(
+                            children: [
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: isDesktop ? 500 : double.infinity,
+                                ),
+                                child: AdvancedButton(
+                                  label: "Get Started",
+                                  onPressed: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/auth',
+                                      arguments: {'initialView': 1},
+                                    );
+                                  },
+                                  fullWidth: true,
+                                ),
+                              ),
+                              SizedBox(height: isMobile ? 8 : 12),
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: isDesktop ? 500 : double.infinity,
+                                ),
+                                child: AdvancedButton(
+                                  label: "Sign In",
+                                  onPressed: () {
+                                    Navigator.pushNamed(context, '/auth');
+                                  },
+                                  fullWidth: true,
+                                  gradient: const LinearGradient(
+                                    colors: [Colors.white, Colors.white],
+                                  ),
+                                  foregroundColor: Colors.black87,
+                                  borderRadius: 12,
+                                  elevation: 0,
+                                ),
+                              ),
+                              SizedBox(height: isMobile ? 8 : 12),
+                              Text(
+                                "Terms & Conditions",
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: isDesktop
+                                      ? AppTextStyles.caption.fontSize! * 1.1
+                                      : AppTextStyles.caption.fontSize,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      ],
                     ),
                   ),
                 ),
-              ));
+              );
             },
           ),
         ),
@@ -231,14 +237,16 @@ class FeatureCard extends StatelessWidget {
         final isMobile = width < 600;
         final isTablet = width >= 600 && width < 900;
         final isDesktop = width >= 900;
-        
+
         // Responsive sizing
         double padding = isSmall ? 12 : (isMobile ? 14 : (isTablet ? 18 : 20));
         double iconSize = isSmall ? 28 : (isMobile ? 30 : (isTablet ? 36 : 40));
-        double titleFontSize = isSmall ? 14 : (isMobile ? 16 : (isTablet ? 18 : 20));
+        double titleFontSize = isSmall
+            ? 14
+            : (isMobile ? 16 : (isTablet ? 18 : 20));
         double bodyFontSize = isSmall ? 12 : (isMobile ? 14 : 15);
         int maxLines = isDesktop ? 6 : 4;
-        
+
         return SizedBox(
           width: double.infinity,
           child: Card(
@@ -265,9 +273,7 @@ class FeatureCard extends StatelessWidget {
                   Text(
                     description,
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.body.copyWith(
-                      fontSize: bodyFontSize,
-                    ),
+                    style: AppTextStyles.body.copyWith(fontSize: bodyFontSize),
                     maxLines: maxLines,
                     overflow: TextOverflow.ellipsis,
                   ),

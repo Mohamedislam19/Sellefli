@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 
 class ProductCard extends StatelessWidget {
@@ -7,6 +8,7 @@ class ProductCard extends StatelessWidget {
   final String location;
   final String distance;
   final String seller;
+  final String? sellerAvatarUrl;
   final double rating;
   final String imageUrl;
   final VoidCallback onTap;
@@ -18,6 +20,7 @@ class ProductCard extends StatelessWidget {
     required this.location,
     required this.distance,
     required this.seller,
+    this.sellerAvatarUrl,
     required this.rating,
     required this.imageUrl,
     required this.onTap,
@@ -191,14 +194,25 @@ class ProductCard extends StatelessWidget {
                         CircleAvatar(
                           radius: 12,
                           backgroundColor: AppColors.primary.withAlpha(50),
-                          child: Text(
-                            seller.isNotEmpty ? seller[0] : '?',
-                            style: AppTextStyles.body.copyWith(
-                              fontSize: 12,
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          backgroundImage:
+                              sellerAvatarUrl != null &&
+                                  sellerAvatarUrl!.isNotEmpty
+                              ? CachedNetworkImageProvider(sellerAvatarUrl!)
+                              : null,
+                          child:
+                              sellerAvatarUrl == null ||
+                                  sellerAvatarUrl!.isEmpty
+                              ? Text(
+                                  seller.isNotEmpty
+                                      ? seller[0].toUpperCase()
+                                      : '?',
+                                  style: AppTextStyles.body.copyWith(
+                                    fontSize: 12,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              : null,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -216,7 +230,7 @@ class ProductCard extends StatelessWidget {
                         Icon(Icons.star, size: 14, color: AppColors.accent),
                         const SizedBox(width: 2),
                         Text(
-                          rating.toString(),
+                          rating > 0 ? rating.toStringAsFixed(1) : 'N/A',
                           style: AppTextStyles.body.copyWith(
                             fontSize: 12,
                             color: AppColors.primaryDark,

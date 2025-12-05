@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import '../../core/widgets/nav/bottom_nav.dart';
@@ -71,15 +72,11 @@ class _MyListingsViewState extends State<_MyListingsView> {
     final screenWidth = MediaQuery.of(context).size.width;
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
-    
+
     return BlocListener<MyListingsCubit, MyListingsState>(
       listener: (context, state) {
         if (state is MyListingsNavigateToEdit) {
-          Navigator.pushNamed(
-            context,
-            '/edit-item',
-            arguments: state.itemId,
-          );
+          Navigator.pushNamed(context, '/edit-item', arguments: state.itemId);
         }
       },
       child: Scaffold(
@@ -119,13 +116,17 @@ class _MyListingsViewState extends State<_MyListingsView> {
                   ),
                 );
               }
-              
+
               if (state is MyListingsError) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         state.message,
@@ -134,21 +135,26 @@ class _MyListingsViewState extends State<_MyListingsView> {
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () => context.read<MyListingsCubit>().loadMyListings(),
+                        onPressed: () =>
+                            context.read<MyListingsCubit>().loadMyListings(),
                         child: const Text('Retry'),
                       ),
                     ],
                   ),
                 );
               }
-              
+
               if (state is MyListingsLoaded) {
                 if (state.items.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.inventory_outlined, size: 64, color: Colors.grey),
+                        const Icon(
+                          Icons.inventory_outlined,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'No listings yet',
@@ -173,7 +179,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
                     ),
                   );
                 }
-                
+
                 return Column(
                   children: [
                     if (state.isOffline)
@@ -202,9 +208,9 @@ class _MyListingsViewState extends State<_MyListingsView> {
                             itemId: item.id,
                             title: item.title,
                             status: item.isAvailable ? 'Active' : 'Unavailable',
-                            imageUrl: item.images.isNotEmpty 
-                                ? item.images.first 
-                                : 'assets/images/powerdrill.jpg',
+                            imageUrl: item.images.isNotEmpty
+                                ? item.images.first
+                                : '',
                           );
                         },
                       ),
@@ -212,7 +218,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
                   ],
                 );
               }
-              
+
               return const SizedBox.shrink();
             },
           ),
@@ -304,7 +310,9 @@ class _MyListingsViewState extends State<_MyListingsView> {
                         color: Colors.grey.shade700,
                         icon: Icons.edit_outlined,
                         onPressed: () {
-                          context.read<MyListingsCubit>().onEditItemTapped(itemId);
+                          context.read<MyListingsCubit>().onEditItemTapped(
+                            itemId,
+                          );
                         },
                       ),
                     ),
@@ -335,10 +343,33 @@ class _MyListingsViewState extends State<_MyListingsView> {
   }
 
   Widget _buildImage(String imageUrl) {
-    // Detect if image is a network URL or local asset
+    if (imageUrl.isEmpty) {
+      return Container(
+        height: 80,
+        width: 80,
+        color: Colors.grey[200],
+        child: const Icon(
+          Icons.image_not_supported,
+          size: 40,
+          color: Colors.grey,
+        ),
+      );
+    }
+    // Detect if image is a network URL, local file, or asset
     if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
       return Image.network(
         imageUrl,
+        height: 80,
+        width: 80,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.broken_image, size: 60, color: Colors.grey),
+      );
+    } else if (imageUrl.startsWith('/') ||
+        imageUrl.contains('\\') ||
+        imageUrl.startsWith('file://')) {
+      return Image.file(
+        File(imageUrl.replaceFirst('file://', '')),
         height: 80,
         width: 80,
         fit: BoxFit.cover,

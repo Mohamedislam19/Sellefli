@@ -10,6 +10,7 @@ import 'logic/profile_state.dart';
 import '../../data/repositories/profile_repository.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class EditProfilePage extends StatelessWidget {
   const EditProfilePage({super.key});
@@ -36,8 +37,8 @@ class _EditProfileViewState extends State<_EditProfileView> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
-  late TextEditingController _emailController;
   File? _selectedImage;
+  String? _currentAvatarUrl;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -45,8 +46,7 @@ class _EditProfileViewState extends State<_EditProfileView> {
     super.initState();
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
-    _emailController = TextEditingController();
-    
+
     // Load current profile data
     _loadCurrentProfile();
   }
@@ -57,7 +57,9 @@ class _EditProfileViewState extends State<_EditProfileView> {
       final user = profileState.profile;
       _nameController.text = user.username ?? '';
       _phoneController.text = user.phone ?? '';
-      _emailController.text = user.email ?? '';
+      setState(() {
+        _currentAvatarUrl = user.avatarUrl;
+      });
     }
   }
 
@@ -69,16 +71,16 @@ class _EditProfileViewState extends State<_EditProfileView> {
         maxHeight: 1024,
         imageQuality: 85,
       );
-      
+
       if (image != null) {
         setState(() {
           _selectedImage = File(image.path);
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
     }
   }
 
@@ -86,7 +88,6 @@ class _EditProfileViewState extends State<_EditProfileView> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
-    _emailController.dispose();
     super.dispose();
   }
 
@@ -108,13 +109,10 @@ class _EditProfileViewState extends State<_EditProfileView> {
           context.read<ProfileCubit>().loadMyProfile();
           Navigator.pop(context);
         }
-        
+
         if (state is EditProfileError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         }
       },
@@ -169,7 +167,14 @@ class _EditProfileViewState extends State<_EditProfileView> {
                             radius: 60,
                             backgroundImage: _selectedImage != null
                                 ? FileImage(_selectedImage!)
-                                : const AssetImage('assets/images/profile.jpg') as ImageProvider,
+                                : (_currentAvatarUrl != null
+                                      ? CachedNetworkImageProvider(
+                                          _currentAvatarUrl!,
+                                        )
+                                      : const AssetImage(
+                                              'assets/images/profile.jpg',
+                                            )
+                                            as ImageProvider),
                             backgroundColor: Colors.grey,
                           ),
                         ),
@@ -208,33 +213,27 @@ class _EditProfileViewState extends State<_EditProfileView> {
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
                   ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    label: 'Email',
-                    controller: _emailController,
-                    icon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                  ),
                   const SizedBox(height: 32),
 
                   // Save Button
                   BlocBuilder<EditProfileCubit, EditProfileState>(
                     builder: (context, state) {
                       final isSaving = state is EditProfileSaving;
-                      
+
                       return SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: isSaving ? null : () {
-                            if (_formKey.currentState!.validate()) {
-                              context.read<EditProfileCubit>().submit(
-                                username: _nameController.text.trim(),
-                                email: _emailController.text.trim(),
-                                phone: _phoneController.text.trim(),
-                                avatarFile: _selectedImage,
-                              );
-                            }
-                          },
+                          onPressed: isSaving
+                              ? null
+                              : () {
+                                  if (_formKey.currentState!.validate()) {
+                                    context.read<EditProfileCubit>().submit(
+                                      username: _nameController.text.trim(),
+                                      phone: _phoneController.text.trim(),
+                                      avatarFile: _selectedImage,
+                                    );
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             backgroundColor: AppColors.primary,

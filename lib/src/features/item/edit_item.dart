@@ -22,9 +22,9 @@ import 'package:sellefli/src/features/item/logic/edit_item_cubit.dart';
 import 'package:sellefli/src/data/repositories/item_repository.dart';
 
 class EditItemPage extends StatefulWidget {
-  final String itemId; // we pass only the id when navigating
+  final String? itemId; // we pass only the id when navigating
 
-  const EditItemPage({super.key, required this.itemId});
+  const EditItemPage({super.key, this.itemId});
 
   @override
   State<EditItemPage> createState() => _EditItemPageState();
@@ -83,11 +83,17 @@ class _EditItemPageState extends State<EditItemPage>
       itemRepository: ItemRepository(Supabase.instance.client),
     );
 
-    // Load the item by id passed in the constructor
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _cubit.loadItem(widget.itemId);
-    });
     setUserId();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final id =
+        widget.itemId ?? ModalRoute.of(context)?.settings.arguments as String?;
+    if (id != null) {
+      _cubit.loadItem(id);
+    }
   }
 
   @override

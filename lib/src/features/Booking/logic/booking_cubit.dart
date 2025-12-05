@@ -2,15 +2,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../data/models/booking_model.dart';
 import '../../../data/repositories/booking_repository.dart';
+import '../../../data/repositories/rating_repository.dart';
 
 part 'booking_state.dart';
 
 class BookingCubit extends Cubit<BookingState> {
   final BookingRepository bookingRepository;
+  final RatingRepository ratingRepository;
 
   BookingCubit()
-      : bookingRepository = BookingRepository(Supabase.instance.client),
-        super(BookingInitial());
+    : bookingRepository = BookingRepository(Supabase.instance.client),
+      ratingRepository = RatingRepository(Supabase.instance.client),
+      super(BookingInitial());
 
   // FETCH BOOKING DETAILS
   Future<void> fetchBookingDetails(String bookingId) async {
@@ -61,7 +64,10 @@ class BookingCubit extends Cubit<BookingState> {
     try {
       emit(BookingActionLoading());
 
-      await bookingRepository.updateBookingStatus(bookingId, BookingStatus.accepted);
+      await bookingRepository.updateBookingStatus(
+        bookingId,
+        BookingStatus.accepted,
+      );
       await bookingRepository.generateBookingCode(bookingId);
 
       emit(BookingActionSuccess('Booking accepted successfully'));
@@ -75,7 +81,10 @@ class BookingCubit extends Cubit<BookingState> {
     try {
       emit(BookingActionLoading());
 
-      await bookingRepository.updateBookingStatus(bookingId, BookingStatus.declined);
+      await bookingRepository.updateBookingStatus(
+        bookingId,
+        BookingStatus.declined,
+      );
 
       emit(BookingActionSuccess('Booking declined'));
     } catch (e) {
@@ -88,8 +97,14 @@ class BookingCubit extends Cubit<BookingState> {
     try {
       emit(BookingActionLoading());
 
-      await bookingRepository.updateDepositStatus(bookingId, DepositStatus.returned);
-      await bookingRepository.updateBookingStatus(bookingId, BookingStatus.completed);
+      await bookingRepository.updateDepositStatus(
+        bookingId,
+        DepositStatus.returned,
+      );
+      await bookingRepository.updateBookingStatus(
+        bookingId,
+        BookingStatus.completed,
+      );
 
       emit(BookingActionSuccess('Deposit marked as returned'));
     } catch (e) {
@@ -102,8 +117,14 @@ class BookingCubit extends Cubit<BookingState> {
     try {
       emit(BookingActionLoading());
 
-      await bookingRepository.updateDepositStatus(bookingId, DepositStatus.kept);
-      await bookingRepository.updateBookingStatus(bookingId, BookingStatus.closed);
+      await bookingRepository.updateDepositStatus(
+        bookingId,
+        DepositStatus.kept,
+      );
+      await bookingRepository.updateBookingStatus(
+        bookingId,
+        BookingStatus.closed,
+      );
 
       emit(BookingActionSuccess('Deposit kept'));
     } catch (e) {
@@ -126,20 +147,28 @@ class BookingCubit extends Cubit<BookingState> {
       }
       final booking = details['booking'] as Booking;
 
-      if (booking.status != BookingStatus.accepted || booking.depositStatus != DepositStatus.none) {
+      if (booking.status != BookingStatus.accepted ||
+          booking.depositStatus != DepositStatus.none) {
         emit(BookingError('Cannot mark deposit received in current state'));
         return;
       }
 
-      await bookingRepository.updateDepositStatus(bookingId, DepositStatus.received);
+      await bookingRepository.updateDepositStatus(
+        bookingId,
+        DepositStatus.received,
+      );
       // Move booking to active lifecycle phase now that deposit is secured
-      await bookingRepository.updateBookingStatus(bookingId, BookingStatus.active);
+      await bookingRepository.updateBookingStatus(
+        bookingId,
+        BookingStatus.active,
+      );
 
       emit(BookingActionSuccess('Deposit marked as received'));
     } catch (e) {
       emit(BookingError(e.toString()));
     }
   }
+
   // CREATE BOOKING REQUEST
   Future<void> createBookingRequest({
     required String itemId,
@@ -170,5 +199,37 @@ class BookingCubit extends Cubit<BookingState> {
     } catch (e) {
       emit(BookingError(e.toString()));
     }
+  }
+
+  // SUBMIT RATING
+  Future<void> submitRating({
+    required String bookingId,
+    required String raterUserId,
+    required String targetUserId,
+    required int stars,
+  }) async {
+    try {
+      emit(BookingActionLoading());
+      await ratingRepository.createRating(
+        bookingId: bookingId,
+        raterUserId: raterUserId,
+        targetUserId: targetUserId,
+        stars: stars,
+      );
+      emit(BookingActionSuccess('Rating submitted successfully'));
+    } catch (e) {
+      emit(BookingError(e.toString()));
+    }
+  }
+
+  // CHECK IF USER HAS ALREADY RATED THIS BOOKING
+  Future<bool> hasAlreadyRated({
+    required String bookingId,
+    required String raterUserId,
+  }) async {
+    return ratingRepository.hasAlreadyRated(
+      bookingId: bookingId,
+      raterUserId: raterUserId,
+    );
   }
 }

@@ -87,15 +87,25 @@ class _RatingWidgetState extends State<RatingWidget>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rating submitted successfully!')),
+          const SnackBar(
+            content: Text('Rating submitted successfully!'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pushNamedAndRemoveUntil(context, "/home", (route) => false);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error submitting rating: $e')));
+        final errorMessage = e.toString().contains('already rated')
+            ? 'You have already rated this booking'
+            : 'Error submitting rating: $e';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        );
+        // If already rated, still navigate away
+        if (e.toString().contains('already rated')) {
+          Navigator.pushNamedAndRemoveUntil(context, "/home", (route) => false);
+        }
       }
     } finally {
       if (mounted) {

@@ -5,6 +5,9 @@ import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
 // import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:sellefli/src/data/models/item_model.dart';
+import 'package:sellefli/src/data/models/booking_model.dart';
+import '../../core/widgets/avatar/avatar.dart';
 import '../../core/widgets/nav/bottom_nav.dart';
 import 'logic/profile_cubit.dart';
 import 'logic/profile_state.dart';
@@ -17,16 +20,16 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Get userId from arguments if not provided
-    final String? id = userId ?? 
-        (ModalRoute.of(context)?.settings.arguments as String?);
-    
+    final String? id =
+        userId ?? (ModalRoute.of(context)?.settings.arguments as String?);
+
     return _ProfileView(userId: id);
   }
 }
 
 class _ProfileView extends StatefulWidget {
   final String? userId;
-  
+
   _ProfileView({Key? key, this.userId}) : super(key: key);
 
   @override
@@ -43,6 +46,10 @@ class _ProfileViewState extends State<_ProfileView> {
     if (widget.userId != null) {
       Future.microtask(() {
         context.read<ProfileCubit>().refreshById(widget.userId!);
+      });
+    } else {
+      Future.microtask(() {
+        context.read<ProfileCubit>().loadMyProfile();
       });
     }
   }
@@ -109,18 +116,20 @@ class _ProfileViewState extends State<_ProfileView> {
           builder: (context, state) {
             if (state is ProfileLoading) {
               return Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.primaryBlue,
-                ),
+                child: CircularProgressIndicator(color: AppColors.primaryBlue),
               );
             }
-            
+
             if (state is ProfileError) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       state.message,
@@ -131,7 +140,9 @@ class _ProfileViewState extends State<_ProfileView> {
                     ElevatedButton(
                       onPressed: () {
                         if (widget.userId != null) {
-                          context.read<ProfileCubit>().refreshById(widget.userId!);
+                          context.read<ProfileCubit>().refreshById(
+                            widget.userId!,
+                          );
                         } else {
                           context.read<ProfileCubit>().loadMyProfile();
                         }
@@ -142,10 +153,10 @@ class _ProfileViewState extends State<_ProfileView> {
                 ),
               );
             }
-            
+
             if (state is ProfileLoaded) {
               final user = state.profile;
-              
+
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -157,7 +168,9 @@ class _ProfileViewState extends State<_ProfileView> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black12.withAlpha(((0.05) * 255).toInt()),
+                          color: Colors.black12.withAlpha(
+                            ((0.05) * 255).toInt(),
+                          ),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -165,46 +178,68 @@ class _ProfileViewState extends State<_ProfileView> {
                     ),
                     child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundImage: user.avatarUrl != null
-                              ? NetworkImage(user.avatarUrl!)
-                              : const AssetImage('assets/images/profile.jpg') as ImageProvider,
-                          backgroundColor: Colors.grey,
-                          child: user.avatarUrl == null
-                              ? const Icon(Icons.person, size: 40, color: Colors.white)
-                              : null,
+                        Avatar(
+                          imageUrl: user.avatarUrl,
+                          initials: user.username?.isNotEmpty == true
+                              ? user.username![0].toUpperCase()
+                              : '?',
+                          size: 80,
                         ),
                         const SizedBox(height: 12),
                         Text(
                           user.username ?? 'User',
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         if (user.phone != null)
                           Text(
                             user.phone!,
-                            style: const TextStyle(color: Colors.grey, fontSize: 14),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
                           ),
                         if (user.email != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
                               user.email!,
-                              style: const TextStyle(color: Colors.grey, fontSize: 14),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                         const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            5,
-                            (index) => const Icon(
-                              Icons.star_border,
-                              color: Colors.blueAccent,
-                              size: 20,
+                          children: [
+                            ...List.generate(5, (index) {
+                              final rating = user.ratingCount > 0
+                                  ? user.ratingSum / user.ratingCount
+                                  : 0.0;
+                              return Icon(
+                                index < rating.round()
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: Colors.amber,
+                                size: 20,
+                              );
+                            }),
+                            const SizedBox(width: 8),
+                            Text(
+                              user.ratingCount > 0
+                                  ? '${(user.ratingSum / user.ratingCount).toStringAsFixed(1)} (${user.ratingCount})'
+                                  : 'No ratings yet',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
@@ -216,10 +251,16 @@ class _ProfileViewState extends State<_ProfileView> {
                     // Edit Profile
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.edit_outlined, color: Colors.black87),
+                      leading: const Icon(
+                        Icons.edit_outlined,
+                        color: Colors.black87,
+                      ),
                       title: const Text('Edit Profile'),
-                      onTap: () {
-                        Navigator.pushNamed(context, '/edit-profile');
+                      onTap: () async {
+                        await Navigator.pushNamed(context, '/edit-profile');
+                        if (context.mounted) {
+                          context.read<ProfileCubit>().loadMyProfile();
+                        }
                       },
                     ),
                     ListTile(
@@ -250,13 +291,41 @@ class _ProfileViewState extends State<_ProfileView> {
 
                     const Text(
                       'Recent Transactions',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
+                    const SizedBox(height: 12),
+                    if (state.transactions.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 20),
+                        child: Text(
+                          'No recent transactions',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    else
+                      ...state.transactions.map((t) {
+                        final item = t['item'] as Item?;
+                        final booking = t['booking'] as Booking;
+                        final isBorrower = t['isBorrower'] as bool;
+                        final imageUrl = t['imageUrl'] as String?;
+
+                        return TransactionCard(
+                          title: item?.title ?? 'Unknown Item',
+                          imageUrl: imageUrl,
+                          status: isBorrower ? 'Borrowed' : 'Lent',
+                          date:
+                              '${booking.createdAt.day}/${booking.createdAt.month}/${booking.createdAt.year}',
+                          price: booking.totalCost ?? 0.0,
+                        );
+                      }),
                   ],
                 ],
               );
             }
-            
+
             return const SizedBox.shrink();
           },
         ),
@@ -271,16 +340,18 @@ class _ProfileViewState extends State<_ProfileView> {
 
 class TransactionCard extends StatelessWidget {
   final String title;
-  final String imagePath;
+  final String? imageUrl;
   final String status;
   final String date;
+  final double price;
 
   const TransactionCard({
     super.key,
     required this.title,
-    required this.imagePath,
+    this.imageUrl,
     required this.status,
     required this.date,
+    required this.price,
   });
 
   Color getStatusColor(String status) {
@@ -316,12 +387,25 @@ class TransactionCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              imagePath,
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-            ),
+            child: imageUrl != null && imageUrl!.isNotEmpty
+                ? Image.network(
+                    imageUrl!,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
+                  )
+                : Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.image, color: Colors.grey),
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -336,26 +420,37 @@ class TransactionCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  date,
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: getStatusColor(status).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        status,
+                        style: TextStyle(
+                          color: getStatusColor(status),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      'DA ${price.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: getStatusColor(status).withAlpha(((0.1) * 255).toInt()),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              status,
-              style: TextStyle(
-                color: getStatusColor(status),
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
-              ),
             ),
           ),
         ],

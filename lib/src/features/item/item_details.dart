@@ -13,6 +13,7 @@ import '../../data/models/item_model.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/booking_model.dart';
 import 'package:uuid/uuid.dart';
+import '../../core/widgets/avatar/avatar.dart';
 
 class ItemDetailsPage extends StatelessWidget {
   final String? itemId;
@@ -22,18 +23,16 @@ class ItemDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Get itemId from arguments if not provided
-    final String? id = itemId ?? 
-        (ModalRoute.of(context)?.settings.arguments as String?);
-    
+    final String? id =
+        itemId ?? (ModalRoute.of(context)?.settings.arguments as String?);
+
     if (id == null) {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Color.fromARGB(255, 207, 225, 255),
           title: const Text('Item Details'),
         ),
-        body: const Center(
-          child: Text('Error: No item ID provided'),
-        ),
+        body: const Center(child: Text('Error: No item ID provided')),
       );
     }
 
@@ -88,18 +87,20 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
           builder: (context, state) {
             if (state is ItemDetailsLoading) {
               return Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.primaryBlue,
-                ),
+                child: CircularProgressIndicator(color: AppColors.primaryBlue),
               );
             }
-            
+
             if (state is ItemDetailsError) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       state.message,
@@ -115,31 +116,66 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
                 ),
               );
             }
-            
-              if (state is ItemDetailsLoaded) {
+
+            if (state is ItemDetailsLoaded) {
               final item = state.item;
               final images = state.images;
               final owner = state.owner;
-              
+              final currentUser = context.read<AuthRepository>().currentUser;
+              final isOwner = currentUser?.id == item.ownerId;
+
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: _buildImage(
-                      images.isNotEmpty 
-                          ? images.first.imageUrl 
-                          : 'assets/images/powerdrill.jpg',
-                    ),
+                  SizedBox(
+                    height: 300,
+                    child: images.isNotEmpty
+                        ? PageView.builder(
+                            itemCount: images.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black12,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(
+                                    images[index].imageUrl,
+                                    fit: BoxFit.contain,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(
+                                              Icons.broken_image,
+                                              size: 100,
+                                              color: Colors.grey,
+                                            ),
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: _buildImage(
+                              item.images.isNotEmpty ? item.images.first : '',
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 16),
 
                   _buildDetailsCard(item),
                   const SizedBox(height: 16),
 
-                  _buildOwnerInfo(item, owner),
-                  const SizedBox(height: 24),                  _buildActionButtons(item),
-                  const SizedBox(height: 20),
+                  if (!isOwner) ...[
+                    _buildOwnerInfo(item, owner),
+                    const SizedBox(height: 24),
+                    _buildActionButtons(item),
+                    const SizedBox(height: 20),
+                  ],
 
                   const Text(
                     'Please refer to the Deposit Policy for more information on item rentals and returns.',
@@ -149,7 +185,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
                 ],
               );
             }
-            
+
             return const SizedBox.shrink();
           },
         ),
@@ -158,6 +194,16 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
   }
 
   Widget _buildImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return Container(
+        height: 220,
+        width: double.infinity,
+        color: Colors.grey[200],
+        child: const Center(
+          child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+        ),
+      );
+    }
     if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
       return Image.network(
         imageUrl,
@@ -212,14 +258,23 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
           const SizedBox(height: 20),
           _buildDetailRow('Category', item.category),
           if (item.estimatedValue != null)
-            _buildDetailRow('Item Value', 'DA ${item.estimatedValue!.toStringAsFixed(0)}'),
+            _buildDetailRow(
+              'Item Value',
+              'DA ${item.estimatedValue!.toStringAsFixed(0)}',
+            ),
           if (item.depositAmount != null)
-            _buildDetailRow('Deposit Required', 'DA ${item.depositAmount!.toStringAsFixed(0)}'),
+            _buildDetailRow(
+              'Deposit Required',
+              'DA ${item.depositAmount!.toStringAsFixed(0)}',
+            ),
           if (item.startDate != null)
             _buildDetailRow('Available From', _formatDate(item.startDate!)),
           if (item.endDate != null)
             _buildDetailRow('Available Until', _formatDate(item.endDate!)),
-          _buildDetailRow('Status', item.isAvailable ? 'Available' : 'Unavailable'),
+          _buildDetailRow(
+            'Status',
+            item.isAvailable ? 'Available' : 'Unavailable',
+          ),
         ],
       ),
     );
@@ -250,15 +305,12 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: const Color(0xFFE0E0E0),
-            backgroundImage: owner?.avatarUrl != null 
-                ? NetworkImage(owner!.avatarUrl!) 
-                : null,
-            child: owner?.avatarUrl == null 
-                ? const Icon(Icons.person, color: Colors.white, size: 32)
-                : null,
+          Avatar(
+            imageUrl: owner?.avatarUrl,
+            initials: owner?.username?.isNotEmpty == true
+                ? owner!.username![0].toUpperCase()
+                : '?',
+            size: 56,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -276,11 +328,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(
-                      Icons.star,
-                      size: 18,
-                      color: Color(0xFFFFC107),
-                    ),
+                    const Icon(Icons.star, size: 18, color: Color(0xFFFFC107)),
                     const SizedBox(width: 4),
                     Text(
                       averageRating.toStringAsFixed(1),
@@ -314,7 +362,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: item.isAvailable 
+            onPressed: item.isAvailable
                 ? () {
                     _showBookingDialog(item);
                   }
@@ -428,7 +476,8 @@ class _BookingDialogState extends State<BookingDialog>
 
   void _parseItemData() {
     availableFrom = widget.item.startDate ?? DateTime.now();
-    availableUntil = widget.item.endDate ?? DateTime.now().add(const Duration(days: 30));
+    availableUntil =
+        widget.item.endDate ?? DateTime.now().add(const Duration(days: 30));
     itemValue = widget.item.estimatedValue?.toInt() ?? 0;
   }
 
@@ -489,11 +538,8 @@ class _BookingDialogState extends State<BookingDialog>
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(
-            color: Colors.white,
-          ),
-        ),
+        builder: (context) =>
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
       );
 
       // Get current user
@@ -532,12 +578,16 @@ class _BookingDialogState extends State<BookingDialog>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Booking confirmed for $numDays days!',
-            ),
+            content: Text('Booking confirmed for $numDays days!'),
             backgroundColor: AppColors.primary,
             duration: const Duration(seconds: 3),
           ),
+        );
+
+        Navigator.pushReplacementNamed(
+          context,
+          '/request-order',
+          arguments: {'initialTab': 'my_requests'},
         );
       }
     } catch (e) {
@@ -548,9 +598,7 @@ class _BookingDialogState extends State<BookingDialog>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Failed to create booking: ${e.toString()}',
-            ),
+            content: Text('Failed to create booking: ${e.toString()}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
