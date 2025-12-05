@@ -72,19 +72,7 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
     return '${date.month}/${date.day}/${date.year}';
   }
 
-  RequestStatus _mapBookingStatusToRequestStatus(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pending:
-        return RequestStatus.pending;
-      case BookingStatus.accepted:
-      case BookingStatus.active:
-      case BookingStatus.completed:
-        return RequestStatus.accepted;
-      case BookingStatus.declined:
-      case BookingStatus.closed:
-        return RequestStatus.declined;
-    }
-  }
+  // No mapping needed: use BookingStatus directly for consistency
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +161,7 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                           ),
                         );
                       }
+
                     },
                     builder: (context, state) {
                       if (state is BookingLoading) {
@@ -182,9 +171,7 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                       if (state is BookingError) {
                         return Center(
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.error_outline, size: 64, color: Colors.red),
                               const SizedBox(height: 16),
                               Text(
                                 'Error: ${state.error}',
@@ -240,6 +227,7 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                                 ? data['borrower'] 
                                 : data['owner'];
                             final imageUrl = data['imageUrl'] as String?;
+                              final avatarUrl = otherUser?.avatarUrl as String?;
 
                             return _RequestCard(
                               bookingId: booking.id,
@@ -247,9 +235,10 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                                   'https://via.placeholder.com/150',
                               title: item?.title ?? 'Item',
                               sender: otherUser?.username ?? 'Unknown User',
+                              senderAvatarUrl: avatarUrl,
                               dateRange:
                                   '${_formatDate(booking.startDate)} - ${_formatDate(booking.returnByDate)}',
-                              status: _mapBookingStatusToRequestStatus(booking.status),
+                              status: booking.status,
                               isSmallMobile: isSmallMobile,
                               isMobile: isMobile,
                               isOwnerView: _showIncoming,
@@ -342,15 +331,16 @@ class _TabButton extends StatelessWidget {
 
 // ------------------ REQUEST CARD ------------------
 
-enum RequestStatus { pending, accepted, declined }
+// Use BookingStatus across list and detail for consistency
 
 class _RequestCard extends StatelessWidget {
   final String bookingId;
   final String imageUrl;
   final String title;
   final String sender;
+  final String? senderAvatarUrl;
   final String dateRange;
-  final RequestStatus status;
+  final BookingStatus status;
   final bool isSmallMobile;
   final bool isMobile;
   final bool isOwnerView;
@@ -362,6 +352,7 @@ class _RequestCard extends StatelessWidget {
     required this.imageUrl,
     required this.title,
     required this.sender,
+    this.senderAvatarUrl,
     required this.dateRange,
     required this.status,
     this.isSmallMobile = false,
@@ -423,12 +414,28 @@ class _RequestCard extends StatelessWidget {
                       SizedBox(height: isSmallMobile ? 4 : 6),
                       Row(
                         children: [
-                          Icon(
-                            Icons.person_outline,
-                            size: isSmallMobile ? 12 : 14,
-                            color: AppColors.muted,
-                          ),
-                          SizedBox(width: isSmallMobile ? 3 : 4),
+                          // Sender avatar (fallback to icon if missing)
+                          if (senderAvatarUrl != null && senderAvatarUrl!.isNotEmpty) ...[
+                            Container(
+                              width: isSmallMobile ? 16 : 18,
+                              height: isSmallMobile ? 16 : 18,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: DecorationImage(
+                                  image: NetworkImage(senderAvatarUrl!),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: isSmallMobile ? 4 : 6),
+                          ] else ...[
+                            Icon(
+                              Icons.person_outline,
+                              size: isSmallMobile ? 12 : 14,
+                              color: AppColors.muted,
+                            ),
+                            SizedBox(width: isSmallMobile ? 3 : 4),
+                          ],
                           Flexible(
                             child: Text(
                               'From $sender',
@@ -484,7 +491,7 @@ class _RequestCard extends StatelessWidget {
                             Expanded(
                               child: AdvancedButton(
                                 label: 'Accept',
-                                onPressed: status == RequestStatus.pending ? onAccept : null,
+                                onPressed: status == BookingStatus.pending ? onAccept : null,
                                 fullWidth: true,
                                 gradient: const LinearGradient(
                                   colors: [AppColors.primary, AppColors.primaryDark],
@@ -497,7 +504,7 @@ class _RequestCard extends StatelessWidget {
                             Expanded(
                               child: AdvancedButton(
                                 label: 'Decline',
-                                onPressed: status == RequestStatus.pending ? onDecline : null,
+                                onPressed: status == BookingStatus.pending ? onDecline : null,
                                 fullWidth: true,
                                 gradient: const LinearGradient(
                                   colors: [AppColors.danger, Color(0xFFB63A2D)],
@@ -521,7 +528,7 @@ class _RequestCard extends StatelessWidget {
                           width: 100,
                           child: AdvancedButton(
                             label: 'Accept',
-                            onPressed: status == RequestStatus.pending ? onAccept : null,
+                            onPressed: status == BookingStatus.pending ? onAccept : null,
                             fullWidth: true,
                             gradient: const LinearGradient(
                               colors: [AppColors.primary, AppColors.primaryDark],
@@ -535,7 +542,7 @@ class _RequestCard extends StatelessWidget {
                           width: 100,
                           child: AdvancedButton(
                             label: 'Decline',
-                            onPressed: status == RequestStatus.pending ? onDecline : null,
+                            onPressed: status == BookingStatus.pending ? onDecline : null,
                             fullWidth: true,
                             gradient: const LinearGradient(
                               colors: [AppColors.danger, Color(0xFFB63A2D)],
@@ -561,14 +568,20 @@ class _RequestCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(RequestStatus status) {
+  Widget _buildStatusBadge(BookingStatus status) {
     switch (status) {
-      case RequestStatus.pending:
+      case BookingStatus.pending:
         return const ChipBadge(label: 'Pending', type: ChipType.ghost);
-      case RequestStatus.accepted:
+      case BookingStatus.accepted:
         return const ChipBadge(label: 'Accepted', type: ChipType.primary);
-      case RequestStatus.declined:
+      case BookingStatus.declined:
         return const ChipBadge(label: 'Declined', type: ChipType.danger);
+      case BookingStatus.active:
+        return const ChipBadge(label: 'Active', type: ChipType.primary);
+      case BookingStatus.completed:
+        return const ChipBadge(label: 'Completed', type: ChipType.primary);
+      case BookingStatus.closed:
+        return const ChipBadge(label: 'Closed', type: ChipType.primary);
     }
   }
 }

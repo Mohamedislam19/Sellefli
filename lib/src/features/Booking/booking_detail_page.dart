@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/buttons/advanced_button.dart';
 import '../../core/widgets/chips/chip_badge.dart';
 import '../../core/widgets/avatar/avatar.dart';
+import '../../core/widgets/rating_widget.dart';
 import '../../data/models/booking_model.dart';
 import '../../data/models/item_model.dart';
 import '../../data/models/user_model.dart' as models;
@@ -280,7 +281,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                     ),
                                   ),
                                   Text(
-                                    '\$${booking.totalCost?.toStringAsFixed(2) ?? "0.00"}',
+                                    'DA ${booking.totalCost?.toStringAsFixed(2) ?? "0.00"}',
                                     style: TextStyle(
                                       fontSize: isSmallMobile ? 11 : 12,
                                       fontWeight: FontWeight.w600,
@@ -316,7 +317,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                       ),
                                       const Spacer(),
                                       Text(
-                                        '\$${item?.depositAmount?.toStringAsFixed(2) ?? "0.00"}',
+                                        'DA ${item?.depositAmount?.toStringAsFixed(2) ?? "0.00"}',
                                         style: TextStyle(
                                           fontSize: isSmallMobile ? 14 : 16,
                                           fontWeight: FontWeight.w600,
@@ -352,7 +353,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                   Expanded(
                                     child: Center(
                                       child: Text(
-                                        '\$${item?.depositAmount?.toStringAsFixed(2) ?? "0.00"}',
+                                        'DA ${item?.depositAmount?.toStringAsFixed(2) ?? "0.00"}',
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -374,6 +375,41 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                       ),
 
                       SizedBox(height: isMobile ? 16 : 24),
+
+                      // Rate Your Experience button i added based on the two condition completed and closed ig beacaue if otherwise the booking didn't happen yet
+                      (() {
+                        final currentUserId = context.read<BookingCubit>().bookingRepository.supabase.auth.currentUser?.id;
+                        final isOwnerLocal = currentUserId == booking.ownerId;
+                        final targetUserId = isOwnerLocal ? borrower?.id : owner?.id;
+                        final canRate =
+                            (booking.status == BookingStatus.completed || booking.status == BookingStatus.closed) &&
+                            targetUserId != null;
+                        if (!canRate) return const SizedBox.shrink();
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AdvancedButton(
+                              label: 'Rate Your Experience',
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/rating',
+                                  arguments: RatingPageArguments(
+                                    bookingId: booking.id,
+                                    targetUserId: targetUserId,
+                                  ),
+                                );
+                              },
+                              gradient: const LinearGradient(
+                                colors: [AppColors.primary, AppColors.primaryDark],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            SizedBox(height: isMobile ? 16 : 24),
+                          ],
+                        );
+                      })(),
 
                       Text(
                         'Booking Status',
