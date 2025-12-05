@@ -1,0 +1,106 @@
+Role: You are a Senior Flutter Architect and Engineer.
+
+Context: We are refactoring a Flutter application. The current implementation of marketplace_home_page.dart is monolithic, uses setState, and lacks proper separation of concerns. We need to refactor this into a Clean Architecture feature structure using Cubit for state management.
+
+Input:
+
+Current File: marketplace_home_page.dart (Assume access to codebase).
+
+Visual Reference: [Attached Screenshot of the Explore/Home Page]
+
+Existing Data Layer: Data models are in lib/src/data/models. Repositories are in lib/src/data/repositories.
+
+Task 1: Renaming and Structural Refactoring
+Global Renaming:
+
+Rename the class MarketplaceHomePage to HomePage.
+
+Rename the file marketplace_home_page.dart to home_page.dart.
+
+Crucial: Scan the entire project and update all references (imports and routing) to reflect these changes.
+
+Folder Structure & Decomposition:
+
+Refactor the file structure to match the features/auth pattern exactly. The target structure is:
+
+lib/src/features/home/presentation/cubit/ (for Logic)
+
+lib/src/features/home/presentation/pages/ (for the main HomePage scaffold)
+
+lib/src/features/home/presentation/widgets/ (for home-specific widgets)
+
+Widget Extraction: Split the monolithic UI into smaller, reusable components.
+
+Core Widgets: If a widget is generic (e.g., a custom Search Field or Button used elsewhere), move it to lib/src/core/widgets.
+
+Task 2: State Management (Cubit)
+Replace setState: Completely remove setState. Implement HomeCubit and HomeState.
+
+State Definition: HomeState should handle:
+
+status (Initial, Loading, Success, Error).
+
+items (List of item models).
+
+selectedCategory (String/Enum).
+
+isLocationEnabled (Boolean).
+
+searchQuery (String).
+
+radius (Double).
+
+userLocation (Coordinates).
+
+Task 3: Business Logic & Data Filtering
+You must implement the following specific logic in the Cubit and Repository:
+
+Data Scope:
+
+The feed must display all items in the database EXCEPT items created by the current user.
+
+Search Logic:
+
+Implement Exact Name Matching.
+
+Prioritize performance. Ensure the list updates immediately upon submission.
+
+Category Filtering:
+
+Ensure the Category Chips (All, Tools, Electronics, etc.) strictly filter the loaded items list.
+
+Location & Radius Logic (Complex):
+
+Scenario A: "Use my location" is OFF:
+
+Hide the "Radius" slider/bar in the UI.
+
+Hide the "Distance" text/icon on the item cards.
+
+Load items arbitrarily (default sorting) without distance calculations.
+
+Scenario B: "Use my location" is ON:
+
+Show the "Radius" slider.
+
+Calculate the distance between the user's location and the item's location using the Haversine formula (or strictly appropriate geodesic math).
+
+Filter: Only show items where distance < selected_radius.
+
+Performance: Use Lazy Loading (Pagination) when fetching these items from the database to ensure the app remains fast even with large datasets.
+
+Task 4: UI Updates (Refer to Screenshot)
+Search Bar:
+
+Ensure the input field triggers the search logic defined above.
+
+Location Controls:
+
+Remove the blue "Search" button located to the right of the "Use my location" toggle. The toggle and slider interactions should drive the state updates automatically.
+
+Ensure the Radius Slider visibility is conditional based on the Toggle Switch state.
+
+Technical Implementation Constraints
+Models/Repos: Do not create new models. Use existing ones in lib/src/data/models. Implement the business logic (filtering/distance) inside lib/src/data/repositories or the Cubit, keeping the UI dumb.
+
+Performance: Optimize for minimal rebuilds. Use BlocBuilder or BlocSelector wisely.

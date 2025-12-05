@@ -10,6 +10,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:sellefli/src/core/widgets/snackbar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sellefli/src/core/constants/categories.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/image/image_gallery.dart';
@@ -28,11 +29,10 @@ class _CreateItemPageState extends State<CreateItemPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
-  String? _userId; 
+  String? _userId;
 
   final supabase = Supabase.instance.client;
 
-  
   void setUserId() async {
     final user = supabase.auth.currentUser;
     if (user == null) {
@@ -43,7 +43,6 @@ class _CreateItemPageState extends State<CreateItemPage>
       });
       print('Current signed-in user ID: ${user.id}');
     }
-
   }
 
   List<XFile> _images = [];
@@ -59,41 +58,9 @@ class _CreateItemPageState extends State<CreateItemPage>
   bool _showImageError = false;
   late AnimationController _animController;
 
-  final List<String> _categories = [
-    'Electronics & Tech',
-    'Home & Appliances',
-    'Furniture & Décor',
-    'Tools & Equipment',
-    'Vehicles & Mobility',
-    'Sports & Outdoors',
-    'Books & Study',
-    'Fashion & Accessories',
-    'Events & Celebrations',
-    'Baby & Kids',
-    'Health & Personal Care',
-    'Musical Instruments',
-    'Hobbies & Crafts',
-    'Pet Supplies',
-    'Other Items',
-  ];
+  final List<String> _categories = AppCategories.categories;
 
-  final Map<String, IconData> _categoryIcons = {
-    'Electronics & Tech': Icons.devices_rounded,
-    'Home & Appliances': Icons.kitchen_rounded,
-    'Furniture & Décor': Icons.chair_rounded,
-    'Tools & Equipment': Icons.construction_rounded,
-    'Vehicles & Mobility': Icons.directions_car_rounded,
-    'Sports & Outdoors': Icons.sports_soccer_rounded,
-    'Books & Study': Icons.menu_book_rounded,
-    'Fashion & Accessories': Icons.checkroom_rounded,
-    'Events & Celebrations': Icons.celebration_rounded,
-    'Baby & Kids': Icons.child_care_rounded,
-    'Health & Personal Care': Icons.favorite_rounded,
-    'Musical Instruments': Icons.music_note_rounded,
-    'Hobbies & Crafts': Icons.palette_rounded,
-    'Pet Supplies': Icons.pets_rounded,
-    'Other Items': Icons.category_rounded,
-  };
+  final Map<String, IconData> _categoryIcons = AppCategories.categoryIcons;
 
   @override
   void initState() {
@@ -251,7 +218,7 @@ class _CreateItemPageState extends State<CreateItemPage>
     form.save();
 
     // Get current authenticated user id
-    final ownerId = _userId; 
+    final ownerId = _userId;
     if (ownerId == null) {
       SnackbarHelper.showSnackBar(
         context,

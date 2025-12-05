@@ -13,6 +13,8 @@ class Item {
   final bool isAvailable;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final double? distance; // Distance in km from user
+  final List<String> images;
 
   Item({
     required this.id,
@@ -29,9 +31,56 @@ class Item {
     this.isAvailable = true,
     required this.createdAt,
     required this.updatedAt,
+    this.distance,
+    this.images = const [],
   });
 
+  Item copyWith({
+    String? id,
+    String? ownerId,
+    String? title,
+    String? category,
+    String? description,
+    double? estimatedValue,
+    double? depositAmount,
+    DateTime? startDate,
+    DateTime? endDate,
+    double? lat,
+    double? lng,
+    bool? isAvailable,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    double? distance,
+    List<String>? images,
+  }) {
+    return Item(
+      id: id ?? this.id,
+      ownerId: ownerId ?? this.ownerId,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      description: description ?? this.description,
+      estimatedValue: estimatedValue ?? this.estimatedValue,
+      depositAmount: depositAmount ?? this.depositAmount,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      isAvailable: isAvailable ?? this.isAvailable,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      distance: distance ?? this.distance,
+      images: images ?? this.images,
+    );
+  }
+
   factory Item.fromJson(Map<String, dynamic> json) {
+    // Parse images if available from join
+    List<String> imagesList = [];
+    if (json['item_images'] != null) {
+      final imagesData = json['item_images'] as List;
+      imagesList = imagesData.map((img) => img['image_url'] as String).toList();
+    }
+
     return Item(
       id: json['id'] as String,
       ownerId: json['owner_id'] as String,
@@ -51,6 +100,7 @@ class Item {
       isAvailable: json['is_available'] as bool? ?? true,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      images: imagesList,
     );
   }
 

@@ -178,6 +178,47 @@ class ItemRepository {
   }
 
   // ===========================================================================
+  // GET ITEMS (Feed)
+  // ===========================================================================
+  Future<List<Item>> getItems({
+    required int page,
+    required int pageSize,
+    String? excludeUserId,
+    List<String>? categories,
+    String? searchQuery,
+  }) async {
+    dynamic query = supabase.from('items').select('*, item_images(image_url)');
+
+    // Exclude current user's items
+    if (excludeUserId != null) {
+      query = query.neq('owner_id', excludeUserId);
+    }
+
+    // Category Filter
+    if (categories != null &&
+        categories.isNotEmpty &&
+        !categories.contains('All')) {
+      query = query.inFilter('category', categories);
+    }
+
+    // Search Filter (Partial match)
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      query = query.ilike('title', '%$searchQuery%');
+    }
+
+    // Order by creation date (newest first)
+    query = query.order('created_at', ascending: false);
+
+    // Pagination
+    final from = (page - 1) * pageSize;
+    final to = from + pageSize - 1;
+    query = query.range(from, to);
+
+    final data = await query;
+    return (data as List).map((json) => Item.fromJson(json)).toList();
+  }
+
+  // ===========================================================================
   // GET ITEM
   // ===========================================================================
   Future<Item?> getItemById(String itemId) async {

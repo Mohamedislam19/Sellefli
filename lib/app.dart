@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:sellefli/src/core/widgets/rating_widget.dart';
 import 'package:sellefli/src/data/repositories/auth_repository.dart';
+import 'package:sellefli/src/data/repositories/item_repository.dart';
 import 'package:sellefli/src/features/Booking/booking_detail_page.dart';
 import 'package:sellefli/src/features/auth/auth_page.dart';
 import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
 import 'package:sellefli/src/features/auth/logic/auth_state.dart';
-import 'package:sellefli/src/features/home/marketplace_home_page.dart';
+import 'package:sellefli/src/features/home/home_page.dart';
 import 'package:sellefli/src/features/item/edit_item.dart';
 import 'package:sellefli/src/features/item/item_details.dart';
 import 'package:sellefli/src/features/landing/landing_page.dart';
@@ -25,8 +27,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider(
-      create: (context) => AuthRepository(),
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider(create: (context) => AuthRepository()),
+        RepositoryProvider(
+          create: (context) => ItemRepository(Supabase.instance.client),
+        ),
+      ],
       child: BlocProvider(
         create: (context) => AuthCubit(context.read<AuthRepository>()),
         child: MaterialApp(
@@ -59,8 +66,7 @@ class MyApp extends StatelessWidget {
                 const ProtectedRoute(child: EditProfilePage()),
             '/listings': (context) =>
                 const ProtectedRoute(child: MyListingsPage()),
-            '/home': (context) =>
-                const ProtectedRoute(child: MarketplaceHomePage()),
+            '/home': (context) => const ProtectedRoute(child: HomePage()),
             '/rating': (context) => ProtectedRoute(child: RatingWidget()),
           },
         ),
@@ -79,7 +85,7 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, state) {
         if (state is AuthAuthenticated) {
           // User is authenticated, go to home
-          return const MarketplaceHomePage();
+          return const HomePage();
         } else if (state is AuthUnauthenticated) {
           // User is not authenticated, show landing page
           return const LandingPage();
