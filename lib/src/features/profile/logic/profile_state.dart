@@ -1,4 +1,4 @@
-part of 'profile_cubit.dart';
+import '../../../data/models/user_model.dart';
 
 abstract class ProfileState {
   const ProfileState();
@@ -9,7 +9,7 @@ class ProfileInitial extends ProfileState {}
 class ProfileLoading extends ProfileState {}
 
 class ProfileLoaded extends ProfileState {
-  final models.User profile;
+  final User profile;
   const ProfileLoaded(this.profile);
 }
 

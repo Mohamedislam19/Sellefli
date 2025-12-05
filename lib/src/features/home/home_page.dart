@@ -227,13 +227,17 @@ class _HomePageViewState extends State<_HomePageView> {
                             location:
                                 'Location', // TODO: Reverse geocode or use item address
                             distance: distance,
-                            seller: 'Seller', // TODO: Fetch seller name
+                            seller: item.ownerUsername ?? 'Unknown',
                             rating: 0.0, // TODO: Fetch rating
                             imageUrl: item.images.isNotEmpty
                                 ? item.images.first
                                 : '',
                             onTap: () =>
-                                Navigator.pushNamed(context, '/item-details'),
+                                Navigator.pushNamed(
+                                  context,
+                                  '/item-details',
+                                  arguments: item.id,
+                                ),
                           );
                         },
                         childCount: state.hasReachedMax

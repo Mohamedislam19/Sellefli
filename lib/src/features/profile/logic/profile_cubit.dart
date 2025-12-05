@@ -1,16 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../data/repositories/profile_repository.dart';
-import '../../../data/models/user_model.dart' as models;
-
-part 'profile_state.dart';
+import 'profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileRepository _repo;
 
-  ProfileCubit({ProfileRepository? repository})
-      : _repo = repository ?? ProfileRepository(supabase: Supabase.instance.client),
+  ProfileCubit({required ProfileRepository profileRepository})
+      : _repo = profileRepository,
         super(ProfileInitial());
 
   Future<void> loadMyProfile() async {

@@ -1,17 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../data/models/item_model.dart';
-import '../../../data/models/item_image_model.dart';
 import '../../../data/repositories/item_repository.dart';
-
-part 'item_details_state.dart';
+import '../../../data/repositories/profile_repository.dart';
+import 'item_details_state.dart';
 
 class ItemDetailsCubit extends Cubit<ItemDetailsState> {
   final ItemRepository _itemRepository;
+  final ProfileRepository _profileRepository;
 
-  ItemDetailsCubit({ItemRepository? itemRepository})
-      : _itemRepository = itemRepository ?? ItemRepository(Supabase.instance.client),
+  ItemDetailsCubit({
+    required ItemRepository itemRepository,
+    required ProfileRepository profileRepository,
+  })  : _itemRepository = itemRepository,
+        _profileRepository = profileRepository,
         super(ItemDetailsInitial());
 
   Future<void> load(String itemId) async {
@@ -23,7 +24,11 @@ class ItemDetailsCubit extends Cubit<ItemDetailsState> {
         return;
       }
       final images = await _itemRepository.getItemImages(itemId);
-      emit(ItemDetailsLoaded(item: item, images: images));
+      
+      // Fetch owner profile
+      final owner = await _profileRepository.getProfileById(item.ownerId);
+      
+      emit(ItemDetailsLoaded(item: item, images: images, owner: owner));
     } catch (e) {
       emit(ItemDetailsError(e.toString()));
     }

@@ -192,7 +192,7 @@ class ItemRepository {
     try {
       dynamic query = supabase
           .from('items')
-          .select('*, item_images(image_url)');
+          .select('*, item_images(image_url), users!inner(username)');
 
       // Exclude current user's items
       if (excludeUserId != null) {

@@ -5,6 +5,9 @@ import 'package:sellefli/src/core/widgets/rating_widget.dart';
 import 'package:sellefli/src/data/repositories/auth_repository.dart';
 import 'package:sellefli/src/data/repositories/item_repository.dart';
 import 'package:sellefli/src/data/repositories/rating_repository.dart';
+import 'package:sellefli/src/data/repositories/profile_repository.dart';
+import 'package:sellefli/src/data/repositories/booking_repository.dart';
+import 'package:sellefli/src/data/local/local_item_repository.dart';
 import 'package:sellefli/src/features/Booking/booking_detail_page.dart';
 import 'package:sellefli/src/features/auth/auth_page.dart';
 import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
@@ -22,6 +25,7 @@ import 'package:sellefli/src/features/profile/edit_profile_page.dart';
 import 'package:sellefli/src/features/item/create_item_page.dart';
 import 'package:sellefli/src/core/widgets/protected_route.dart';
 import 'src/core/theme/app_theme.dart';
+import 'src/features/profile/logic/profile_cubit.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -37,9 +41,27 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(
           create: (context) => RatingRepository(Supabase.instance.client),
         ),
+        RepositoryProvider(
+          create: (context) => ProfileRepository(supabase: Supabase.instance.client),
+        ),
+        RepositoryProvider(
+          create: (context) => BookingRepository(Supabase.instance.client),
+        ),
+        RepositoryProvider(
+          create: (context) => LocalItemRepository(),
+        ),
       ],
-      child: BlocProvider(
-        create: (context) => AuthCubit(context.read<AuthRepository>()),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => AuthCubit(context.read<AuthRepository>()),
+          ),
+          BlocProvider(
+            create: (context) => ProfileCubit(
+              profileRepository: context.read<ProfileRepository>(),
+            ),
+          ),
+        ],
         child: MaterialApp(
           title: 'Sellefli',
           debugShowCheckedModeBanner: false,

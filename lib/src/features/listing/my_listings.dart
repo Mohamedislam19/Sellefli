@@ -3,15 +3,35 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import '../../core/widgets/nav/bottom_nav.dart';
 import '../../core/theme/app_theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'logic/my_listings_cubit.dart';
+import 'logic/my_listings_state.dart';
+import '../../data/repositories/item_repository.dart';
+import '../../data/local/local_item_repository.dart';
 
-class MyListingsPage extends StatefulWidget {
+class MyListingsPage extends StatelessWidget {
   const MyListingsPage({Key? key}) : super(key: key);
 
   @override
-  State<MyListingsPage> createState() => _MyListingsPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => MyListingsCubit(
+        itemRepository: context.read<ItemRepository>(),
+        localItemRepository: context.read<LocalItemRepository>(),
+      )..loadMyListings(),
+      child: _MyListingsView(),
+    );
+  }
 }
 
-class _MyListingsPageState extends State<MyListingsPage> {
+class _MyListingsView extends StatefulWidget {
+  _MyListingsView({Key? key}) : super(key: key);
+
+  @override
+  State<_MyListingsView> createState() => _MyListingsViewState();
+}
+
+class _MyListingsViewState extends State<_MyListingsView> {
   int _currentIndex = 2;
 
   void _onNavTap(int index) {
@@ -30,39 +50,6 @@ class _MyListingsPageState extends State<MyListingsPage> {
         break;
     }
   }
-
-  final List<Map<String, dynamic>> listings = [
-    {
-      "title": "Cordless Power Drill Set",
-      "status": "Active",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "4-Person Camping Tent",
-      "status": "Rented",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "Stand Mixer - KitchenAid",
-      "status": "Pending Approval",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "Mountain Bike - Size L",
-      "status": "Active",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "Digital Camera - Canon EOS",
-      "status": "Unavailable",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "Robotic Vacuum Cleaner",
-      "status": "Active",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-  ];
 
   Color _getStatusColor(String status) {
     switch (status) {
@@ -84,49 +71,163 @@ class _MyListingsPageState extends State<MyListingsPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 207, 225, 255),
-        elevation: 1,
-        centerTitle: true,
-        leading: const AnimatedReturnButton(),
-        title: Padding(
-          padding: EdgeInsets.symmetric(vertical: 12 * scale),
-          child: Text(
-            'My Listings',
-            style: GoogleFonts.outfit(
-              fontSize: 22 * scale,
-              color: AppColors.primaryBlue,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
+    
+    return BlocListener<MyListingsCubit, MyListingsState>(
+      listener: (context, state) {
+        if (state is MyListingsNavigateToEdit) {
+          Navigator.pushNamed(
+            context,
+            '/edit-item',
+            arguments: state.itemId,
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Color.fromARGB(255, 207, 225, 255),
+          elevation: 1,
+          centerTitle: true,
+          leading: const AnimatedReturnButton(),
+          title: Padding(
+            padding: EdgeInsets.symmetric(vertical: 12 * scale),
+            child: Text(
+              'My Listings',
+              style: GoogleFonts.outfit(
+                fontSize: 22 * scale,
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.refresh, color: AppColors.primaryBlue),
+              onPressed: () => context.read<MyListingsCubit>().loadMyListings(),
+            ),
+          ],
+        ),
+        body: Container(
+          decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+          child: BlocBuilder<MyListingsCubit, MyListingsState>(
+            builder: (context, state) {
+              if (state is MyListingsLoading) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryBlue,
+                  ),
+                );
+              }
+              
+              if (state is MyListingsError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        state.message,
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => context.read<MyListingsCubit>().loadMyListings(),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              
+              if (state is MyListingsLoaded) {
+                if (state.items.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.inventory_outlined, size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No listings yet',
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (state.isOffline)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              '(Offline mode)',
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }
+                
+                return Column(
+                  children: [
+                    if (state.isOffline)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        color: Colors.orange.shade100,
+                        child: Text(
+                          '📡 Offline Mode - Showing cached listings',
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            color: Colors.orange.shade900,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: state.items.length,
+                        itemBuilder: (context, index) {
+                          final item = state.items[index];
+                          return _buildListingCard(
+                            context: context,
+                            itemId: item.id,
+                            title: item.title,
+                            status: item.isAvailable ? 'Active' : 'Unavailable',
+                            imageUrl: item.images.isNotEmpty 
+                                ? item.images.first 
+                                : 'assets/images/powerdrill.jpg',
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }
+              
+              return const SizedBox.shrink();
+            },
           ),
         ),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        child: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: listings.length,
-          itemBuilder: (context, index) {
-            final item = listings[index];
-            return _buildListingCard(
-              title: item["title"],
-              status: item["status"],
-              imageUrl: item["image"],
-            );
-          },
+        bottomNavigationBar: AnimatedBottomNav(
+          currentIndex: _currentIndex,
+          onTap: _onNavTap,
         ),
-      ),
-      bottomNavigationBar: AnimatedBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onNavTap,
       ),
     );
   }
 
   Widget _buildListingCard({
+    required BuildContext context,
+    required String itemId,
     required String title,
     required String status,
     required String imageUrl,
@@ -203,7 +304,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
                         color: Colors.grey.shade700,
                         icon: Icons.edit_outlined,
                         onPressed: () {
-                          Navigator.pushNamed(context, '/edit-item');
+                          context.read<MyListingsCubit>().onEditItemTapped(itemId);
                         },
                       ),
                     ),
@@ -215,7 +316,11 @@ class _MyListingsPageState extends State<MyListingsPage> {
                         icon: Icons.visibility_outlined,
                         isPrimary: true,
                         onPressed: () {
-                          Navigator.pushNamed(context, '/item-details');
+                          Navigator.pushNamed(
+                            context,
+                            '/item-details',
+                            arguments: itemId,
+                          );
                         },
                       ),
                     ),

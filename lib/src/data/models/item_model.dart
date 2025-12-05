@@ -15,6 +15,7 @@ class Item {
   final DateTime updatedAt;
   final double? distance; // Distance in km from user
   final List<String> images;
+  final String? ownerUsername; // Owner's username
 
   Item({
     required this.id,
@@ -33,6 +34,7 @@ class Item {
     required this.updatedAt,
     this.distance,
     this.images = const [],
+    this.ownerUsername,
   });
 
   Item copyWith({
@@ -52,6 +54,7 @@ class Item {
     DateTime? updatedAt,
     double? distance,
     List<String>? images,
+    String? ownerUsername,
   }) {
     return Item(
       id: id ?? this.id,
@@ -70,6 +73,7 @@ class Item {
       updatedAt: updatedAt ?? this.updatedAt,
       distance: distance ?? this.distance,
       images: images ?? this.images,
+      ownerUsername: ownerUsername ?? this.ownerUsername,
     );
   }
 
@@ -79,6 +83,12 @@ class Item {
     if (json['item_images'] != null) {
       final imagesData = json['item_images'] as List;
       imagesList = imagesData.map((img) => img['image_url'] as String).toList();
+    }
+
+    // Parse owner username if available from join
+    String? ownerUsername;
+    if (json['users'] != null && json['users'] is Map) {
+      ownerUsername = json['users']['username'] as String?;
     }
 
     return Item(
@@ -101,6 +111,7 @@ class Item {
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       images: imagesList,
+      ownerUsername: ownerUsername,
     );
   }
 

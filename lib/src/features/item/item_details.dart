@@ -2,36 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'logic/item_details_cubit.dart';
+import 'logic/item_details_state.dart';
+import '../../data/repositories/item_repository.dart';
+import '../../data/repositories/profile_repository.dart';
+import '../../data/repositories/booking_repository.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../../data/models/item_model.dart';
+import '../../data/models/user_model.dart';
+import '../../data/models/booking_model.dart';
+import 'package:uuid/uuid.dart';
 
-class ItemDetailsPage extends StatefulWidget {
-  const ItemDetailsPage({super.key});
+class ItemDetailsPage extends StatelessWidget {
+  final String? itemId;
+
+  const ItemDetailsPage({super.key, this.itemId});
 
   @override
-  State<ItemDetailsPage> createState() => _ItemDetailsPageState();
+  Widget build(BuildContext context) {
+    // Get itemId from arguments if not provided
+    final String? id = itemId ?? 
+        (ModalRoute.of(context)?.settings.arguments as String?);
+    
+    if (id == null) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Color.fromARGB(255, 207, 225, 255),
+          title: const Text('Item Details'),
+        ),
+        body: const Center(
+          child: Text('Error: No item ID provided'),
+        ),
+      );
+    }
+
+    return BlocProvider(
+      create: (context) => ItemDetailsCubit(
+        itemRepository: context.read<ItemRepository>(),
+        profileRepository: context.read<ProfileRepository>(),
+      )..load(id),
+      child: _ItemDetailsView(),
+    );
+  }
 }
 
-class _ItemDetailsPageState extends State<ItemDetailsPage> {
+class _ItemDetailsView extends StatefulWidget {
+  _ItemDetailsView({Key? key}) : super(key: key);
+
+  @override
+  State<_ItemDetailsView> createState() => _ItemDetailsViewState();
+}
+
+class _ItemDetailsViewState extends State<_ItemDetailsView> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
-    final Map<String, String> item = {
-      'title': 'Professional Camera Kit',
-      'description':
-          'A high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
-      'image': 'assets/images/powerdrill.jpg',
-      'value': 'DA 1200',
-      'deposit': 'DA 300',
-      'availableFrom': '2023-11-20',
-      'availableUntil': '2023-11-27',
-      'ownerName': 'Sarah Jansen',
-      'ownerImage':
-          'https://cdn.pixabay.com/photo/2017/09/12/13/18/woman-2745228_1280.jpg',
-    };
-
-    const double ownerRating = 4.8;
-    const int ownerReviews = 75;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -56,30 +84,74 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       ),
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: _buildImage(item['image']!),
-            ),
-            const SizedBox(height: 16),
+        child: BlocBuilder<ItemDetailsCubit, ItemDetailsState>(
+          builder: (context, state) {
+            if (state is ItemDetailsLoading) {
+              return Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primaryBlue,
+                ),
+              );
+            }
+            
+            if (state is ItemDetailsError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Go Back'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            
+              if (state is ItemDetailsLoaded) {
+              final item = state.item;
+              final images = state.images;
+              final owner = state.owner;
+              
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: _buildImage(
+                      images.isNotEmpty 
+                          ? images.first.imageUrl 
+                          : 'assets/images/powerdrill.jpg',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
-            _buildDetailsCard(item),
-            const SizedBox(height: 16),
+                  _buildDetailsCard(item),
+                  const SizedBox(height: 16),
 
-            _buildOwnerInfo(item, ownerRating, ownerReviews),
-            const SizedBox(height: 24),
+                  _buildOwnerInfo(item, owner),
+                  const SizedBox(height: 24),                  _buildActionButtons(item),
+                  const SizedBox(height: 20),
 
-            _buildActionButtons(item),
-            const SizedBox(height: 20),
-
-            const Text(
-              'Please refer to the Deposit Policy for more information on item rentals and returns.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
+                  const Text(
+                    'Please refer to the Deposit Policy for more information on item rentals and returns.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              );
+            }
+            
+            return const SizedBox.shrink();
+          },
         ),
       ),
     );
@@ -107,7 +179,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     }
   }
 
-  Widget _buildDetailsCard(Map<String, String> item) {
+  Widget _buildDetailsCard(Item item) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -125,12 +197,12 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            item['title']!,
+            item.title,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
-            item['description']!,
+            item.description ?? 'No description available',
             style: const TextStyle(
               fontSize: 14,
               color: Colors.black87,
@@ -138,22 +210,33 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildDetailRow('Item Value', item['value']!),
-          _buildDetailRow('Deposit Required', item['deposit']!),
-          _buildDetailRow('Available From', item['availableFrom']!),
-          _buildDetailRow('Available Until', item['availableUntil']!),
+          _buildDetailRow('Category', item.category),
+          if (item.estimatedValue != null)
+            _buildDetailRow('Item Value', 'DA ${item.estimatedValue!.toStringAsFixed(0)}'),
+          if (item.depositAmount != null)
+            _buildDetailRow('Deposit Required', 'DA ${item.depositAmount!.toStringAsFixed(0)}'),
+          if (item.startDate != null)
+            _buildDetailRow('Available From', _formatDate(item.startDate!)),
+          if (item.endDate != null)
+            _buildDetailRow('Available Until', _formatDate(item.endDate!)),
+          _buildDetailRow('Status', item.isAvailable ? 'Available' : 'Unavailable'),
         ],
       ),
     );
   }
 
-  Widget _buildOwnerInfo(
-    Map<String, String> item,
-    double ownerRating,
-    int ownerReviews,
-  ) {
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildOwnerInfo(Item item, User? owner) {
+    // Calculate average rating
+    final double averageRating = owner != null && owner.ratingCount > 0
+        ? owner.ratingSum / owner.ratingCount
+        : 0.0;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -165,68 +248,77 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           ),
         ],
       ),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.pushNamed(context, '/profile-page');
-        },
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.grey,
-              child: Icon(Icons.person, color: Colors.white, size: 28),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item['ownerName']!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: const Color(0xFFE0E0E0),
+            backgroundImage: owner?.avatarUrl != null 
+                ? NetworkImage(owner!.avatarUrl!) 
+                : null,
+            child: owner?.avatarUrl == null 
+                ? const Icon(Icons.person, color: Colors.white, size: 32)
+                : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  owner?.username ?? 'Owner',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.star,
+                      size: 18,
+                      color: Color(0xFFFFC107),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$ownerRating ',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 13,
-                        ),
+                    const SizedBox(width: 4),
+                    Text(
+                      averageRating.toStringAsFixed(1),
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A1A),
                       ),
-                      Text(
-                        '($ownerReviews reviews)',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '(${owner?.ratingCount ?? 0} reviews)',
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: const Color(0xFF9E9E9E),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildActionButtons(Map<String, String> item) {
+  Widget _buildActionButtons(Item item) {
     return Column(
       children: [
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-              _showBookingDialog(item);
-            },
+            onPressed: item.isAvailable 
+                ? () {
+                    _showBookingDialog(item);
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -234,9 +326,9 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
-              'Book Now',
-              style: TextStyle(
+            child: Text(
+              item.isAvailable ? 'Book Now' : 'Not Available',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -267,21 +359,32 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     );
   }
 
-  void _showBookingDialog(Map<String, String> item) {
+  void _showBookingDialog(Item item) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
-        return BookingDialog(item: item);
+      builder: (BuildContext dialogContext) {
+        return BookingDialog(
+          item: item,
+          bookingRepository: context.read<BookingRepository>(),
+          authRepository: context.read<AuthRepository>(),
+        );
       },
     );
   }
 }
 
 class BookingDialog extends StatefulWidget {
-  final Map<String, String> item;
+  final Item item;
+  final BookingRepository bookingRepository;
+  final AuthRepository authRepository;
 
-  const BookingDialog({required this.item, super.key});
+  const BookingDialog({
+    required this.item,
+    required this.bookingRepository,
+    required this.authRepository,
+    super.key,
+  });
 
   @override
   State<BookingDialog> createState() => _BookingDialogState();
@@ -324,9 +427,9 @@ class _BookingDialogState extends State<BookingDialog>
   }
 
   void _parseItemData() {
-    availableFrom = DateTime.parse(widget.item['availableFrom']!);
-    availableUntil = DateTime.parse(widget.item['availableUntil']!);
-    itemValue = int.parse(widget.item['value']!.replaceAll('DA', ''));
+    availableFrom = widget.item.startDate ?? DateTime.now();
+    availableUntil = widget.item.endDate ?? DateTime.now().add(const Duration(days: 30));
+    itemValue = widget.item.estimatedValue?.toInt() ?? 0;
   }
 
   Future<void> _selectDate(bool isStartDate) async {
@@ -373,6 +476,86 @@ class _BookingDialogState extends State<BookingDialog>
       }
     } else {
       numDays = 0;
+    }
+  }
+
+  Future<void> _handleBookingConfirmation() async {
+    if (startDate == null || endDate == null || numDays <= 0) {
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
+        ),
+      );
+
+      // Get current user
+      final currentUser = widget.authRepository.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Calculate total cost
+      final totalCost = itemValue * numDays;
+
+      // Create booking
+      final booking = Booking(
+        id: const Uuid().v4(),
+        itemId: widget.item.id,
+        ownerId: widget.item.ownerId,
+        borrowerId: currentUser.id,
+        status: BookingStatus.pending,
+        depositStatus: DepositStatus.none,
+        startDate: startDate!,
+        returnByDate: endDate!,
+        totalCost: totalCost.toDouble(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await widget.bookingRepository.createBooking(booking);
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Close booking dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Booking confirmed for $numDays days!',
+            ),
+            backgroundColor: AppColors.primary,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to create booking: ${e.toString()}',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -466,17 +649,8 @@ class _BookingDialogState extends State<BookingDialog>
                         Expanded(
                           child: ElevatedButton(
                             onPressed: numDays > 0
-                                ? () {
-                                    // Handle booking confirmation
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Booking confirmed for $numDays days!',
-                                        ),
-                                        backgroundColor: AppColors.primary,
-                                      ),
-                                    );
+                                ? () async {
+                                    await _handleBookingConfirmation();
                                   }
                                 : null,
                             style: ElevatedButton.styleFrom(

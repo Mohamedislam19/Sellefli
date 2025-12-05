@@ -45,7 +45,6 @@ class ProfileRepository {
     String? username,
     String? email,
     String? phone,
-    String? bio, // if the table has a bio column
     String? avatarUrl,
   }) async {
     final userId = _supabase.auth.currentUser?.id;
@@ -54,7 +53,6 @@ class ProfileRepository {
       if (username != null) 'username': username,
       if (email != null) 'email': email,
       if (phone != null) 'phone': phone,
-      if (bio != null) 'bio': bio,
       if (avatarUrl != null) 'avatar_url': avatarUrl,
       'updated_at': DateTime.now().toIso8601String(),
     };

@@ -1,4 +1,4 @@
-part of 'my_listings_cubit.dart';
+import '../../../data/models/item_model.dart';
 
 abstract class MyListingsState {
   const MyListingsState();
@@ -10,7 +10,8 @@ class MyListingsLoading extends MyListingsState {}
 
 class MyListingsLoaded extends MyListingsState {
   final List<Item> items;
-  const MyListingsLoaded({required this.items});
+  final bool isOffline;
+  const MyListingsLoaded({required this.items, this.isOffline = false});
 }
 
 class MyListingsError extends MyListingsState {

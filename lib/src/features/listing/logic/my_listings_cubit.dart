@@ -5,17 +5,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../data/models/item_model.dart';
 import '../../../data/repositories/item_repository.dart';
 import '../../../data/local/local_item_repository.dart';
-import '../../../data/local/db_helper.dart';
-
-part 'my_listings_state.dart';
+import 'my_listings_state.dart';
 
 class MyListingsCubit extends Cubit<MyListingsState> {
   final ItemRepository _itemRepository;
-  final LocalItemRepository _localRepo = LocalItemRepository();
+  final LocalItemRepository _localRepo;
   final Connectivity _connectivity;
 
-  MyListingsCubit({ItemRepository? itemRepository, Connectivity? connectivity})
-      : _itemRepository = itemRepository ?? ItemRepository(Supabase.instance.client),
+  MyListingsCubit({
+    required ItemRepository itemRepository,
+    required LocalItemRepository localItemRepository,
+    Connectivity? connectivity,
+  })  : _itemRepository = itemRepository,
+        _localRepo = localItemRepository,
         _connectivity = connectivity ?? Connectivity(),
         super(MyListingsInitial());
 
@@ -52,34 +54,11 @@ class MyListingsCubit extends Cubit<MyListingsState> {
           await _localRepo.upsertLocalItem(item: item, thumbnailUrl: thumb);
           await _localRepo.replaceItemImages(item.id, images);
         }
-        emit(MyListingsLoaded(items: items));
+        emit(MyListingsLoaded(items: items, isOffline: false));
       } else {
-        // Offline: read from local DB and return
-        final db = await DbHelper.database;
-        final rows = await db.query(
-          DbHelper.tableItems,
-          orderBy: 'updated_at DESC',
-        );
-        final items = rows.map<Item>((r) {
-          // Map local row to Item using available fields
-          return Item(
-            id: r['id'] as String,
-            ownerId: r['owner_id'] as String,
-            title: r['title'] as String,
-            category: r['category'] as String,
-            description: null,
-            estimatedValue: (r['estimated_value'] as num?)?.toDouble(),
-            depositAmount: (r['deposit_amount'] as num?)?.toDouble(),
-            startDate: null,
-            endDate: null,
-            lat: null,
-            lng: null,
-            isAvailable: (r['is_available'] as int?) == 1,
-            createdAt: DateTime.parse((r['created_at'] as String?) ?? DateTime.now().toIso8601String()),
-            updatedAt: DateTime.parse((r['updated_at'] as String?) ?? DateTime.now().toIso8601String()),
-          );
-        }).toList();
-        emit(MyListingsLoaded(items: items));
+        // Offline: read from local DB and return cached items
+        final items = await _localRepo.getCachedItems(limit: 100);
+        emit(MyListingsLoaded(items: items, isOffline: true));
       }
     } catch (e) {
       emit(MyListingsError(e.toString()));
