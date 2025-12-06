@@ -1,6 +1,9 @@
+// ignore_for_file: use_super_parameters
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme.dart';
@@ -91,6 +94,7 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -111,7 +115,7 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
             title: Padding(
               padding: EdgeInsets.symmetric(vertical: 12 * scale),
               child: Text(
-                'Requests & Orders',
+                l10n.requestsTitle,
                 style: GoogleFonts.outfit(
                   fontSize: (isSmallMobile ? 18 : 22) * scale,
                   color: AppColors.primaryBlue,
@@ -136,7 +140,7 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                     children: [
                       Expanded(
                         child: _TabButton(
-                          label: 'Incoming',
+                          label: l10n.requestsIncomingTab,
                           isSelected: _showIncoming,
                           onTap: () {
                             setState(() => _showIncoming = true);
@@ -148,7 +152,7 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                       SizedBox(width: isSmallMobile ? 8 : 12),
                       Expanded(
                         child: _TabButton(
-                          label: 'My Requests',
+                          label: l10n.requestsMyRequestsTab,
                           isSelected: !_showIncoming,
                           onTap: () {
                             setState(() => _showIncoming = false);
@@ -195,14 +199,14 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Error: ${state.error}',
+                                l10n.requestsError(state.error),
                                 style: const TextStyle(color: Colors.red),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: _loadBookings,
-                                child: const Text('Retry'),
+                                child: Text(l10n.retry),
                               ),
                             ],
                           ),
@@ -225,8 +229,8 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                                 const SizedBox(height: 16),
                                 Text(
                                   _showIncoming
-                                      ? 'No incoming requests'
-                                      : 'No requests sent yet',
+                                      ? l10n.requestsNoIncoming
+                                      : l10n.requestsNoSent,
                                   style: const TextStyle(
                                     fontSize: 18,
                                     color: Colors.grey,
@@ -256,8 +260,8 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                               bookingId: booking.id,
                               imageUrl:
                                   imageUrl ?? 'https://via.placeholder.com/150',
-                              title: item?.title ?? 'Item',
-                              sender: otherUser?.username ?? 'Unknown User',
+                              title: item?.title ?? l10n.itemDetailsTitle,
+                              sender: otherUser?.username ?? l10n.homeEmpty,
                               senderAvatarUrl: avatarUrl,
                               dateRange:
                                   '${_formatDate(booking.startDate)} - ${_formatDate(booking.returnByDate)}',
@@ -265,6 +269,7 @@ class _RequestsOrdersPageState extends State<_RequestsOrdersPageContent> {
                               isSmallMobile: isSmallMobile,
                               isMobile: isMobile,
                               isOwnerView: _showIncoming,
+                              l10n: l10n,
                               onAccept: () => context
                                   .read<BookingCubit>()
                                   .acceptBooking(booking.id),
@@ -371,6 +376,7 @@ class _RequestCard extends StatelessWidget {
   final bool isSmallMobile;
   final bool isMobile;
   final bool isOwnerView;
+  final AppLocalizations l10n;
   final VoidCallback onAccept;
   final VoidCallback onDecline;
 
@@ -385,6 +391,7 @@ class _RequestCard extends StatelessWidget {
     this.isSmallMobile = false,
     this.isMobile = true,
     required this.isOwnerView,
+    required this.l10n,
     required this.onAccept,
     required this.onDecline,
   });
@@ -466,7 +473,7 @@ class _RequestCard extends StatelessWidget {
                           ],
                           Flexible(
                             child: Text(
-                              'From $sender',
+                              l10n.requestsFromSender( sender),
                               style: AppTextStyles.caption.copyWith(
                                 fontSize: isSmallMobile ? 11 : null,
                               ),
@@ -518,7 +525,7 @@ class _RequestCard extends StatelessWidget {
                           children: [
                             Expanded(
                               child: AdvancedButton(
-                                label: 'Accept',
+                                label: l10n.requestsAccept,
                                 onPressed: status == BookingStatus.pending
                                     ? onAccept
                                     : null,
@@ -536,7 +543,7 @@ class _RequestCard extends StatelessWidget {
                             SizedBox(width: isSmallMobile ? 6 : 8),
                             Expanded(
                               child: AdvancedButton(
-                                label: 'Decline',
+                                label: l10n.requestsDecline,
                                 onPressed: status == BookingStatus.pending
                                     ? onDecline
                                     : null,
@@ -559,7 +566,7 @@ class _RequestCard extends StatelessWidget {
                         SizedBox(
                           width: 100,
                           child: AdvancedButton(
-                            label: 'Accept',
+                            label: l10n.requestsAccept,
                             onPressed: status == BookingStatus.pending
                                 ? onAccept
                                 : null,
@@ -578,7 +585,7 @@ class _RequestCard extends StatelessWidget {
                         SizedBox(
                           width: 100,
                           child: AdvancedButton(
-                            label: 'Decline',
+                            label: l10n.requestsDecline,
                             onPressed: status == BookingStatus.pending
                                 ? onDecline
                                 : null,
@@ -610,17 +617,19 @@ class _RequestCard extends StatelessWidget {
   Widget _buildStatusBadge(BookingStatus status) {
     switch (status) {
       case BookingStatus.pending:
-        return const ChipBadge(label: 'Pending', type: ChipType.ghost);
+        return ChipBadge(label: l10n.statusPending, type: ChipType.ghost);
       case BookingStatus.accepted:
-        return const ChipBadge(label: 'Accepted', type: ChipType.primary);
+        return ChipBadge(label: l10n.statusAccepted, type: ChipType.primary);
       case BookingStatus.declined:
-        return const ChipBadge(label: 'Declined', type: ChipType.danger);
+        return ChipBadge(label: l10n.statusDeclined, type: ChipType.danger);
       case BookingStatus.active:
-        return const ChipBadge(label: 'Active', type: ChipType.primary);
+        return ChipBadge(label: l10n.statusActive, type: ChipType.primary);
       case BookingStatus.completed:
-        return const ChipBadge(label: 'Completed', type: ChipType.primary);
+        return ChipBadge(label: l10n.statusCompleted, type: ChipType.primary);
       case BookingStatus.closed:
-        return const ChipBadge(label: 'Closed', type: ChipType.primary);
+        return ChipBadge(label: l10n.statusClosed, type: ChipType.primary);
     }
   }
 }
+
+

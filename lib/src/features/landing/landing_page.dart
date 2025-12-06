@@ -1,5 +1,6 @@
 // lib/src/features/landing/landing_page.dart
 import 'package:flutter/material.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/buttons/advanced_button.dart';
 
@@ -8,6 +9,7 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Container(
@@ -60,7 +62,7 @@ class LandingPage extends StatelessWidget {
                               ),
                               SizedBox(height: isMobile ? 4 : 8),
                               Text(
-                                "Borrow nearby · Share simply",
+                                l10n.landingTagline,
                                 style: AppTextStyles.subtitle.copyWith(
                                   fontSize: isSmallMobile
                                       ? 12
@@ -77,6 +79,7 @@ class LandingPage extends StatelessWidget {
 
                           // Feature Cards - Responsive Layout
                           _buildFeatureCards(
+                            context: context,
                             isMobile: isMobile,
                             isTablet: isTablet,
                             isDesktop: isDesktop,
@@ -92,7 +95,7 @@ class LandingPage extends StatelessWidget {
                                   maxWidth: isDesktop ? 500 : double.infinity,
                                 ),
                                 child: AdvancedButton(
-                                  label: "Get Started",
+                                  label: l10n.landingGetStarted,
                                   onPressed: () {
                                     Navigator.pushNamed(
                                       context,
@@ -109,7 +112,7 @@ class LandingPage extends StatelessWidget {
                                   maxWidth: isDesktop ? 500 : double.infinity,
                                 ),
                                 child: AdvancedButton(
-                                  label: "Sign In",
+                                  label: l10n.landingSignIn,
                                   onPressed: () {
                                     Navigator.pushNamed(context, '/auth');
                                   },
@@ -124,7 +127,7 @@ class LandingPage extends StatelessWidget {
                               ),
                               SizedBox(height: isMobile ? 8 : 12),
                               Text(
-                                "Terms & Conditions",
+                                l10n.landingTerms,
                                 style: AppTextStyles.caption.copyWith(
                                   fontSize: isDesktop
                                       ? AppTextStyles.caption.fontSize! * 1.1
@@ -147,28 +150,28 @@ class LandingPage extends StatelessWidget {
   }
 
   Widget _buildFeatureCards({
+    required BuildContext context,
     required bool isMobile,
     required bool isTablet,
     required bool isDesktop,
   }) {
-    const features = [
+    final l10n = AppLocalizations.of(context);
+
+    final features = [
       FeatureCard(
         icon: Icons.search,
-        title: "Browse Local Items",
-        description:
-            "Discover a wide array of tools, equipment, and unique items available for rent in your neighborhood.",
+        title: l10n.landingFeatureBrowseTitle,
+        description: l10n.landingFeatureBrowseDescription,
       ),
       FeatureCard(
         icon: Icons.share_outlined,
-        title: "Effortless Lending",
-        description:
-            "List your unused items in minutes and earn while contributing to a sustainable community economy.",
+        title: l10n.landingFeatureLendTitle,
+        description: l10n.landingFeatureLendDescription,
       ),
       FeatureCard(
         icon: Icons.people_outline,
-        title: "Connect with Neighbors",
-        description:
-            "Build trust and strengthen local ties through shared resources and friendly interactions.",
+        title: l10n.landingFeatureConnectTitle,
+        description: l10n.landingFeatureConnectDescription,
       ),
     ];
 
@@ -286,3 +289,5 @@ class FeatureCard extends StatelessWidget {
     );
   }
 }
+
+

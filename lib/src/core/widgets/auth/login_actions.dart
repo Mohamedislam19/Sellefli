@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 
 class LoginActions extends StatelessWidget {
@@ -17,6 +18,7 @@ class LoginActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         // Forgot Password
@@ -29,7 +31,7 @@ class LoginActions extends StatelessWidget {
               minimumSize: const Size(0, 40),
             ),
             child: Text(
-              'Forgot your password?',
+              l10n.authForgotPassword,
               style: AppTextStyles.body.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w600,
@@ -81,7 +83,7 @@ class LoginActions extends StatelessWidget {
                     ),
                   )
                 : Text(
-                    'Log in',
+                    l10n.authLoginButton,
                     style: AppTextStyles.subtitle.copyWith(
                       color: Colors.white,
                       fontSize: 17,
@@ -98,7 +100,7 @@ class LoginActions extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Don\'t have an account? ',
+              '${l10n.authNoAccount} ',
               style: AppTextStyles.body.copyWith(
                 color: AppColors.muted,
                 fontSize: 15,
@@ -110,7 +112,7 @@ class LoginActions extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Text(
-                  'Register',
+                  l10n.authRegister,
                   style: AppTextStyles.subtitle.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,
@@ -125,3 +127,5 @@ class LoginActions extends StatelessWidget {
     );
   }
 }
+
+

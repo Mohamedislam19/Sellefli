@@ -1,4 +1,6 @@
 // lib/src/core/widgets/dropdown/animated_dropdown.dart
+// ignore_for_file: use_super_parameters
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
@@ -216,3 +218,5 @@ class _AnimatedDropdownState extends State<AnimatedDropdown>
     );
   }
 }
+
+

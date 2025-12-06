@@ -1,3 +1,5 @@
+// ignore_for_file: use_super_parameters, sort_child_properties_last
+
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
@@ -110,3 +112,5 @@ class DangerButton extends StatelessWidget {
     );
   }
 }
+
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:sellefli/src/core/widgets/rating_widget.dart';
@@ -25,6 +26,8 @@ import 'package:sellefli/src/features/profile/edit_profile_page.dart';
 import 'package:sellefli/src/features/item/create_item_page.dart';
 import 'package:sellefli/src/core/widgets/protected_route.dart';
 import 'src/core/theme/app_theme.dart';
+import 'src/core/l10n/language_cubit.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'src/features/profile/logic/profile_cubit.dart';
 
 class MyApp extends StatelessWidget {
@@ -61,36 +64,54 @@ class MyApp extends StatelessWidget {
               bookingRepository: context.read<BookingRepository>(),
             ),
           ),
+          BlocProvider(create: (context) => LanguageCubit()),
         ],
-        child: MaterialApp(
-          title: 'Sellefli',
-          debugShowCheckedModeBanner: false,
-          theme: appTheme,
-          home: const AuthWrapper(),
-          routes: {
-            '/landing': (context) => const LandingPage(),
-            '/map-picker': (context) =>
-                const ProtectedRoute(child: MapPickerPage()),
-            '/settings': (context) => ProtectedRoute(child: SettingsHelpPage()),
-            '/create-item': (context) =>
-                const ProtectedRoute(child: CreateItemPage()),
-            '/edit-item': (context) =>
-                const ProtectedRoute(child: EditItemPage()),
-            '/auth': (context) => const AuthPage(),
-            '/request-order': (context) =>
-                const ProtectedRoute(child: RequestsOrdersPage()),
-            '/booking-details': (context) =>
-                const ProtectedRoute(child: BookingDetailPage()),
-            '/item-details': (context) =>
-                const ProtectedRoute(child: ItemDetailsPage()),
-            '/profile-page': (context) =>
-                const ProtectedRoute(child: ProfilePage()),
-            '/edit-profile': (context) =>
-                const ProtectedRoute(child: EditProfilePage()),
-            '/listings': (context) =>
-                const ProtectedRoute(child: MyListingsPage()),
-            '/home': (context) => const ProtectedRoute(child: HomePage()),
-            '/rating': (context) => ProtectedRoute(child: RatingWidget()),
+        child: BlocBuilder<LanguageCubit, LanguageState>(
+          builder: (context, langState) {
+            return MaterialApp(
+              title: 'Sellefli',
+              debugShowCheckedModeBanner: false,
+              theme: appTheme,
+              locale: langState.locale,
+              supportedLocales: const [
+                Locale('en'),
+                Locale('fr'),
+                Locale('ar'),
+              ],
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              home: const AuthWrapper(),
+              routes: {
+                '/landing': (context) => const LandingPage(),
+                '/map-picker': (context) =>
+                    const ProtectedRoute(child: MapPickerPage()),
+                '/settings': (context) =>
+                    ProtectedRoute(child: SettingsHelpPage()),
+                '/create-item': (context) =>
+                    const ProtectedRoute(child: CreateItemPage()),
+                '/edit-item': (context) =>
+                    const ProtectedRoute(child: EditItemPage()),
+                '/auth': (context) => const AuthPage(),
+                '/request-order': (context) =>
+                    const ProtectedRoute(child: RequestsOrdersPage()),
+                '/booking-details': (context) =>
+                    const ProtectedRoute(child: BookingDetailPage()),
+                '/item-details': (context) =>
+                    const ProtectedRoute(child: ItemDetailsPage()),
+                '/profile-page': (context) =>
+                    const ProtectedRoute(child: ProfilePage()),
+                '/edit-profile': (context) =>
+                    const ProtectedRoute(child: EditProfilePage()),
+                '/listings': (context) =>
+                    const ProtectedRoute(child: MyListingsPage()),
+                '/home': (context) => const ProtectedRoute(child: HomePage()),
+                '/rating': (context) => ProtectedRoute(child: RatingWidget()),
+              },
+            );
           },
         ),
       ),
@@ -122,3 +143,5 @@ class AuthWrapper extends StatelessWidget {
     );
   }
 }
+
+

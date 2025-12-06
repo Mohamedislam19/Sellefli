@@ -31,3 +31,5 @@ class BookingError extends BookingState {
 
   BookingError(this.error);
 }
+
+

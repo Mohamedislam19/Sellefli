@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/features/home/logic/home_cubit.dart';
 
@@ -8,6 +9,7 @@ class HomeSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       child: Container(
@@ -24,7 +26,7 @@ class HomeSearchBar extends StatelessWidget {
           onChanged: (value) =>
               context.read<HomeCubit>().updateSearchQuery(value),
           decoration: InputDecoration(
-            hintText: 'Search for items...',
+            hintText: l10n.homeSearchHint,
             hintStyle: TextStyle(
               color: AppColors.muted.withAlpha(((0.6) * 255).toInt()),
             ),
@@ -40,3 +42,5 @@ class HomeSearchBar extends StatelessWidget {
     );
   }
 }
+
+

@@ -74,3 +74,5 @@ class HomeState extends Equatable {
     isOfflineMode,
   ];
 }
+
+

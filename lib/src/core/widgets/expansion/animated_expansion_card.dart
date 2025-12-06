@@ -1,4 +1,6 @@
 // lib/src/core/widgets/expansion/animated_expansion_card.dart
+// ignore_for_file: use_super_parameters
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart'; // imports primaryBlue
@@ -268,3 +270,5 @@ class _SubExpansionCardState extends State<SubExpansionCard>
     );
   }
 }
+
+

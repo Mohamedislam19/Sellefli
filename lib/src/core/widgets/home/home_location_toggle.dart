@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/features/home/logic/home_cubit.dart';
 import 'package:sellefli/src/features/home/logic/home_state.dart';
@@ -9,6 +10,7 @@ class HomeLocationToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return BlocBuilder<HomeCubit, HomeState>(
       buildWhen: (previous, current) =>
           previous.isLocationEnabled != current.isLocationEnabled,
@@ -38,7 +40,7 @@ class HomeLocationToggle extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Use my location',
+                  l10n.homeUseLocation,
                   style: AppTextStyles.body.copyWith(
                     fontSize: 14,
                     color: state.isLocationEnabled
@@ -63,3 +65,5 @@ class HomeLocationToggle extends StatelessWidget {
     );
   }
 }
+
+

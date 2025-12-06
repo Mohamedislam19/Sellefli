@@ -1,5 +1,8 @@
+// ignore_for_file: prefer_const_constructors_in_immutables, use_super_parameters
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,6 +25,7 @@ class ItemDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // Get itemId from arguments if not provided
     final String? id =
         itemId ?? (ModalRoute.of(context)?.settings.arguments as String?);
@@ -30,9 +34,9 @@ class ItemDetailsPage extends StatelessWidget {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Color.fromARGB(255, 207, 225, 255),
-          title: const Text('Item Details'),
+          title: Text(l10n.itemDetailsTitle),
         ),
-        body: const Center(child: Text('Error: No item ID provided')),
+        body: Center(child: Text(l10n.itemDetailsNoId)),
       );
     }
 
@@ -56,6 +60,7 @@ class _ItemDetailsView extends StatefulWidget {
 class _ItemDetailsViewState extends State<_ItemDetailsView> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
@@ -70,7 +75,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Item Details',
+            l10n.itemDetailsTitle,
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,
@@ -110,7 +115,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Go Back'),
+                      child: Text(l10n.itemDetailsGoBack),
                     ),
                   ],
                 ),
@@ -167,19 +172,19 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
                   ),
                   const SizedBox(height: 16),
 
-                  _buildDetailsCard(item),
+                  _buildDetailsCard(item, l10n),
                   const SizedBox(height: 16),
 
                   if (!isOwner) ...[
-                    _buildOwnerInfo(item, owner),
+                    _buildOwnerInfo(item, owner, l10n),
                     const SizedBox(height: 24),
-                    _buildActionButtons(item),
+                    _buildActionButtons(item, l10n),
                     const SizedBox(height: 20),
                   ],
 
-                  const Text(
-                    'Please refer to the Deposit Policy for more information on item rentals and returns.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  Text(
+                    l10n.itemDetailsDepositNote,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -225,7 +230,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
     }
   }
 
-  Widget _buildDetailsCard(Item item) {
+  Widget _buildDetailsCard(Item item, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -248,7 +253,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
           ),
           const SizedBox(height: 8),
           Text(
-            item.description ?? 'No description available',
+            item.description ?? l10n.itemDetailsNoDescription,
             style: const TextStyle(
               fontSize: 14,
               color: Colors.black87,
@@ -256,24 +261,32 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildDetailRow('Category', item.category),
+          _buildDetailRow(l10n.itemDetailsCategory, item.category),
           if (item.estimatedValue != null)
             _buildDetailRow(
-              'Item Value',
+              l10n.itemDetailsValue,
               'DA ${item.estimatedValue!.toStringAsFixed(0)}',
             ),
           if (item.depositAmount != null)
             _buildDetailRow(
-              'Deposit Required',
+              l10n.itemDetailsDeposit,
               'DA ${item.depositAmount!.toStringAsFixed(0)}',
             ),
           if (item.startDate != null)
-            _buildDetailRow('Available From', _formatDate(item.startDate!)),
+            _buildDetailRow(
+              l10n.itemDetailsAvailableFrom,
+              _formatDate(item.startDate!),
+            ),
           if (item.endDate != null)
-            _buildDetailRow('Available Until', _formatDate(item.endDate!)),
+            _buildDetailRow(
+              l10n.itemDetailsAvailableUntil,
+              _formatDate(item.endDate!),
+            ),
           _buildDetailRow(
-            'Status',
-            item.isAvailable ? 'Available' : 'Unavailable',
+            l10n.itemDetailsStatus,
+            item.isAvailable
+                ? l10n.itemStatusAvailable
+                : l10n.itemStatusUnavailable,
           ),
         ],
       ),
@@ -284,7 +297,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  Widget _buildOwnerInfo(Item item, User? owner) {
+  Widget _buildOwnerInfo(Item item, User? owner, AppLocalizations l10n) {
     // Calculate average rating
     final double averageRating = owner != null && owner.ratingCount > 0
         ? owner.ratingSum / owner.ratingCount
@@ -318,7 +331,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  owner?.username ?? 'Owner',
+                  owner?.username ?? l10n.itemDetailsOwner,
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.w600,
                     fontSize: 17,
@@ -340,7 +353,9 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '(${owner?.ratingCount ?? 0} reviews)',
+                      l10n.itemDetailsOwnerReviews(
+                        owner?.ratingCount ?? 0,
+                      ),
                       style: GoogleFonts.outfit(
                         fontSize: 14,
                         color: const Color(0xFF9E9E9E),
@@ -356,7 +371,7 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
     );
   }
 
-  Widget _buildActionButtons(Item item) {
+  Widget _buildActionButtons(Item item, AppLocalizations l10n) {
     return Column(
       children: [
         SizedBox(
@@ -375,7 +390,9 @@ class _ItemDetailsViewState extends State<_ItemDetailsView> {
               ),
             ),
             child: Text(
-              item.isAvailable ? 'Book Now' : 'Not Available',
+              item.isAvailable
+                  ? l10n.itemDetailsBookNow
+                  : l10n.itemDetailsNotAvailable,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -529,6 +546,7 @@ class _BookingDialogState extends State<BookingDialog>
   }
 
   Future<void> _handleBookingConfirmation() async {
+    final l10n = AppLocalizations.of(context);
     if (startDate == null || endDate == null || numDays <= 0) {
       return;
     }
@@ -545,7 +563,7 @@ class _BookingDialogState extends State<BookingDialog>
       // Get current user
       final currentUser = widget.authRepository.currentUser;
       if (currentUser == null) {
-        throw Exception('User not authenticated');
+        throw Exception(l10n.bookingDialogAuthRequired);
       }
 
       // Calculate total cost
@@ -578,7 +596,7 @@ class _BookingDialogState extends State<BookingDialog>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Booking confirmed for $numDays days!'),
+            content: Text(l10n.bookingDialogSuccess(numDays)),
             backgroundColor: AppColors.primary,
             duration: const Duration(seconds: 3),
           ),
@@ -598,7 +616,7 @@ class _BookingDialogState extends State<BookingDialog>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create booking: ${e.toString()}'),
+            content: Text(l10n.bookingDialogFail(e.toString())),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -615,6 +633,7 @@ class _BookingDialogState extends State<BookingDialog>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return FadeTransition(
       opacity: _opacityAnimation,
       child: ScaleTransition(
@@ -639,7 +658,7 @@ class _BookingDialogState extends State<BookingDialog>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Booking Details',
+                          l10n.bookingDialogTitle,
                           style: GoogleFonts.outfit(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -665,9 +684,13 @@ class _BookingDialogState extends State<BookingDialog>
                       ],
                     ),
                     const SizedBox(height: 24),
-                    _buildDateField('Start Date', startDate, true),
+                    _buildDateField(
+                      l10n.bookingDialogStartDate,
+                      startDate,
+                      true,
+                    ),
                     const SizedBox(height: 16),
-                    _buildDateField('End Date', endDate, false),
+                    _buildDateField(l10n.bookingDialogEndDate, endDate, false),
                     const SizedBox(height: 24),
                     _buildTotalCostField(),
                     const SizedBox(height: 28),
@@ -684,7 +707,7 @@ class _BookingDialogState extends State<BookingDialog>
                               ),
                             ),
                             child: Text(
-                              'Cancel',
+                              l10n.bookingDialogCancel,
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -710,7 +733,7 @@ class _BookingDialogState extends State<BookingDialog>
                               ),
                             ),
                             child: Text(
-                              'Confirm',
+                              l10n.bookingDialogConfirm,
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -759,7 +782,7 @@ class _BookingDialogState extends State<BookingDialog>
                 Text(
                   date != null
                       ? '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'
-                      : 'Select date',
+                      : AppLocalizations.of(context).bookingDialogSelectDate,
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -791,7 +814,7 @@ class _BookingDialogState extends State<BookingDialog>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total Cost',
+                AppLocalizations.of(context).bookingDialogTotalCost,
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
@@ -813,7 +836,7 @@ class _BookingDialogState extends State<BookingDialog>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Days',
+                AppLocalizations.of(context).bookingDialogDays,
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
@@ -836,3 +859,5 @@ class _BookingDialogState extends State<BookingDialog>
     );
   }
 }
+
+

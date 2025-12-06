@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/core/utils/validators.dart';
 import 'package:sellefli/src/core/widgets/auth/auth_text_field.dart';
@@ -65,6 +66,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       alignment: Alignment.center,
       child: FadeTransition(
@@ -95,11 +97,12 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                     const SizedBox(height: 40),
                     AuthTextField(
                       controller: _emailController,
-                      label: 'Email',
-                      hint: 'example@email.com',
+                      label: l10n.authEmailLabel,
+                      hint: l10n.authEmailHint,
                       prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
-                      validator: Validators.validateEmail,
+                      validator: (value) =>
+                          Validators.validateEmail(context, value),
                     ),
                     const SizedBox(height: 32),
                     ElevatedButton(
@@ -143,7 +146,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                               ),
                             )
                           : Text(
-                              'Send Reset Link',
+                              l10n.authSendResetLink,
                               style: AppTextStyles.subtitle.copyWith(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -166,7 +169,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'OR',
+                            l10n.authOr,
                             style: AppTextStyles.body.copyWith(
                               color: AppColors.muted,
                               fontSize: 13,
@@ -189,7 +192,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Remember your password? ',
+                          '${l10n.authRememberPassword} ',
                           style: AppTextStyles.body.copyWith(
                             color: AppColors.muted,
                             fontSize: 15,
@@ -204,7 +207,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                               vertical: 4,
                             ),
                             child: Text(
-                              'Log in',
+                              l10n.authLoginButton,
                               style: AppTextStyles.subtitle.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
@@ -225,3 +228,5 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
     );
   }
 }
+
+

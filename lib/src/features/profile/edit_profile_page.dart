@@ -1,5 +1,8 @@
+// ignore_for_file: prefer_const_constructors_in_immutables, use_super_parameters, use_build_context_synchronously, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -64,6 +67,7 @@ class _EditProfileViewState extends State<_EditProfileView> {
   }
 
   Future<void> _pickImage() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -78,9 +82,9 @@ class _EditProfileViewState extends State<_EditProfileView> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.editProfileImagePickFail( '$e'))),
+      );
     }
   }
 
@@ -93,6 +97,7 @@ class _EditProfileViewState extends State<_EditProfileView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
 
@@ -100,8 +105,8 @@ class _EditProfileViewState extends State<_EditProfileView> {
       listener: (context, state) {
         if (state is EditProfileSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully'),
+            SnackBar(
+              content: Text(l10n.editProfileSuccess),
               backgroundColor: Colors.green,
             ),
           );
@@ -125,7 +130,7 @@ class _EditProfileViewState extends State<_EditProfileView> {
           title: Padding(
             padding: EdgeInsets.symmetric(vertical: 12 * scale),
             child: Text(
-              'Edit Profile',
+              l10n.editProfile,
               style: GoogleFonts.outfit(
                 fontSize: 22 * scale,
                 color: AppColors.primaryBlue,
@@ -202,13 +207,13 @@ class _EditProfileViewState extends State<_EditProfileView> {
 
                   // Form Fields
                   _buildTextField(
-                    label: 'Full Name',
+                    label: l10n.editProfileFullName,
                     controller: _nameController,
                     icon: Icons.person_outline,
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
-                    label: 'Phone Number',
+                    label: l10n.editProfilePhoneNumber,
                     controller: _phoneController,
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
@@ -252,7 +257,7 @@ class _EditProfileViewState extends State<_EditProfileView> {
                                   ),
                                 )
                               : Text(
-                                  'Save Changes',
+                                  l10n.editProfileSave,
                                   style: GoogleFonts.outfit(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -313,7 +318,9 @@ class _EditProfileViewState extends State<_EditProfileView> {
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'Please enter your $label';
+            return AppLocalizations.of(
+              context,
+            ).editProfileFieldRequired(label);
           }
           return null;
         },
@@ -321,3 +328,5 @@ class _EditProfileViewState extends State<_EditProfileView> {
     );
   }
 }
+
+

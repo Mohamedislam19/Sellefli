@@ -1,7 +1,7 @@
 // lib/src/core/widgets/nav/bottom_nav.dart
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-
+import 'package:sellefli/l10n/app_localizations.dart';
 
 class AnimatedBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -17,11 +17,12 @@ class AnimatedBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final items = [
-      _NavItem(icon: Icons.home_outlined, label: 'Home'),
-      _NavItem(icon: Icons.list_alt_outlined, label: 'Requests'),
-      _NavItem(icon: Icons.storefront_outlined, label: 'My Listings'),
-      _NavItem(icon: Icons.person_outline, label: 'Profile'),
+      _NavItem(icon: Icons.home_outlined, label: l10n.navHome),
+      _NavItem(icon: Icons.list_alt_outlined, label: l10n.navRequests),
+      _NavItem(icon: Icons.storefront_outlined, label: l10n.navListings),
+      _NavItem(icon: Icons.person_outline, label: l10n.navProfile),
     ];
 
     return SafeArea(

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
@@ -82,10 +83,11 @@ class _CreateItemPageState extends State<CreateItemPage>
   }
 
   Future<void> _pickImages() async {
+    final l10n = AppLocalizations.of(context);
     if (_images.length >= _maxImages) {
       SnackbarHelper.showSnackBar(
         context,
-        message: 'You can upload up to $_maxImages images.',
+        message: l10n.itemImageLimit(_maxImages),
         isSuccess: false,
       );
       return;
@@ -101,10 +103,11 @@ class _CreateItemPageState extends State<CreateItemPage>
   }
 
   Future<void> _pickImageCamera() async {
+    final l10n = AppLocalizations.of(context);
     if (_images.length >= _maxImages) {
       SnackbarHelper.showSnackBar(
         context,
-        message: 'You can upload up to $_maxImages images.',
+        message: l10n.itemImageLimit(_maxImages),
         isSuccess: false,
       );
       return;
@@ -207,6 +210,7 @@ class _CreateItemPageState extends State<CreateItemPage>
   }
 
   Future<void> _submit(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     print('object');
     print(_userId);
     _prepareImageErrorFlag();
@@ -222,7 +226,7 @@ class _CreateItemPageState extends State<CreateItemPage>
     if (ownerId == null) {
       SnackbarHelper.showSnackBar(
         context,
-        message: 'You must be signed in to create items.',
+        message: l10n.itemSignInRequired,
         isSuccess: false, // Triggers the red color
       );
       return;
@@ -251,6 +255,7 @@ class _CreateItemPageState extends State<CreateItemPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final double screenW = MediaQuery.of(context).size.width;
     final double scale = ((screenW / 350).clamp(0.8, 1.0)).toDouble();
 
@@ -265,14 +270,14 @@ class _CreateItemPageState extends State<CreateItemPage>
             messenger.clearSnackBars();
             SnackbarHelper.showSnackBar(
               context,
-              message: 'Item published successfully.',
+              message: l10n.itemCreateSuccess,
               isSuccess: true, // Triggers the blue color
             );
           } else if (state is CreateItemError) {
             messenger.clearSnackBars();
             SnackbarHelper.showSnackBar(
               context,
-              message: 'Error: Item could not be published.${state.message}',
+              message: l10n.itemCreateError(state.message),
               isSuccess: false, // Triggers the red color
             );
           }
@@ -286,7 +291,7 @@ class _CreateItemPageState extends State<CreateItemPage>
             title: Padding(
               padding: EdgeInsets.symmetric(vertical: 12 * scale),
               child: Text(
-                'Create Item',
+                l10n.itemCreateTitle,
                 style: GoogleFonts.outfit(
                   fontSize: 22 * scale,
                   color: AppColors.primaryBlue,
@@ -317,7 +322,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Item Photos',
+                        l10n.itemPhotos,
                         style: GoogleFonts.outfit(
                           fontWeight: FontWeight.w600,
                           fontSize: 15 * scale,
@@ -353,7 +358,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                                 size: 18 * scale,
                               ),
                               label: Text(
-                                'Gallery',
+                                l10n.itemGallery,
                                 style: GoogleFonts.outfit(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -382,7 +387,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                                 size: 18 * scale,
                               ),
                               label: Text(
-                                'Camera',
+                                l10n.itemCamera,
                                 style: TextStyle(
                                   color: AppColors.primaryBlue,
                                   fontWeight: FontWeight.w600,
@@ -400,7 +405,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                             ? Padding(
                                 padding: EdgeInsets.only(top: 8 * scale),
                                 child: Text(
-                                  'At least one photo is required.',
+                                  l10n.itemImageRequired,
                                   style: TextStyle(
                                     color: Colors.red[400],
                                     fontSize: 12.8 * scale,
@@ -420,7 +425,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Title',
+                          l10n.itemTitleLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -430,10 +435,11 @@ class _CreateItemPageState extends State<CreateItemPage>
                       TextFormField(
                         decoration: fieldDecoration(
                           label: null,
-                          hint: 'e.g., Electric Drill, Bicycle',
+                          hint: l10n.itemTitleHint,
                         ),
-                        validator: (val) =>
-                            val == null || val.isEmpty ? 'Required' : null,
+                        validator: (val) => val == null || val.isEmpty
+                            ? l10n.itemRequiredField
+                            : null,
                         onSaved: (val) => _title = val,
                       ),
 
@@ -444,7 +450,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Category',
+                          l10n.itemCategoryLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -465,7 +471,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Description',
+                          l10n.itemDescriptionLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -475,14 +481,15 @@ class _CreateItemPageState extends State<CreateItemPage>
                       TextFormField(
                         decoration: fieldDecoration(
                           label: null,
-                          hint: 'Describe your item in detail...',
+                          hint: l10n.itemDescriptionHint,
                         ),
                         maxLines: 3,
                         minLines: 3,
                         keyboardType: TextInputType.multiline,
                         textInputAction: TextInputAction.newline,
-                        validator: (val) =>
-                            val == null || val.isEmpty ? 'Required' : null,
+                        validator: (val) => val == null || val.isEmpty
+                            ? l10n.itemRequiredField
+                            : null,
                         onSaved: (val) => _description = val,
                       ),
 
@@ -493,7 +500,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Estimated Value per Day',
+                          l10n.itemValuePerDayLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -503,7 +510,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                       TextFormField(
                         decoration: fieldDecoration(
                           label: null,
-                          hint: 'e.g., 150 DA',
+                          hint: l10n.itemValueHint,
                         ),
                         keyboardType: TextInputType.number,
                         onSaved: (val) => _value = val == null || val.isEmpty
@@ -518,7 +525,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Deposit Required',
+                          l10n.itemDepositLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -528,7 +535,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                       TextFormField(
                         decoration: fieldDecoration(
                           label: null,
-                          hint: 'e.g., 50 DA (refundable)',
+                          hint: l10n.itemDepositHint,
                         ),
                         keyboardType: TextInputType.number,
                         onSaved: (val) => _deposit = val == null || val.isEmpty
@@ -547,8 +554,8 @@ class _CreateItemPageState extends State<CreateItemPage>
                               child: AbsorbPointer(
                                 child: TextFormField(
                                   decoration: InputDecoration(
-                                    labelText: 'Available From',
-                                    hintText: 'MM/DD/YYYY',
+                                    labelText: l10n.itemAvailableFrom,
+                                    hintText: l10n.itemDateHint,
                                     floatingLabelBehavior:
                                         FloatingLabelBehavior.always,
                                     filled: true,
@@ -597,8 +604,9 @@ class _CreateItemPageState extends State<CreateItemPage>
                                         ? ''
                                         : '${_fromDate!.month}/${_fromDate!.day}/${_fromDate!.year}',
                                   ),
-                                  validator: (val) =>
-                                      _fromDate == null ? 'Required' : null,
+                                  validator: (val) => _fromDate == null
+                                      ? l10n.itemRequiredField
+                                      : null,
                                 ),
                               ),
                             ),
@@ -610,8 +618,8 @@ class _CreateItemPageState extends State<CreateItemPage>
                               child: AbsorbPointer(
                                 child: TextFormField(
                                   decoration: InputDecoration(
-                                    labelText: 'Available Until',
-                                    hintText: 'MM/DD/YYYY',
+                                    labelText: l10n.itemAvailableUntil,
+                                    hintText: l10n.itemDateHint,
                                     floatingLabelBehavior:
                                         FloatingLabelBehavior.always,
                                     filled: true,
@@ -660,8 +668,9 @@ class _CreateItemPageState extends State<CreateItemPage>
                                         ? ''
                                         : '${_untilDate!.month}/${_untilDate!.day}/${_untilDate!.year}',
                                   ),
-                                  validator: (val) =>
-                                      _untilDate == null ? 'Required' : null,
+                                  validator: (val) => _untilDate == null
+                                      ? l10n.itemRequiredField
+                                      : null,
                                 ),
                               ),
                             ),
@@ -676,7 +685,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Location',
+                          l10n.itemLocationLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -689,7 +698,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                           child: TextFormField(
                             decoration: fieldDecoration(
                               label: null,
-                              hint: 'Pick on map',
+                              hint: l10n.itemLocationHint,
                               icon: Icons.map_outlined,
                             ),
                             controller: TextEditingController(
@@ -698,7 +707,9 @@ class _CreateItemPageState extends State<CreateItemPage>
                                   : 'Lat: ${_locationLatLng!.latitude.toStringAsFixed(5)}, Lng: ${_locationLatLng!.longitude.toStringAsFixed(5)}',
                             ),
                             validator: (val) {
-                              if (_locationLatLng == null) return 'Required';
+                              if (_locationLatLng == null) {
+                                return l10n.itemLocationRequired;
+                              }
                               return null;
                             },
                           ),
@@ -752,7 +763,7 @@ class _CreateItemPageState extends State<CreateItemPage>
                                         ),
                                       )
                                     : Text(
-                                        'Publish Item',
+                                        l10n.itemPublishButton,
                                         style: GoogleFonts.outfit(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 17 * scale,

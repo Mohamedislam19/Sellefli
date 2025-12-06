@@ -93,3 +93,5 @@ class RatingRepository {
     return count > 0 ? sum / count : 0.0;
   }
 }
+
+

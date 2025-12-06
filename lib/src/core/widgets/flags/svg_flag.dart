@@ -1,4 +1,6 @@
 // lib/src/core/widgets/flags/svg_flag.dart
+// ignore_for_file: use_super_parameters
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -61,3 +63,5 @@ class SvgFlag extends StatelessWidget {
     );
   }
 }
+
+

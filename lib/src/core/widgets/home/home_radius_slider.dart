@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 
 class HomeRadiusSlider extends StatefulWidget {
@@ -34,6 +35,7 @@ class _HomeRadiusSliderState extends State<HomeRadiusSlider> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Column(
@@ -43,7 +45,7 @@ class _HomeRadiusSliderState extends State<HomeRadiusSlider> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Radius:',
+                '${l10n.homeRadiusLabel}:',
                 style: AppTextStyles.body.copyWith(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -51,7 +53,7 @@ class _HomeRadiusSliderState extends State<HomeRadiusSlider> {
                 ),
               ),
               Text(
-                '${_radius.toStringAsFixed(0)} km',
+                l10n.distanceKm(_radius.toStringAsFixed(0)),
                 style: AppTextStyles.body.copyWith(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -86,3 +88,5 @@ class _HomeRadiusSliderState extends State<HomeRadiusSlider> {
     );
   }
 }
+
+

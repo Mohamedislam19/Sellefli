@@ -1,7 +1,10 @@
 // lib/src/features/map/map_picker_page.dart
+// ignore_for_file: use_super_parameters, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
@@ -28,12 +31,13 @@ class _MapPickerPageState extends State<MapPickerPage> {
   }
 
   Future<void> _centerOnCurrentLocation() async {
+    final l10n = AppLocalizations.of(context);
     bool serviceEnabled;
     LocationPermission permission;
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      TopSnack.show(context, 'Location services are disabled.', false);
+      TopSnack.show(context, l10n.mapServicesDisabled, false);
       return;
     }
 
@@ -41,13 +45,13 @@ class _MapPickerPageState extends State<MapPickerPage> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        TopSnack.show(context, 'Location permission denied.', false);
+        TopSnack.show(context, l10n.mapPermissionDenied, false);
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      TopSnack.show(context, 'Location permission permanently denied.', false);
+      TopSnack.show(context, l10n.mapPermissionDeniedForever, false);
       return;
     }
 
@@ -62,9 +66,9 @@ class _MapPickerPageState extends State<MapPickerPage> {
       setState(() {
         selectedLatLng = currentLocation;
       });
-      TopSnack.show(context, 'Location set to your current position!', true);
+      TopSnack.show(context, l10n.mapCurrentLocationSet, true);
     } catch (e) {
-      TopSnack.show(context, 'Failed to get location. Try again.', false);
+      TopSnack.show(context, l10n.mapLocationFailed, false);
     }
   }
 
@@ -78,6 +82,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
@@ -92,7 +97,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Map',
+            l10n.mapTitle,
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,
@@ -182,7 +187,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
                   child: ElevatedButton.icon(
                     icon: Icon(Icons.my_location, color: AppColors.primaryBlue),
                     label: Text(
-                      'Localize to Current Location',
+                      l10n.mapLocalizeCurrent,
                       style: TextStyle(
                         color: AppColors.primaryBlue,
                         fontWeight: FontWeight.w600,
@@ -239,7 +244,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text("Confirm Location"),
+                    child: Text(l10n.mapConfirmLocation),
                   ),
                 ),
               ],
@@ -256,3 +261,5 @@ class _MapPickerPageState extends State<MapPickerPage> {
     );
   }
 }
+
+

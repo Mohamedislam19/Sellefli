@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 
 class SignUpHeader extends StatelessWidget {
@@ -6,6 +7,7 @@ class SignUpHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         // Icon with animated gradient
@@ -16,19 +18,14 @@ class SignUpHeader extends StatelessWidget {
             height: 90,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  AppColors.primaryDark,
-                  AppColors.primary,
-                ],
+                colors: [AppColors.primaryDark, AppColors.primary],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withAlpha(
-                    ((0.3) * 255).toInt(),
-                  ),
+                  color: AppColors.primary.withAlpha(((0.3) * 255).toInt()),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -45,7 +42,7 @@ class SignUpHeader extends StatelessWidget {
 
         // Title with better typography
         Text(
-          'Create an account',
+          l10n.authSignupTitle,
           style: AppTextStyles.title.copyWith(
             color: AppColors.primaryDark,
             fontSize: 32,
@@ -56,7 +53,7 @@ class SignUpHeader extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          'Join us today',
+          l10n.authSignupSubtitle,
           style: AppTextStyles.subtitle.copyWith(
             color: AppColors.muted,
             fontSize: 16,
@@ -68,3 +65,5 @@ class SignUpHeader extends StatelessWidget {
     );
   }
 }
+
+

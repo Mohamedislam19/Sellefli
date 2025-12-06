@@ -34,3 +34,5 @@ class ItemDetailsCubit extends Cubit<ItemDetailsState> {
     }
   }
 }
+
+

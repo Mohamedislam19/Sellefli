@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
 import 'package:sellefli/src/core/widgets/home/home_categories.dart';
 import 'package:sellefli/src/core/widgets/home/home_location_toggle.dart';
@@ -77,6 +78,7 @@ class _HomePageViewState extends State<_HomePageView> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -87,7 +89,7 @@ class _HomePageViewState extends State<_HomePageView> {
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Explore',
+            l10n.homeExploreTitle,
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,
@@ -126,8 +128,9 @@ class _HomePageViewState extends State<_HomePageView> {
                   buildWhen: (previous, current) =>
                       previous.isLocationEnabled != current.isLocationEnabled,
                   builder: (context, state) {
-                    if (!state.isLocationEnabled)
+                    if (!state.isLocationEnabled) {
                       return const SizedBox.shrink();
+                    }
                     return HomeRadiusSlider(
                       initialRadius: state.radius,
                       onChanged: (value) {
@@ -153,14 +156,14 @@ class _HomePageViewState extends State<_HomePageView> {
                     if (state.status == HomeStatus.error) {
                       return SliverToBoxAdapter(
                         child: Center(
-                          child: Text(state.errorMessage ?? 'Error'),
+                          child: Text(state.errorMessage ?? l10n.homeError),
                         ),
                       );
                     }
 
                     if (state.items.isEmpty) {
-                      return const SliverToBoxAdapter(
-                        child: Center(child: Text('No items found')),
+                      return SliverToBoxAdapter(
+                        child: Center(child: Text(l10n.homeEmpty)),
                       );
                     }
 
@@ -188,14 +191,14 @@ class _HomePageViewState extends State<_HomePageView> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      "You are currently offline",
+                                      l10n.homeOfflineTitle,
                                       style: AppTextStyles.body.copyWith(
                                         color: AppColors.primaryDark,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     Text(
-                                      "Connect to the internet to see more items",
+                                      l10n.homeOfflineSubtitle,
                                       style: AppTextStyles.body.copyWith(
                                         color: AppColors.muted,
                                         fontSize: 12,
@@ -217,17 +220,17 @@ class _HomePageViewState extends State<_HomePageView> {
                           String distance = '';
                           if (state.isLocationEnabled &&
                               item.distance != null) {
-                            distance =
-                                '${item.distance!.toStringAsFixed(2)} km';
+                            distance = l10n.distanceKm(
+                               item.distance!.toStringAsFixed(2),
+                            );
                           }
 
                           return ProductCard(
                             title: item.title,
                             price: '${item.estimatedValue ?? 0} DA',
-                            location:
-                                'Location', // TODO: Reverse geocode or use item address
+                            location: l10n.homeLocationPlaceholder,
                             distance: distance,
-                            seller: item.ownerUsername ?? 'Unknown',
+                            seller: item.ownerUsername ?? l10n.userFallback,
                             sellerAvatarUrl: item.ownerAvatarUrl,
                             rating: item.ownerRatingCount > 0
                                 ? item.ownerRatingSum / item.ownerRatingCount
@@ -299,3 +302,5 @@ class _HomePageViewState extends State<_HomePageView> {
     );
   }
 }
+
+

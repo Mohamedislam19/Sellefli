@@ -1,6 +1,9 @@
 // lib/src/features/bookings/booking_detail_page.dart
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/buttons/advanced_button.dart';
 import '../../core/widgets/chips/chip_badge.dart';
@@ -49,6 +52,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -88,14 +92,14 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Error: ${state.error}',
+                      l10n.bookingDetailsError(state.error),
                       style: const TextStyle(color: Colors.red),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Go Back'),
+                      child: Text(l10n.itemDetailsGoBack),
                     ),
                   ],
                 ),
@@ -103,7 +107,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
             }
 
             if (state is! BookingDetailsLoaded) {
-              return const Center(child: Text('No booking data'));
+              return Center(child: Text(l10n.bookingDetailsNoData));
             }
 
             final booking = state.bookingDetails['booking'] as Booking;
@@ -176,7 +180,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Booking Details',
+                                  l10n.bookingDetailsTitle,
                                   style: TextStyle(
                                     fontSize: isSmallMobile
                                         ? 16
@@ -199,7 +203,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                           SizedBox(height: isMobile ? 16 : 24),
 
                           Text(
-                            'Item & Booking Summary',
+                            l10n.bookingSummaryTitle,
                             style: TextStyle(
                               fontSize: isSmallMobile ? 14 : 16,
                               fontWeight: FontWeight.w600,
@@ -252,7 +256,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      item?.title ?? 'Item',
+                                      item?.title ?? l10n.itemDetailsTitle,
                                       style: TextStyle(
                                         fontSize: isSmallMobile ? 14 : 16,
                                         fontWeight: FontWeight.w600,
@@ -270,7 +274,9 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                         const SizedBox(width: 6),
                                         Flexible(
                                           child: Text(
-                                            'Borrowed by: ${borrower?.username ?? "Unknown"}',
+                                            l10n.bookingBorrowedBy(
+                                              borrower?.username ?? '—',
+                                            ),
                                             style: TextStyle(
                                               fontSize: isSmallMobile ? 11 : 12,
                                               color: Colors.grey,
@@ -308,7 +314,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          'Total Cost: ',
+                                          '${l10n.bookingDialogTotalCost}: ',
                                           style: TextStyle(
                                             fontSize: isSmallMobile ? 11 : 12,
                                             color: Colors.grey,
@@ -348,7 +354,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
-                                            'Deposit:',
+                                            l10n.bookingDepositLabel,
                                             style: TextStyle(
                                               fontSize: isSmallMobile ? 12 : 14,
                                             ),
@@ -365,7 +371,10 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                       ),
                                       const SizedBox(height: 8),
                                       ChipBadge(
-                                        label: booking.depositStatus.name,
+                                        label: _depositStatusLabel(
+                                          booking.depositStatus,
+                                          l10n,
+                                        ),
                                         type: ChipType.primary,
                                       ),
                                     ],
@@ -436,10 +445,13 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                 currentUserId != null;
                             if (!canRate) return const SizedBox.shrink();
 
+                            final safeCurrentUserId = currentUserId;
+                            final safeTargetUserId = targetUserId;
+
                             return FutureBuilder<bool>(
                               future: bookingCubit.hasAlreadyRated(
                                 bookingId: booking.id,
-                                raterUserId: currentUserId!,
+                                raterUserId: safeCurrentUserId,
                               ),
                               builder: (context, snapshot) {
                                 // While checking, show nothing
@@ -505,7 +517,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                           '/rating',
                                           arguments: RatingPageArguments(
                                             bookingId: booking.id,
-                                            targetUserId: targetUserId!,
+                                            targetUserId: safeTargetUserId,
                                           ),
                                         );
                                       },
@@ -526,7 +538,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                           })(),
 
                           Text(
-                            'Booking Status',
+                            l10n.bookingStatusLabel,
                             style: TextStyle(
                               fontSize: isSmallMobile ? 14 : 16,
                               fontWeight: FontWeight.w600,
@@ -565,9 +577,9 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
 
                                 const Spacer(),
 
-                                const Text(
-                                  'Booking Code:',
-                                  style: TextStyle(
+                                Text(
+                                  l10n.bookingCodeLabel,
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey,
                                   ),
@@ -590,7 +602,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                           // Show owner actions only if current user is the owner
                           if (isOwner) ...[
                             Text(
-                              'Owner Actions',
+                              l10n.bookingOwnerActions,
                               style: TextStyle(
                                 fontSize: isSmallMobile ? 14 : 16,
                                 fontWeight: FontWeight.w600,
@@ -600,7 +612,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
 
                             // Mark deposit as received (only when accepted & deposit none)
                             AdvancedButton(
-                              label: 'Mark Deposit Received',
+                              label: l10n.bookingMarkDepositReceived,
                               onPressed:
                                   booking.status == BookingStatus.accepted &&
                                       booking.depositStatus ==
@@ -621,7 +633,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                             SizedBox(height: isMobile ? 8 : 12),
 
                             AdvancedButton(
-                              label: 'Mark Deposit as Returned',
+                              label: l10n.bookingMarkDepositReturned,
                               onPressed:
                                   booking.depositStatus !=
                                           DepositStatus.returned &&
@@ -646,7 +658,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                             SizedBox(height: isMobile ? 8 : 12),
 
                             AdvancedButton(
-                              label: 'Keep Deposit',
+                              label: l10n.bookingKeepDeposit,
                               onPressed:
                                   booking.depositStatus !=
                                           DepositStatus.returned &&
@@ -667,7 +679,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                           ] else ...[
                             // Borrower view - show owner info instead
                             Text(
-                              'Owner Information',
+                              l10n.bookingOwnerInformation,
                               style: TextStyle(
                                 fontSize: isSmallMobile ? 14 : 16,
                                 fontWeight: FontWeight.w600,
@@ -695,7 +707,8 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          owner?.username ?? 'Unknown Owner',
+                                          owner?.username ??
+                                              l10n.itemDetailsOwner,
                                           style: TextStyle(
                                             fontSize: isSmallMobile ? 14 : 16,
                                             fontWeight: FontWeight.w600,
@@ -730,6 +743,19 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
   }
 }
 
+String _depositStatusLabel(DepositStatus status, AppLocalizations l10n) {
+  switch (status) {
+    case DepositStatus.none:
+      return l10n.depositStatusNone;
+    case DepositStatus.received:
+      return l10n.depositStatusReceived;
+    case DepositStatus.returned:
+      return l10n.depositStatusReturned;
+    case DepositStatus.kept:
+      return l10n.depositStatusKept;
+  }
+}
+
 class RatingDialog extends StatefulWidget {
   final Function(int) onSubmit;
 
@@ -744,12 +770,13 @@ class _RatingDialogState extends State<RatingDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('Rate Your Experience'),
+      title: Text(l10n.bookingRateExperience),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('How was your experience with this user?'),
+          Text(l10n.bookingRateQuestion),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

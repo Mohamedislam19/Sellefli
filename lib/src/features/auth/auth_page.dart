@@ -1,5 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/core/widgets/auth/login_form.dart';
 import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
@@ -44,13 +47,14 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
           // Show success message based on which form was used
-          String message = currentView == 1
-              ? 'Account created successfully! Welcome to Sellefli.'
-              : 'Welcome back! Login successful.';
+          final message = currentView == 1
+              ? l10n.authSignupSuccess
+              : l10n.authLoginSuccess;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
@@ -103,3 +107,5 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 }
+
+

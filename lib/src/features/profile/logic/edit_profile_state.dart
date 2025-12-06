@@ -17,3 +17,5 @@ class EditProfileError extends EditProfileState {
   final String message;
   const EditProfileError(this.message);
 }
+
+

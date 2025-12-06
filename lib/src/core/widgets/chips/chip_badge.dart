@@ -29,8 +29,9 @@ class ChipBadge extends StatelessWidget {
   }
 
   Color _textColor() {
-    if (type == ChipType.primary || type == ChipType.danger)
+    if (type == ChipType.primary || type == ChipType.danger) {
       return Colors.white;
+    }
     return Colors.black87;
   }
 
@@ -64,3 +65,5 @@ class ChipBadge extends StatelessWidget {
     );
   }
 }
+
+

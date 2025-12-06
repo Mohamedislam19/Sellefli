@@ -37,3 +37,5 @@ class AppCategories {
     'Other Items': Icons.category_rounded,
   };
 }
+
+

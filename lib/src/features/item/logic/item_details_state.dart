@@ -21,3 +21,5 @@ class ItemDetailsError extends ItemDetailsState {
   final String message;
   const ItemDetailsError(this.message);
 }
+
+

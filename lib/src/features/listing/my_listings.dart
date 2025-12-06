@@ -1,6 +1,9 @@
+// ignore_for_file: deprecated_member_use, use_super_parameters, prefer_const_constructors_in_immutables
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import '../../core/widgets/nav/bottom_nav.dart';
 import '../../core/theme/app_theme.dart';
@@ -54,21 +57,36 @@ class _MyListingsViewState extends State<_MyListingsView> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case "Active":
+      case 'active':
         return Colors.green;
-      case "Rented":
+      case 'rented':
         return Colors.blue;
-      case "Pending Approval":
+      case 'pending':
         return Colors.orange;
-      case "Unavailable":
+      case 'unavailable':
         return Colors.grey;
       default:
         return Colors.grey;
     }
   }
 
+  String _statusLabel(String status, AppLocalizations l10n) {
+    switch (status) {
+      case 'active':
+        return l10n.myListingsStatusActive;
+      case 'rented':
+        return l10n.myListingsStatusRented;
+      case 'pending':
+        return l10n.myListingsStatusPending;
+      case 'unavailable':
+      default:
+        return l10n.myListingsStatusUnavailable;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
@@ -88,7 +106,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
           title: Padding(
             padding: EdgeInsets.symmetric(vertical: 12 * scale),
             child: Text(
-              'My Listings',
+              l10n.myListingsTitle,
               style: GoogleFonts.outfit(
                 fontSize: 22 * scale,
                 color: AppColors.primaryBlue,
@@ -137,7 +155,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
                       ElevatedButton(
                         onPressed: () =>
                             context.read<MyListingsCubit>().loadMyListings(),
-                        child: const Text('Retry'),
+                        child: Text(l10n.retry),
                       ),
                     ],
                   ),
@@ -157,7 +175,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No listings yet',
+                          l10n.myListingsNoItems,
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             color: Colors.grey,
@@ -168,7 +186,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
-                              '(Offline mode)',
+                              l10n.myListingsOffline,
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 color: Colors.orange,
@@ -188,7 +206,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         color: Colors.orange.shade100,
                         child: Text(
-                          '📡 Offline Mode - Showing cached listings',
+                          l10n.myListingsOfflineBanner,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             color: Colors.orange.shade900,
@@ -207,10 +225,11 @@ class _MyListingsViewState extends State<_MyListingsView> {
                             context: context,
                             itemId: item.id,
                             title: item.title,
-                            status: item.isAvailable ? 'Active' : 'Unavailable',
+                            status: item.isAvailable ? 'active' : 'unavailable',
                             imageUrl: item.images.isNotEmpty
                                 ? item.images.first
                                 : '',
+                            l10n: l10n,
                           );
                         },
                       ),
@@ -237,6 +256,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
     required String title,
     required String status,
     required String imageUrl,
+    required AppLocalizations l10n,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -290,7 +310,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    status,
+                    _statusLabel(status, l10n),
                     style: GoogleFonts.outfit(
                       color: _getStatusColor(status),
                       fontWeight: FontWeight.w500,
@@ -306,7 +326,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
                   children: [
                     Expanded(
                       child: _actionButton(
-                        label: "Edit",
+                        label: l10n.myListingsEdit,
                         color: Colors.grey.shade700,
                         icon: Icons.edit_outlined,
                         onPressed: () {
@@ -319,7 +339,7 @@ class _MyListingsViewState extends State<_MyListingsView> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _actionButton(
-                        label: "View",
+                        label: l10n.myListingsView,
                         color: AppColors.primaryBlue,
                         icon: Icons.visibility_outlined,
                         isPrimary: true,
@@ -422,3 +442,5 @@ class _MyListingsViewState extends State<_MyListingsView> {
     );
   }
 }
+
+

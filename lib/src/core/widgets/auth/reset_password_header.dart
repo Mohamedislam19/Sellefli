@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 
 class ResetPasswordHeader extends StatelessWidget {
@@ -6,6 +7,7 @@ class ResetPasswordHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         // Icon with animated gradient
@@ -23,26 +25,20 @@ class ResetPasswordHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withAlpha(
-                    ((0.3) * 255).toInt(),
-                  ),
+                  color: AppColors.primary.withAlpha(((0.3) * 255).toInt()),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.lock_reset,
-              size: 44,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.lock_reset, size: 44, color: Colors.white),
           ),
         ),
         const SizedBox(height: 28),
 
         // Title with better typography
         Text(
-          'Reset Password',
+          l10n.authResetTitle,
           style: AppTextStyles.title.copyWith(
             color: AppColors.primaryDark,
             fontSize: 32,
@@ -53,7 +49,7 @@ class ResetPasswordHeader extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          'Enter your email to receive\na password reset link',
+          l10n.authResetSubtitle,
           style: AppTextStyles.subtitle.copyWith(
             color: AppColors.muted,
             fontSize: 16,
@@ -65,3 +61,5 @@ class ResetPasswordHeader extends StatelessWidget {
     );
   }
 }
+
+

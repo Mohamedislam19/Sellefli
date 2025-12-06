@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors_in_immutables, use_super_parameters, use_build_context_synchronously, deprecated_member_use, unused_element_parameter, unused_local_variable
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
@@ -11,6 +13,8 @@ import '../../core/widgets/avatar/avatar.dart';
 import '../../core/widgets/nav/bottom_nav.dart';
 import 'logic/profile_cubit.dart';
 import 'logic/profile_state.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
+import '../../core/l10n/language_cubit.dart';
 
 class ProfilePage extends StatelessWidget {
   final String? userId;
@@ -72,9 +76,106 @@ class _ProfileViewState extends State<_ProfileView> {
     }
   }
 
+  void _showLanguageDialog(AppLocalizations l10n) {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            l10n.languageDialogTitle,
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.w600,
+              color: AppColors.primaryBlue,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              _LanguageOptionTile(
+                labelKey: 'languageEnglish',
+                locale: Locale('en'),
+                flagPath: 'assets/images/us_flag.png',
+              ),
+              SizedBox(height: 8),
+              _LanguageOptionTile(
+                labelKey: 'languageArabic',
+                locale: Locale('ar'),
+                flagPath: 'assets/images/algeria_flag.png',
+              ),
+              SizedBox(height: 8),
+              _LanguageOptionTile(
+                labelKey: 'languageFrench',
+                locale: Locale('fr'),
+                flagPath: 'assets/images/france_flag.png',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final l10n = AppLocalizations.of(context);
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
 
@@ -87,7 +188,7 @@ class _ProfileViewState extends State<_ProfileView> {
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Profile',
+            l10n.profileTitle,
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,
@@ -147,7 +248,7 @@ class _ProfileViewState extends State<_ProfileView> {
                           context.read<ProfileCubit>().loadMyProfile();
                         }
                       },
-                      child: const Text('Retry'),
+                      child: Text(l10n.retry),
                     ),
                   ],
                 ),
@@ -156,6 +257,7 @@ class _ProfileViewState extends State<_ProfileView> {
 
             if (state is ProfileLoaded) {
               final user = state.profile;
+              final isRtl = Directionality.of(context) == TextDirection.rtl;
 
               return ListView(
                 padding: const EdgeInsets.all(16),
@@ -187,7 +289,7 @@ class _ProfileViewState extends State<_ProfileView> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          user.username ?? 'User',
+                          user.username ?? l10n.userFallback,
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 18,
@@ -233,7 +335,7 @@ class _ProfileViewState extends State<_ProfileView> {
                             Text(
                               user.ratingCount > 0
                                   ? '${(user.ratingSum / user.ratingCount).toStringAsFixed(1)} (${user.ratingCount})'
-                                  : 'No ratings yet',
+                                  : l10n.noRatingsYet,
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 14,
@@ -241,6 +343,30 @@ class _ProfileViewState extends State<_ProfileView> {
                             ),
                           ],
                         ),
+                        if (widget.userId == null) ...[
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: AppColors.primaryBlue),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                            onPressed: () => _showLanguageDialog(l10n),
+                            icon: Icon(
+                              Icons.language,
+                              color: AppColors.primaryBlue,
+                            ),
+                            label: Text(
+                              l10n.language,
+                              style: TextStyle(color: AppColors.primaryBlue),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -249,13 +375,10 @@ class _ProfileViewState extends State<_ProfileView> {
                   // Show edit/settings only for own profile
                   if (widget.userId == null) ...[
                     // Edit Profile
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(
-                        Icons.edit_outlined,
-                        color: Colors.black87,
-                      ),
-                      title: const Text('Edit Profile'),
+                    _buildActionCard(
+                      icon: Icons.edit_rounded,
+                      iconColor: AppColors.primary,
+                      title: l10n.editProfile,
                       onTap: () async {
                         await Navigator.pushNamed(context, '/edit-profile');
                         if (context.mounted) {
@@ -263,21 +386,30 @@ class _ProfileViewState extends State<_ProfileView> {
                         }
                       },
                     ),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(
-                        Icons.settings_outlined,
-                        color: Colors.black87,
-                      ),
-                      title: const Text('Settings / Help'),
+                    const SizedBox(height: 12),
+                    // Language selection
+                    _buildActionCard(
+                      icon: Icons.language_rounded,
+                      iconColor: const Color(0xFF4CAF50),
+                      title: l10n.language,
+                      onTap: () => _showLanguageDialog(l10n),
+                    ),
+                    const SizedBox(height: 12),
+                    // Settings
+                    _buildActionCard(
+                      icon: Icons.settings_rounded,
+                      iconColor: const Color(0xFFFF9800),
+                      title: l10n.settingsHelp,
                       onTap: () {
                         Navigator.pushNamed(context, '/settings');
                       },
                     ),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.logout, color: Colors.black87),
-                      title: const Text('Logout'),
+                    const SizedBox(height: 12),
+                    // Logout
+                    _buildActionCard(
+                      icon: Icons.logout_rounded,
+                      iconColor: const Color(0xFFF44336),
+                      title: l10n.logout,
                       onTap: () {
                         context.read<AuthCubit>().logout();
                         Navigator.pushNamedAndRemoveUntil(
@@ -287,22 +419,22 @@ class _ProfileViewState extends State<_ProfileView> {
                         );
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
-                    const Text(
-                      'Recent Transactions',
-                      style: TextStyle(
+                    Text(
+                      l10n.recentTransactions,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 12),
                     if (state.transactions.isEmpty)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.only(bottom: 20),
                         child: Text(
-                          'No recent transactions',
-                          style: TextStyle(color: Colors.grey),
+                          l10n.noRecentTransactions,
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       )
                     else
@@ -313,9 +445,11 @@ class _ProfileViewState extends State<_ProfileView> {
                         final imageUrl = t['imageUrl'] as String?;
 
                         return TransactionCard(
-                          title: item?.title ?? 'Unknown Item',
+                          title: item?.title ?? l10n.unknownItem,
                           imageUrl: imageUrl,
-                          status: isBorrower ? 'Borrowed' : 'Lent',
+                          status: isBorrower
+                              ? l10n.borrowedStatus
+                              : l10n.lentStatus,
                           date:
                               '${booking.createdAt.day}/${booking.createdAt.month}/${booking.createdAt.year}',
                           price: booking.totalCost ?? 0.0,
@@ -454,6 +588,90 @@ class TransactionCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LanguageOptionTile extends StatelessWidget {
+  final String labelKey;
+  final Locale locale;
+  final String flagPath;
+
+  const _LanguageOptionTile({
+    super.key,
+    required this.labelKey,
+    required this.locale,
+    required this.flagPath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final languageCubit = context.read<LanguageCubit>();
+
+    String label;
+    switch (labelKey) {
+      case 'languageArabic':
+        label = l10n.languageArabic;
+        break;
+      case 'languageFrench':
+        label = l10n.languageFrench;
+        break;
+      case 'languageEnglish':
+      default:
+        label = l10n.languageEnglish;
+        break;
+    }
+
+    return InkWell(
+      onTap: () {
+        languageCubit.changeLocale(locale);
+        Navigator.of(context).pop();
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.asset(
+                flagPath,
+                width: 32,
+                height: 24,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 32,
+                    height: 24,
+                    color: Colors.grey[300],
+                    child: Icon(Icons.flag, size: 16, color: Colors.grey[600]),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
       ),
     );
   }
