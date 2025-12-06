@@ -1,4 +1,8 @@
+// ignore_for_file: depend_on_referenced_packages
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../../theme/app_theme.dart';
 
 class Avatar extends StatelessWidget {
@@ -14,6 +18,16 @@ class Avatar extends StatelessWidget {
     this.size = 52,
     this.showOnline = false,
   });
+
+  /// Clear the cache for a specific avatar URL
+  static Future<void> clearCacheForUrl(String url) async {
+    await DefaultCacheManager().removeFile(url);
+  }
+
+  /// Clear all avatar cache
+  static Future<void> clearAllCache() async {
+    await DefaultCacheManager().emptyCache();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +46,11 @@ class Avatar extends StatelessWidget {
           )
         : CircleAvatar(
             radius: size / 2,
-            backgroundImage: NetworkImage(imageUrl!),
+            backgroundImage: CachedNetworkImageProvider(
+              imageUrl!,
+              cacheKey:
+                  imageUrl, // Use URL as cache key to auto-refresh on URL change
+            ),
             backgroundColor: Colors.grey.shade200,
           );
 
@@ -58,3 +76,5 @@ class Avatar extends StatelessWidget {
     );
   }
 }
+
+

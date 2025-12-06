@@ -1,4 +1,6 @@
 // lib/src/core/widgets/buttons/advanced_button.dart
+// ignore_for_file: use_super_parameters
+
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
@@ -121,3 +123,5 @@ class _AdvancedButtonState extends State<AdvancedButton>
     );
   }
 }
+
+

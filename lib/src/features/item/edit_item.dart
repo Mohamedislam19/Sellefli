@@ -5,11 +5,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:sellefli/src/core/widgets/snackbar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sellefli/src/core/constants/categories.dart';
 
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
@@ -21,9 +23,9 @@ import 'package:sellefli/src/features/item/logic/edit_item_cubit.dart';
 import 'package:sellefli/src/data/repositories/item_repository.dart';
 
 class EditItemPage extends StatefulWidget {
-  final String itemId; // we pass only the id when navigating
+  final String? itemId; // we pass only the id when navigating
 
-  const EditItemPage({super.key, required this.itemId});
+  const EditItemPage({super.key, this.itemId});
 
   @override
   State<EditItemPage> createState() => _EditItemPageState();
@@ -35,56 +37,7 @@ class _EditItemPageState extends State<EditItemPage>
 
   final supabase = Supabase.instance.client;
 
-  // State variable to hold the test user ID
-  String? _testUserId;
-
-  /// TEMPORARY RLS TESTING FUNCTION:
-  /// Signs in as a fixed, pre-existing user to establish a session/JWT.
-  ///
-  /// !!! IMPORTANT: This user (testuser@example.com) MUST exist in Supabase Auth
-  /// AND have a profile entry in the 'users' table.
-  Future<String?> testUserSetup() async {
-    // --- TESTING CONSTANTS (FIXED) ---
-    const String testEmail = 'testuser_1764248817123@example.com';
-    const String testPassword = 'TestPassword123';
-    // ------------------------------------
-
-    String? authenticatedUserId;
-
-    try {
-      // 1. --- Sign In with existing credentials ---
-      print('TEST AUTH: Attempting to sign IN with existing user: $testEmail');
-
-      final AuthResponse signInResponse = await supabase.auth
-          .signInWithPassword(email: testEmail, password: testPassword);
-
-      authenticatedUserId = signInResponse.user?.id;
-
-      if (authenticatedUserId == null) {
-        print(
-          'TEST FAILED: Sign in failed. Could not get authenticated user ID.',
-        );
-        return null;
-      }
-
-      print(
-        'TEST SUCCESS: Session active for User ID: $authenticatedUserId. Email: $testEmail',
-      );
-
-      // 2. --- Return the authenticated ID ---
-      return authenticatedUserId;
-    } on AuthException catch (e) {
-      print('TEST FAILED (AUTH): Could not sign in. Error: ${e.message}');
-      print(
-        'HINT: Check if the user exists in the Supabase Authentication list and if the password is correct.',
-      );
-    } catch (e) {
-      print('TEST FAILED (GENERAL): General Error during setup: $e');
-    }
-
-    // Return null on any failure
-    return null;
-  }
+  String? _userId;
 
   // We'll keep controllers so fields are editable & show initial values
   final TextEditingController _titleController = TextEditingController();
@@ -100,43 +53,27 @@ class _EditItemPageState extends State<EditItemPage>
   bool _showImageError = false;
   late AnimationController _animController;
 
-  final List<String> _categories = [
-    'Electronics & Tech',
-    'Home & Appliances',
-    'Furniture & Décor',
-    'Tools & Equipment',
-    'Vehicles & Mobility',
-    'Sports & Outdoors',
-    'Books & Study',
-    'Fashion & Accessories',
-    'Events & Celebrations',
-    'Baby & Kids',
-    'Health & Personal Care',
-    'Musical Instruments',
-    'Hobbies & Crafts',
-    'Pet Supplies',
-    'Other Items',
-  ];
+  final List<String> _categories = AppCategories.categories;
 
-  final Map<String, IconData> _categoryIcons = {
-    'Electronics & Tech': Icons.devices_rounded,
-    'Home & Appliances': Icons.kitchen_rounded,
-    'Furniture & Décor': Icons.chair_rounded,
-    'Tools & Equipment': Icons.construction_rounded,
-    'Vehicles & Mobility': Icons.directions_car_rounded,
-    'Sports & Outdoors': Icons.sports_soccer_rounded,
-    'Books & Study': Icons.menu_book_rounded,
-    'Fashion & Accessories': Icons.checkroom_rounded,
-    'Events & Celebrations': Icons.celebration_rounded,
-    'Baby & Kids': Icons.child_care_rounded,
-    'Health & Personal Care': Icons.favorite_rounded,
-    'Musical Instruments': Icons.music_note_rounded,
-    'Hobbies & Crafts': Icons.palette_rounded,
-    'Pet Supplies': Icons.pets_rounded,
-    'Other Items': Icons.category_rounded,
-  };
+  final Map<String, IconData> _categoryIcons = AppCategories.categoryIcons;
 
   late EditItemCubit _cubit;
+
+  // Prevent repeated initial loads and unintended controller resets
+  bool _loadedOnce = false;
+  bool _prefilledOnce = false;
+
+  void setUserId() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      print('No user is currently signed in.');
+    } else {
+      setState(() {
+        _userId = user.id;
+      });
+      print('Current signed-in user ID: ${user.id}');
+    }
+  }
 
   @override
   void initState() {
@@ -151,15 +88,18 @@ class _EditItemPageState extends State<EditItemPage>
       itemRepository: ItemRepository(Supabase.instance.client),
     );
 
-    // Load the item by id passed in the constructor
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _cubit.loadItem(widget.itemId);
-    });
-    testUserSetup().then((userId) {
-      setState(() {
-        _testUserId = userId;
-      });
-    });
+    setUserId();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final id =
+        widget.itemId ?? ModalRoute.of(context)?.settings.arguments as String?;
+    if (!_loadedOnce && id != null) {
+      _loadedOnce = true;
+      _cubit.loadItem(id);
+    }
   }
 
   @override
@@ -184,12 +124,13 @@ class _EditItemPageState extends State<EditItemPage>
 
   // Pick multiple images and fill available slots in order
   Future<void> _pickImages(BuildContext context, EditItemLoaded state) async {
+    final l10n = AppLocalizations.of(context);
     // Enforce max 3 total images (existing + new)
     final currentCount = state.slots.where((s) => !s.isEmpty).length;
     if (currentCount >= _maxImages) {
       SnackbarHelper.showSnackBar(
         context,
-        message: 'You can upload up to $_maxImages images.',
+        message: l10n.itemImageLimit(_maxImages),
         isSuccess: false,
       );
       return;
@@ -223,12 +164,13 @@ class _EditItemPageState extends State<EditItemPage>
     BuildContext context,
     EditItemLoaded state,
   ) async {
+    final l10n = AppLocalizations.of(context);
     // Enforce max 3 total images (existing + new)
     final currentCount = state.slots.where((s) => !s.isEmpty).length;
     if (currentCount >= _maxImages) {
       SnackbarHelper.showSnackBar(
         context,
-        message: 'You can upload up to $_maxImages images.',
+        message: l10n.itemImageLimit(_maxImages),
         isSuccess: false,
       );
       return;
@@ -291,10 +233,12 @@ class _EditItemPageState extends State<EditItemPage>
               //   0.12,
               // ),
               dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected))
+                if (states.contains(WidgetState.selected)) {
                   return Colors.white;
-                if (states.contains(WidgetState.disabled))
+                }
+                if (states.contains(WidgetState.disabled)) {
                   return Colors.grey.shade400;
+                }
                 return Colors.black87;
               }),
             ),
@@ -327,6 +271,7 @@ class _EditItemPageState extends State<EditItemPage>
 
   // Called when user taps the Edit button
   Future<void> _submit(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _showImageError = false; // will be validated more below
     });
@@ -335,7 +280,7 @@ class _EditItemPageState extends State<EditItemPage>
     if (currentState is! EditItemLoaded) {
       SnackbarHelper.showSnackBar(
         context,
-        message: 'Item not loaded yet.',
+        message: l10n.itemLoadError,
         isSuccess: false,
       );
       return;
@@ -384,6 +329,7 @@ class _EditItemPageState extends State<EditItemPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final double screenW = MediaQuery.of(context).size.width;
     final double scale = ((screenW / 350).clamp(0.8, 1.0)).toDouble();
 
@@ -392,27 +338,32 @@ class _EditItemPageState extends State<EditItemPage>
       child: BlocListener<EditItemCubit, EditItemState>(
         listener: (context, state) {
           final messenger = ScaffoldMessenger.of(context);
+          final l10n = AppLocalizations.of(context);
 
           if (state is EditItemLoaded) {
-            // Prefill controllers only when loaded
-            _titleController.text = state.item.title;
-            _descriptionController.text = state.item.description ?? '';
-            _valueController.text = (state.item.estimatedValue ?? 0).toString();
-            _depositController.text = (state.item.depositAmount ?? 0)
-                .toString();
-            _fromDate = state.item.startDate;
-            _untilDate = state.item.endDate;
-            if (state.item.lat != null && state.item.lng != null) {
-              _locationLatLng = LatLng(state.item.lat!, state.item.lng!);
+            // Prefill only once to avoid resetting user edits on subsequent emits
+            if (!_prefilledOnce) {
+              _titleController.text = state.item.title;
+              _descriptionController.text = state.item.description ?? '';
+              _valueController.text = (state.item.estimatedValue ?? 0)
+                  .toString();
+              _depositController.text = (state.item.depositAmount ?? 0)
+                  .toString();
+              _fromDate = state.item.startDate;
+              _untilDate = state.item.endDate;
+              if (state.item.lat != null && state.item.lng != null) {
+                _locationLatLng = LatLng(state.item.lat!, state.item.lng!);
+              }
+              _category = state.item.category;
+              _prefilledOnce = true;
             }
-            _category = state.item.category;
           } else if (state is EditItemSuccess) {
             // on success -> pop and show success snackbar
             Navigator.of(context).pop();
             messenger.clearSnackBars();
             SnackbarHelper.showSnackBar(
               context,
-              message: 'Item updated successfully.',
+              message: l10n.itemEditSuccess,
               isSuccess: true,
             );
           } else if (state is EditItemError) {
@@ -433,7 +384,7 @@ class _EditItemPageState extends State<EditItemPage>
             title: Padding(
               padding: EdgeInsets.symmetric(vertical: 12 * scale),
               child: Text(
-                'Edit Item',
+                l10n.itemEditTitle,
                 style: GoogleFonts.outfit(
                   fontSize: 22 * scale,
                   color: AppColors.primaryBlue,
@@ -464,7 +415,7 @@ class _EditItemPageState extends State<EditItemPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Item Photos',
+                        l10n.itemPhotos,
                         style: GoogleFonts.outfit(
                           fontWeight: FontWeight.w600,
                           fontSize: 15 * scale,
@@ -518,7 +469,7 @@ class _EditItemPageState extends State<EditItemPage>
                                       size: 18 * scale,
                                     ),
                                     label: Text(
-                                      'Gallery',
+                                      l10n.itemGallery,
                                       style: GoogleFonts.outfit(
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -550,7 +501,7 @@ class _EditItemPageState extends State<EditItemPage>
                                       size: 18 * scale,
                                     ),
                                     label: Text(
-                                      'Camera',
+                                      l10n.itemCamera,
                                       style: TextStyle(
                                         color: AppColors.primaryBlue,
                                         fontWeight: FontWeight.w600,
@@ -570,7 +521,7 @@ class _EditItemPageState extends State<EditItemPage>
                                       Icons.photo_library_outlined,
                                       size: 18 * scale,
                                     ),
-                                    label: Text('Gallery'),
+                                    label: Text(l10n.itemGallery),
                                   ),
                                 ),
                                 SizedBox(width: 12 * scale),
@@ -581,7 +532,7 @@ class _EditItemPageState extends State<EditItemPage>
                                       Icons.camera_alt_outlined,
                                       size: 18 * scale,
                                     ),
-                                    label: Text('Camera'),
+                                    label: Text(l10n.itemCamera),
                                   ),
                                 ),
                               ],
@@ -597,7 +548,7 @@ class _EditItemPageState extends State<EditItemPage>
                             ? Padding(
                                 padding: EdgeInsets.only(top: 8 * scale),
                                 child: Text(
-                                  'At least one photo is required.',
+                                  l10n.itemImageRequired,
                                   style: TextStyle(
                                     color: Colors.red[700],
                                     fontSize: 12.8 * scale,
@@ -617,7 +568,7 @@ class _EditItemPageState extends State<EditItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Title',
+                          l10n.itemTitleLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -628,10 +579,11 @@ class _EditItemPageState extends State<EditItemPage>
                         controller: _titleController,
                         decoration: fieldDecoration(
                           label: null,
-                          hint: 'e.g., Electric Drill, Bicycle',
+                          hint: l10n.itemTitleHint,
                         ),
-                        validator: (val) =>
-                            val == null || val.isEmpty ? 'Required' : null,
+                        validator: (val) => val == null || val.isEmpty
+                            ? l10n.itemRequiredField
+                            : null,
                       ),
 
                       // Category
@@ -641,7 +593,7 @@ class _EditItemPageState extends State<EditItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Category',
+                          l10n.itemCategoryLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -663,7 +615,7 @@ class _EditItemPageState extends State<EditItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Description',
+                          l10n.itemDescriptionLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -674,14 +626,15 @@ class _EditItemPageState extends State<EditItemPage>
                         controller: _descriptionController,
                         decoration: fieldDecoration(
                           label: null,
-                          hint: 'Describe your item in detail...',
+                          hint: l10n.itemDescriptionHint,
                         ),
                         maxLines: 3,
                         minLines: 3,
                         keyboardType: TextInputType.multiline,
                         textInputAction: TextInputAction.newline,
-                        validator: (val) =>
-                            val == null || val.isEmpty ? 'Required' : null,
+                        validator: (val) => val == null || val.isEmpty
+                            ? l10n.itemRequiredField
+                            : null,
                       ),
 
                       // Estimated Value
@@ -691,7 +644,7 @@ class _EditItemPageState extends State<EditItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Estimated Value',
+                          l10n.itemValuePerDayLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -702,7 +655,7 @@ class _EditItemPageState extends State<EditItemPage>
                         controller: _valueController,
                         decoration: fieldDecoration(
                           label: null,
-                          hint: 'e.g., 150 DA',
+                          hint: l10n.itemValueHint,
                         ),
                         keyboardType: TextInputType.number,
                       ),
@@ -714,7 +667,7 @@ class _EditItemPageState extends State<EditItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Deposit Required',
+                          l10n.itemDepositLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -725,7 +678,7 @@ class _EditItemPageState extends State<EditItemPage>
                         controller: _depositController,
                         decoration: fieldDecoration(
                           label: null,
-                          hint: 'e.g., 50 DA (refundable)',
+                          hint: l10n.itemDepositHint,
                         ),
                         keyboardType: TextInputType.number,
                       ),
@@ -741,8 +694,8 @@ class _EditItemPageState extends State<EditItemPage>
                               child: AbsorbPointer(
                                 child: TextFormField(
                                   decoration: InputDecoration(
-                                    labelText: 'Available From',
-                                    hintText: 'MM/DD/YYYY',
+                                    labelText: l10n.itemAvailableFrom,
+                                    hintText: l10n.itemDateHint,
                                     floatingLabelBehavior:
                                         FloatingLabelBehavior.always,
                                     filled: true,
@@ -791,8 +744,9 @@ class _EditItemPageState extends State<EditItemPage>
                                         ? ''
                                         : '${_fromDate!.month}/${_fromDate!.day}/${_fromDate!.year}',
                                   ),
-                                  validator: (val) =>
-                                      _fromDate == null ? 'Required' : null,
+                                  validator: (val) => _fromDate == null
+                                      ? l10n.itemRequiredField
+                                      : null,
                                 ),
                               ),
                             ),
@@ -804,8 +758,8 @@ class _EditItemPageState extends State<EditItemPage>
                               child: AbsorbPointer(
                                 child: TextFormField(
                                   decoration: InputDecoration(
-                                    labelText: 'Available Until',
-                                    hintText: 'MM/DD/YYYY',
+                                    labelText: l10n.itemAvailableUntil,
+                                    hintText: l10n.itemDateHint,
                                     floatingLabelBehavior:
                                         FloatingLabelBehavior.always,
                                     filled: true,
@@ -854,8 +808,9 @@ class _EditItemPageState extends State<EditItemPage>
                                         ? ''
                                         : '${_untilDate!.month}/${_untilDate!.day}/${_untilDate!.year}',
                                   ),
-                                  validator: (val) =>
-                                      _untilDate == null ? 'Required' : null,
+                                  validator: (val) => _untilDate == null
+                                      ? l10n.itemRequiredField
+                                      : null,
                                 ),
                               ),
                             ),
@@ -870,7 +825,7 @@ class _EditItemPageState extends State<EditItemPage>
                           bottom: 4 * scale,
                         ),
                         child: Text(
-                          'Location',
+                          l10n.itemLocationLabel,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                             fontSize: 15 * scale,
@@ -883,7 +838,7 @@ class _EditItemPageState extends State<EditItemPage>
                           child: TextFormField(
                             decoration: fieldDecoration(
                               label: null,
-                              hint: 'Pick on map',
+                              hint: l10n.itemLocationHint,
                               icon: Icons.map_outlined,
                             ),
                             controller: TextEditingController(
@@ -892,7 +847,9 @@ class _EditItemPageState extends State<EditItemPage>
                                   : 'Lat: ${_locationLatLng!.latitude.toStringAsFixed(5)}, Lng: ${_locationLatLng!.longitude.toStringAsFixed(5)}',
                             ),
                             validator: (val) {
-                              if (_locationLatLng == null) return 'Required';
+                              if (_locationLatLng == null) {
+                                return l10n.itemLocationRequired;
+                              }
                               return null;
                             },
                           ),
@@ -946,7 +903,7 @@ class _EditItemPageState extends State<EditItemPage>
                                         ),
                                       )
                                     : Text(
-                                        'Edit Item',
+                                        l10n.itemEditButton,
                                         style: GoogleFonts.outfit(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 17 * scale,
@@ -969,3 +926,5 @@ class _EditItemPageState extends State<EditItemPage>
     );
   }
 }
+
+

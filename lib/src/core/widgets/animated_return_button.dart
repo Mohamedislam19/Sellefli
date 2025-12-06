@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 
 class AnimatedReturnButton extends StatefulWidget {
-  const AnimatedReturnButton({Key? key}) : super(key: key);
+  const AnimatedReturnButton({super.key});
 
   @override
   State<AnimatedReturnButton> createState() => _AnimatedReturnButtonState();
@@ -60,3 +60,5 @@ class _AnimatedReturnButtonState extends State<AnimatedReturnButton>
     super.dispose();
   }
 }
+
+

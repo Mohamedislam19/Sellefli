@@ -1,37 +1,69 @@
+// ignore_for_file: prefer_const_constructors_in_immutables, use_super_parameters
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'logic/item_details_cubit.dart';
+import 'logic/item_details_state.dart';
+import '../../data/repositories/item_repository.dart';
+import '../../data/repositories/profile_repository.dart';
+import '../../data/repositories/booking_repository.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../../data/models/item_model.dart';
+import '../../data/models/user_model.dart';
+import '../../data/models/booking_model.dart';
+import 'package:uuid/uuid.dart';
+import '../../core/widgets/avatar/avatar.dart';
 
-class ItemDetailsPage extends StatefulWidget {
-  const ItemDetailsPage({super.key});
+class ItemDetailsPage extends StatelessWidget {
+  final String? itemId;
 
-  @override
-  State<ItemDetailsPage> createState() => _ItemDetailsPageState();
-}
+  const ItemDetailsPage({super.key, this.itemId});
 
-class _ItemDetailsPageState extends State<ItemDetailsPage> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    // Get itemId from arguments if not provided
+    final String? id =
+        itemId ?? (ModalRoute.of(context)?.settings.arguments as String?);
+
+    if (id == null) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Color.fromARGB(255, 207, 225, 255),
+          title: Text(l10n.itemDetailsTitle),
+        ),
+        body: Center(child: Text(l10n.itemDetailsNoId)),
+      );
+    }
+
+    return BlocProvider(
+      create: (context) => ItemDetailsCubit(
+        itemRepository: context.read<ItemRepository>(),
+        profileRepository: context.read<ProfileRepository>(),
+      )..load(id),
+      child: _ItemDetailsView(),
+    );
+  }
+}
+
+class _ItemDetailsView extends StatefulWidget {
+  _ItemDetailsView({Key? key}) : super(key: key);
+
+  @override
+  State<_ItemDetailsView> createState() => _ItemDetailsViewState();
+}
+
+class _ItemDetailsViewState extends State<_ItemDetailsView> {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
-    final Map<String, String> item = {
-      'title': 'Professional Camera Kit',
-      'description':
-          'A high-performance tool perfect for both home and professional use. It features a powerful motor for efficient drilling and screwdriving on various materials, a rechargeable lithium-ion battery for long-lasting use, and an ergonomic design that ensures comfort and control during operation.',
-      'image': 'assets/images/powerdrill.jpg',
-      'value': 'DA 1200',
-      'deposit': 'DA 300',
-      'availableFrom': '2023-11-20',
-      'availableUntil': '2023-11-27',
-      'ownerName': 'Sarah Jansen',
-      'ownerImage':
-          'https://cdn.pixabay.com/photo/2017/09/12/13/18/woman-2745228_1280.jpg',
-    };
-
-    const double ownerRating = 4.8;
-    const int ownerReviews = 75;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -43,7 +75,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         title: Padding(
           padding: EdgeInsets.symmetric(vertical: 12 * scale),
           child: Text(
-            'Item Details',
+            l10n.itemDetailsTitle,
             style: GoogleFonts.outfit(
               fontSize: 22 * scale,
               color: AppColors.primaryBlue,
@@ -56,36 +88,127 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       ),
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: _buildImage(item['image']!),
-            ),
-            const SizedBox(height: 16),
+        child: BlocBuilder<ItemDetailsCubit, ItemDetailsState>(
+          builder: (context, state) {
+            if (state is ItemDetailsLoading) {
+              return Center(
+                child: CircularProgressIndicator(color: AppColors.primaryBlue),
+              );
+            }
 
-            _buildDetailsCard(item),
-            const SizedBox(height: 16),
+            if (state is ItemDetailsError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(l10n.itemDetailsGoBack),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-            _buildOwnerInfo(item, ownerRating, ownerReviews),
-            const SizedBox(height: 24),
+            if (state is ItemDetailsLoaded) {
+              final item = state.item;
+              final images = state.images;
+              final owner = state.owner;
+              final currentUser = context.read<AuthRepository>().currentUser;
+              final isOwner = currentUser?.id == item.ownerId;
 
-            _buildActionButtons(item),
-            const SizedBox(height: 20),
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  SizedBox(
+                    height: 300,
+                    child: images.isNotEmpty
+                        ? PageView.builder(
+                            itemCount: images.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black12,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(
+                                    images[index].imageUrl,
+                                    fit: BoxFit.contain,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(
+                                              Icons.broken_image,
+                                              size: 100,
+                                              color: Colors.grey,
+                                            ),
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: _buildImage(
+                              item.images.isNotEmpty ? item.images.first : '',
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 16),
 
-            const Text(
-              'Please refer to the Deposit Policy for more information on item rentals and returns.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
+                  _buildDetailsCard(item, l10n),
+                  const SizedBox(height: 16),
+
+                  if (!isOwner) ...[
+                    _buildOwnerInfo(item, owner, l10n),
+                    const SizedBox(height: 24),
+                    _buildActionButtons(item, l10n),
+                    const SizedBox(height: 20),
+                  ],
+
+                  Text(
+                    l10n.itemDetailsDepositNote,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              );
+            }
+
+            return const SizedBox.shrink();
+          },
         ),
       ),
     );
   }
 
   Widget _buildImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return Container(
+        height: 220,
+        width: double.infinity,
+        color: Colors.grey[200],
+        child: const Center(
+          child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+        ),
+      );
+    }
     if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
       return Image.network(
         imageUrl,
@@ -107,7 +230,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     }
   }
 
-  Widget _buildDetailsCard(Map<String, String> item) {
+  Widget _buildDetailsCard(Item item, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -125,12 +248,12 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            item['title']!,
+            item.title,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
-            item['description']!,
+            item.description ?? l10n.itemDetailsNoDescription,
             style: const TextStyle(
               fontSize: 14,
               color: Colors.black87,
@@ -138,22 +261,50 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildDetailRow('Item Value', item['value']!),
-          _buildDetailRow('Deposit Required', item['deposit']!),
-          _buildDetailRow('Available From', item['availableFrom']!),
-          _buildDetailRow('Available Until', item['availableUntil']!),
+          _buildDetailRow(l10n.itemDetailsCategory, item.category),
+          if (item.estimatedValue != null)
+            _buildDetailRow(
+              l10n.itemDetailsValue,
+              'DA ${item.estimatedValue!.toStringAsFixed(0)}',
+            ),
+          if (item.depositAmount != null)
+            _buildDetailRow(
+              l10n.itemDetailsDeposit,
+              'DA ${item.depositAmount!.toStringAsFixed(0)}',
+            ),
+          if (item.startDate != null)
+            _buildDetailRow(
+              l10n.itemDetailsAvailableFrom,
+              _formatDate(item.startDate!),
+            ),
+          if (item.endDate != null)
+            _buildDetailRow(
+              l10n.itemDetailsAvailableUntil,
+              _formatDate(item.endDate!),
+            ),
+          _buildDetailRow(
+            l10n.itemDetailsStatus,
+            item.isAvailable
+                ? l10n.itemStatusAvailable
+                : l10n.itemStatusUnavailable,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildOwnerInfo(
-    Map<String, String> item,
-    double ownerRating,
-    int ownerReviews,
-  ) {
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildOwnerInfo(Item item, User? owner, AppLocalizations l10n) {
+    // Calculate average rating
+    final double averageRating = owner != null && owner.ratingCount > 0
+        ? owner.ratingSum / owner.ratingCount
+        : 0.0;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -165,68 +316,72 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           ),
         ],
       ),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.pushNamed(context, '/profile-page');
-        },
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.grey,
-              child: Icon(Icons.person, color: Colors.white, size: 28),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item['ownerName']!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
+      child: Row(
+        children: [
+          Avatar(
+            imageUrl: owner?.avatarUrl,
+            initials: owner?.username?.isNotEmpty == true
+                ? owner!.username![0].toUpperCase()
+                : '?',
+            size: 56,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  owner?.username ?? l10n.itemDetailsOwner,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.star, size: 18, color: Color(0xFFFFC107)),
+                    const SizedBox(width: 4),
+                    Text(
+                      averageRating.toStringAsFixed(1),
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A1A),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$ownerRating ',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 13,
-                        ),
+                    const SizedBox(width: 4),
+                    Text(
+                      l10n.itemDetailsOwnerReviews(
+                        owner?.ratingCount ?? 0,
                       ),
-                      Text(
-                        '($ownerReviews reviews)',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: const Color(0xFF9E9E9E),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildActionButtons(Map<String, String> item) {
+  Widget _buildActionButtons(Item item, AppLocalizations l10n) {
     return Column(
       children: [
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-              _showBookingDialog(item);
-            },
+            onPressed: item.isAvailable
+                ? () {
+                    _showBookingDialog(item);
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -234,9 +389,11 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
-              'Book Now',
-              style: TextStyle(
+            child: Text(
+              item.isAvailable
+                  ? l10n.itemDetailsBookNow
+                  : l10n.itemDetailsNotAvailable,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -267,21 +424,32 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     );
   }
 
-  void _showBookingDialog(Map<String, String> item) {
+  void _showBookingDialog(Item item) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
-        return BookingDialog(item: item);
+      builder: (BuildContext dialogContext) {
+        return BookingDialog(
+          item: item,
+          bookingRepository: context.read<BookingRepository>(),
+          authRepository: context.read<AuthRepository>(),
+        );
       },
     );
   }
 }
 
 class BookingDialog extends StatefulWidget {
-  final Map<String, String> item;
+  final Item item;
+  final BookingRepository bookingRepository;
+  final AuthRepository authRepository;
 
-  const BookingDialog({required this.item, super.key});
+  const BookingDialog({
+    required this.item,
+    required this.bookingRepository,
+    required this.authRepository,
+    super.key,
+  });
 
   @override
   State<BookingDialog> createState() => _BookingDialogState();
@@ -324,9 +492,10 @@ class _BookingDialogState extends State<BookingDialog>
   }
 
   void _parseItemData() {
-    availableFrom = DateTime.parse(widget.item['availableFrom']!);
-    availableUntil = DateTime.parse(widget.item['availableUntil']!);
-    itemValue = int.parse(widget.item['value']!.replaceAll('DA', ''));
+    availableFrom = widget.item.startDate ?? DateTime.now();
+    availableUntil =
+        widget.item.endDate ?? DateTime.now().add(const Duration(days: 30));
+    itemValue = widget.item.estimatedValue?.toInt() ?? 0;
   }
 
   Future<void> _selectDate(bool isStartDate) async {
@@ -376,6 +545,86 @@ class _BookingDialogState extends State<BookingDialog>
     }
   }
 
+  Future<void> _handleBookingConfirmation() async {
+    final l10n = AppLocalizations.of(context);
+    if (startDate == null || endDate == null || numDays <= 0) {
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) =>
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+
+      // Get current user
+      final currentUser = widget.authRepository.currentUser;
+      if (currentUser == null) {
+        throw Exception(l10n.bookingDialogAuthRequired);
+      }
+
+      // Calculate total cost
+      final totalCost = itemValue * numDays;
+
+      // Create booking
+      final booking = Booking(
+        id: const Uuid().v4(),
+        itemId: widget.item.id,
+        ownerId: widget.item.ownerId,
+        borrowerId: currentUser.id,
+        status: BookingStatus.pending,
+        depositStatus: DepositStatus.none,
+        startDate: startDate!,
+        returnByDate: endDate!,
+        totalCost: totalCost.toDouble(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await widget.bookingRepository.createBooking(booking);
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Close booking dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.bookingDialogSuccess(numDays)),
+            backgroundColor: AppColors.primary,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        Navigator.pushReplacementNamed(
+          context,
+          '/request-order',
+          arguments: {'initialTab': 'my_requests'},
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.bookingDialogFail(e.toString())),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -384,6 +633,7 @@ class _BookingDialogState extends State<BookingDialog>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return FadeTransition(
       opacity: _opacityAnimation,
       child: ScaleTransition(
@@ -408,7 +658,7 @@ class _BookingDialogState extends State<BookingDialog>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Booking Details',
+                          l10n.bookingDialogTitle,
                           style: GoogleFonts.outfit(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -434,9 +684,13 @@ class _BookingDialogState extends State<BookingDialog>
                       ],
                     ),
                     const SizedBox(height: 24),
-                    _buildDateField('Start Date', startDate, true),
+                    _buildDateField(
+                      l10n.bookingDialogStartDate,
+                      startDate,
+                      true,
+                    ),
                     const SizedBox(height: 16),
-                    _buildDateField('End Date', endDate, false),
+                    _buildDateField(l10n.bookingDialogEndDate, endDate, false),
                     const SizedBox(height: 24),
                     _buildTotalCostField(),
                     const SizedBox(height: 28),
@@ -453,7 +707,7 @@ class _BookingDialogState extends State<BookingDialog>
                               ),
                             ),
                             child: Text(
-                              'Cancel',
+                              l10n.bookingDialogCancel,
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -466,17 +720,8 @@ class _BookingDialogState extends State<BookingDialog>
                         Expanded(
                           child: ElevatedButton(
                             onPressed: numDays > 0
-                                ? () {
-                                    // Handle booking confirmation
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Booking confirmed for $numDays days!',
-                                        ),
-                                        backgroundColor: AppColors.primary,
-                                      ),
-                                    );
+                                ? () async {
+                                    await _handleBookingConfirmation();
                                   }
                                 : null,
                             style: ElevatedButton.styleFrom(
@@ -488,7 +733,7 @@ class _BookingDialogState extends State<BookingDialog>
                               ),
                             ),
                             child: Text(
-                              'Confirm',
+                              l10n.bookingDialogConfirm,
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -537,7 +782,7 @@ class _BookingDialogState extends State<BookingDialog>
                 Text(
                   date != null
                       ? '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'
-                      : 'Select date',
+                      : AppLocalizations.of(context).bookingDialogSelectDate,
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -569,7 +814,7 @@ class _BookingDialogState extends State<BookingDialog>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total Cost',
+                AppLocalizations.of(context).bookingDialogTotalCost,
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
@@ -591,7 +836,7 @@ class _BookingDialogState extends State<BookingDialog>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Days',
+                AppLocalizations.of(context).bookingDialogDays,
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
@@ -614,3 +859,5 @@ class _BookingDialogState extends State<BookingDialog>
     );
   }
 }
+
+

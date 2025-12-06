@@ -1,21 +1,23 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
-import 'package:sellefli/src/features/auth/login_form.dart';
+import 'package:sellefli/src/core/widgets/auth/login_form.dart';
 import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
 import 'package:sellefli/src/features/auth/logic/auth_state.dart';
-import 'package:sellefli/src/features/auth/signup_form.dart';
-import 'package:sellefli/src/features/auth/reset_password_form.dart';
+import 'package:sellefli/src/core/widgets/auth/signup_form.dart';
+import 'package:sellefli/src/core/widgets/auth/reset_password_form.dart';
 
-class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+class AuthPage extends StatefulWidget {
+  const AuthPage({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  State<AuthPage> createState() => _AuthPageState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthPageState extends State<AuthPage> {
   int currentView = 0; // 0 = Login, 1 = SignUp, 2 = ResetPassword
 
   @override
@@ -45,24 +47,26 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
           // Show success message based on which form was used
-          String message = currentView == 1
-              ? 'Account created successfully! Welcome to Sellefli.'
-              : 'Welcome back! Login successful.';
+          final message = currentView == 1
+              ? l10n.authSignupSuccess
+              : l10n.authLoginSuccess;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(milliseconds: 1500),
               behavior: SnackBarBehavior.floating,
             ),
           );
           // Navigate to home on successful authentication
-          Future.delayed(const Duration(milliseconds: 500), () {
+          Future.delayed(const Duration(milliseconds: 200), () {
             if (mounted) {
+              ScaffoldMessenger.of(context).clearSnackBars();
               Navigator.pushReplacementNamed(context, '/home');
             }
           });
@@ -72,7 +76,7 @@ class _AuthScreenState extends State<AuthScreen> {
             SnackBar(
               content: Text(state.message),
               backgroundColor: AppColors.danger,
-              duration: const Duration(seconds: 4),
+              duration: const Duration(seconds: 3),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -103,3 +107,5 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
+
+

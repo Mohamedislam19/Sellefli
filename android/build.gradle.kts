@@ -11,21 +11,12 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
-    
-    // Force all subprojects to use Java 11
-    afterEvaluate {
-        if (project.hasProperty("android")) {
-            extensions.configure<com.android.build.gradle.BaseExtension>("android") {
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_11
-                    targetCompatibility = JavaVersion.VERSION_11
-                }
-            }
-        }
-    }
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    tasks.withType<JavaCompile>().configureEach {
+        options.compilerArgs.add("-Xlint:-options")
+    }
 }
 
 tasks.register<Delete>("clean") {

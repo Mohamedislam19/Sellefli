@@ -1,4 +1,6 @@
 // lib/src/core/widgets/image/image_gallery.dart
+// ignore_for_file: use_super_parameters
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -101,3 +103,5 @@ class ImageGallery extends StatelessWidget {
     );
   }
 }
+
+

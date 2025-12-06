@@ -1,17 +1,41 @@
+// ignore_for_file: deprecated_member_use, use_super_parameters, prefer_const_constructors_in_immutables
+
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import '../../core/widgets/nav/bottom_nav.dart';
 import '../../core/theme/app_theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'logic/my_listings_cubit.dart';
+import 'logic/my_listings_state.dart';
+import '../../data/repositories/item_repository.dart';
+import '../../data/local/local_item_repository.dart';
 
-class MyListingsPage extends StatefulWidget {
+class MyListingsPage extends StatelessWidget {
   const MyListingsPage({Key? key}) : super(key: key);
 
   @override
-  State<MyListingsPage> createState() => _MyListingsPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => MyListingsCubit(
+        itemRepository: context.read<ItemRepository>(),
+        localItemRepository: context.read<LocalItemRepository>(),
+      )..loadMyListings(),
+      child: _MyListingsView(),
+    );
+  }
 }
 
-class _MyListingsPageState extends State<MyListingsPage> {
+class _MyListingsView extends StatefulWidget {
+  _MyListingsView({Key? key}) : super(key: key);
+
+  @override
+  State<_MyListingsView> createState() => _MyListingsViewState();
+}
+
+class _MyListingsViewState extends State<_MyListingsView> {
   int _currentIndex = 2;
 
   void _onNavTap(int index) {
@@ -31,105 +55,208 @@ class _MyListingsPageState extends State<MyListingsPage> {
     }
   }
 
-  final List<Map<String, dynamic>> listings = [
-    {
-      "title": "Cordless Power Drill Set",
-      "status": "Active",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "4-Person Camping Tent",
-      "status": "Rented",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "Stand Mixer - KitchenAid",
-      "status": "Pending Approval",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "Mountain Bike - Size L",
-      "status": "Active",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "Digital Camera - Canon EOS",
-      "status": "Unavailable",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-    {
-      "title": "Robotic Vacuum Cleaner",
-      "status": "Active",
-      "image": 'assets/images/powerdrill.jpg',
-    },
-  ];
-
   Color _getStatusColor(String status) {
     switch (status) {
-      case "Active":
+      case 'active':
         return Colors.green;
-      case "Rented":
+      case 'rented':
         return Colors.blue;
-      case "Pending Approval":
+      case 'pending':
         return Colors.orange;
-      case "Unavailable":
+      case 'unavailable':
         return Colors.grey;
       default:
         return Colors.grey;
     }
   }
 
+  String _statusLabel(String status, AppLocalizations l10n) {
+    switch (status) {
+      case 'active':
+        return l10n.myListingsStatusActive;
+      case 'rented':
+        return l10n.myListingsStatusRented;
+      case 'pending':
+        return l10n.myListingsStatusPending;
+      case 'unavailable':
+      default:
+        return l10n.myListingsStatusUnavailable;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     // Scale factor between 0.7 (at 245px) and 1 (at 350px or higher)
     final scale = (screenWidth / 350).clamp(0.7, 1.0);
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 207, 225, 255),
-        elevation: 1,
-        centerTitle: true,
-        leading: const AnimatedReturnButton(),
-        title: Padding(
-          padding: EdgeInsets.symmetric(vertical: 12 * scale),
-          child: Text(
-            'My Listings',
-            style: GoogleFonts.outfit(
-              fontSize: 22 * scale,
-              color: AppColors.primaryBlue,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
+
+    return BlocListener<MyListingsCubit, MyListingsState>(
+      listener: (context, state) {
+        if (state is MyListingsNavigateToEdit) {
+          Navigator.pushNamed(context, '/edit-item', arguments: state.itemId);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Color.fromARGB(255, 207, 225, 255),
+          elevation: 1,
+          centerTitle: true,
+          leading: const AnimatedReturnButton(),
+          title: Padding(
+            padding: EdgeInsets.symmetric(vertical: 12 * scale),
+            child: Text(
+              l10n.myListingsTitle,
+              style: GoogleFonts.outfit(
+                fontSize: 22 * scale,
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.refresh, color: AppColors.primaryBlue),
+              onPressed: () => context.read<MyListingsCubit>().loadMyListings(),
+            ),
+          ],
+        ),
+        body: Container(
+          decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+          child: BlocBuilder<MyListingsCubit, MyListingsState>(
+            builder: (context, state) {
+              if (state is MyListingsLoading) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryBlue,
+                  ),
+                );
+              }
+
+              if (state is MyListingsError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        state.message,
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () =>
+                            context.read<MyListingsCubit>().loadMyListings(),
+                        child: Text(l10n.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (state is MyListingsLoaded) {
+                if (state.items.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.inventory_outlined,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.myListingsNoItems,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (state.isOffline)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              l10n.myListingsOffline,
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    if (state.isOffline)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        color: Colors.orange.shade100,
+                        child: Text(
+                          l10n.myListingsOfflineBanner,
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            color: Colors.orange.shade900,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: state.items.length,
+                        itemBuilder: (context, index) {
+                          final item = state.items[index];
+                          return _buildListingCard(
+                            context: context,
+                            itemId: item.id,
+                            title: item.title,
+                            status: item.isAvailable ? 'active' : 'unavailable',
+                            imageUrl: item.images.isNotEmpty
+                                ? item.images.first
+                                : '',
+                            l10n: l10n,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
           ),
         ),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        child: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: listings.length,
-          itemBuilder: (context, index) {
-            final item = listings[index];
-            return _buildListingCard(
-              title: item["title"],
-              status: item["status"],
-              imageUrl: item["image"],
-            );
-          },
+        bottomNavigationBar: AnimatedBottomNav(
+          currentIndex: _currentIndex,
+          onTap: _onNavTap,
         ),
-      ),
-      bottomNavigationBar: AnimatedBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onNavTap,
       ),
     );
   }
 
   Widget _buildListingCard({
+    required BuildContext context,
+    required String itemId,
     required String title,
     required String status,
     required String imageUrl,
+    required AppLocalizations l10n,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -183,7 +310,7 @@ class _MyListingsPageState extends State<MyListingsPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    status,
+                    _statusLabel(status, l10n),
                     style: GoogleFonts.outfit(
                       color: _getStatusColor(status),
                       fontWeight: FontWeight.w500,
@@ -199,23 +326,29 @@ class _MyListingsPageState extends State<MyListingsPage> {
                   children: [
                     Expanded(
                       child: _actionButton(
-                        label: "Edit",
+                        label: l10n.myListingsEdit,
                         color: Colors.grey.shade700,
                         icon: Icons.edit_outlined,
                         onPressed: () {
-                          Navigator.pushNamed(context, '/edit-item');
+                          context.read<MyListingsCubit>().onEditItemTapped(
+                            itemId,
+                          );
                         },
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: _actionButton(
-                        label: "View",
+                        label: l10n.myListingsView,
                         color: AppColors.primaryBlue,
                         icon: Icons.visibility_outlined,
                         isPrimary: true,
                         onPressed: () {
-                          Navigator.pushNamed(context, '/item-details');
+                          Navigator.pushNamed(
+                            context,
+                            '/item-details',
+                            arguments: itemId,
+                          );
                         },
                       ),
                     ),
@@ -230,10 +363,33 @@ class _MyListingsPageState extends State<MyListingsPage> {
   }
 
   Widget _buildImage(String imageUrl) {
-    // Detect if image is a network URL or local asset
+    if (imageUrl.isEmpty) {
+      return Container(
+        height: 80,
+        width: 80,
+        color: Colors.grey[200],
+        child: const Icon(
+          Icons.image_not_supported,
+          size: 40,
+          color: Colors.grey,
+        ),
+      );
+    }
+    // Detect if image is a network URL, local file, or asset
     if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
       return Image.network(
         imageUrl,
+        height: 80,
+        width: 80,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.broken_image, size: 60, color: Colors.grey),
+      );
+    } else if (imageUrl.startsWith('/') ||
+        imageUrl.contains('\\') ||
+        imageUrl.startsWith('file://')) {
+      return Image.file(
+        File(imageUrl.replaceFirst('file://', '')),
         height: 80,
         width: 80,
         fit: BoxFit.cover,
@@ -286,3 +442,5 @@ class _MyListingsPageState extends State<MyListingsPage> {
     );
   }
 }
+
+

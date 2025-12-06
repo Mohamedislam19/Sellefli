@@ -8,6 +8,7 @@ import 'package:sellefli/src/data/repositories/auth_repository.dart';
 import 'package:sellefli/src/features/auth/logic/auth_cubit.dart';
 import 'package:sellefli/src/features/auth/logic/auth_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 class MockUser extends Mock implements User {}

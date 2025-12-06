@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
+import 'package:sellefli/src/core/utils/validators.dart';
+import 'package:sellefli/src/core/widgets/auth/auth_text_field.dart';
+import 'package:sellefli/src/core/widgets/auth/reset_password_header.dart';
 
 class ResetPasswordForm extends StatefulWidget {
   final VoidCallback onToggle;
@@ -14,7 +18,6 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _emailFocusNode = FocusNode();
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -40,7 +43,6 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
   @override
   void dispose() {
     _emailController.dispose();
-    _emailFocusNode.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -55,6 +57,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           setState(() => _isLoading = false);
+          // In a real app, you would call the auth cubit here
           Navigator.pushNamed(context, '/auth');
         }
       });
@@ -63,6 +66,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       alignment: Alignment.center,
       child: FadeTransition(
@@ -89,149 +93,18 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Icon with animated gradient
-                    Hero(
-                      tag: 'auth_icon',
-                      child: Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [AppColors.primaryDark, AppColors.primary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(22),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withAlpha(
-                                ((0.3) * 255).toInt(),
-                              ),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.lock_reset,
-                          size: 44,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // Title with better typography
-                    Text(
-                      'Reset Password',
-                      style: AppTextStyles.title.copyWith(
-                        color: AppColors.primaryDark,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Enter your email to receive\na password reset link',
-                      style: AppTextStyles.subtitle.copyWith(
-                        color: AppColors.muted,
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                    const ResetPasswordHeader(),
                     const SizedBox(height: 40),
-
-                    // Email Field with improved styling
-                    TextFormField(
+                    AuthTextField(
                       controller: _emailController,
-                      focusNode: _emailFocusNode,
+                      label: l10n.authEmailLabel,
+                      hint: l10n.authEmailHint,
+                      prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _resetPassword(),
-                      autofocus: true,
-                      style: AppTextStyles.body.copyWith(fontSize: 16),
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'example@email.com',
-                        hintStyle: TextStyle(
-                          color: AppColors.muted.withAlpha(
-                            ((0.5) * 255).toInt(),
-                          ),
-                        ),
-                        prefixIcon: Container(
-                          margin: const EdgeInsets.all(12),
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(
-                              ((0.1) * 255).toInt(),
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.email_outlined,
-                            color: AppColors.primary,
-                            size: 22,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: AppColors.primary.withAlpha(
-                          ((0.03) * 255).toInt(),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(
-                            color: AppColors.border.withAlpha(
-                              ((0.3) * 255).toInt(),
-                            ),
-                            width: 1,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(
-                            color: AppColors.primary,
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(
-                            color: AppColors.danger,
-                            width: 1,
-                          ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide(
-                            color: AppColors.danger,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
+                      validator: (value) =>
+                          Validators.validateEmail(context, value),
                     ),
                     const SizedBox(height: 32),
-
-                    // Reset Button with better styling
                     ElevatedButton(
                       onPressed: _isLoading ? null : _resetPassword,
                       style:
@@ -249,18 +122,17 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                               ((0.4) * 255).toInt(),
                             ),
                           ).copyWith(
-                            elevation:
-                                MaterialStateProperty.resolveWith<double>((
-                                  states,
-                                ) {
-                                  if (states.contains(MaterialState.pressed)) {
-                                    return 0;
-                                  }
-                                  if (states.contains(MaterialState.hovered)) {
-                                    return 4;
-                                  }
-                                  return 2;
-                                }),
+                            elevation: WidgetStateProperty.resolveWith<double>((
+                              states,
+                            ) {
+                              if (states.contains(WidgetState.pressed)) {
+                                return 0;
+                              }
+                              if (states.contains(WidgetState.hovered)) {
+                                return 4;
+                              }
+                              return 2;
+                            }),
                           ),
                       child: _isLoading
                           ? const SizedBox(
@@ -274,7 +146,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                               ),
                             )
                           : Text(
-                              'Send Reset Link',
+                              l10n.authSendResetLink,
                               style: AppTextStyles.subtitle.copyWith(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -284,8 +156,6 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                             ),
                     ),
                     const SizedBox(height: 28),
-
-                    // Divider with text
                     Row(
                       children: [
                         Expanded(
@@ -299,7 +169,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'OR',
+                            l10n.authOr,
                             style: AppTextStyles.body.copyWith(
                               color: AppColors.muted,
                               fontSize: 13,
@@ -318,13 +188,11 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                       ],
                     ),
                     const SizedBox(height: 28),
-
-                    // Back to Login Link with better spacing and touch target
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Remember your password? ',
+                          '${l10n.authRememberPassword} ',
                           style: AppTextStyles.body.copyWith(
                             color: AppColors.muted,
                             fontSize: 15,
@@ -339,7 +207,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
                               vertical: 4,
                             ),
                             child: Text(
-                              'Log in',
+                              l10n.authLoginButton,
                               style: AppTextStyles.subtitle.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
@@ -360,3 +228,5 @@ class _ResetPasswordFormState extends State<ResetPasswordForm>
     );
   }
 }
+
+
