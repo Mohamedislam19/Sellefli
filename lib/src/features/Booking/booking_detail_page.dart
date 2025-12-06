@@ -76,9 +76,11 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
             }
           },
           builder: (context, state) {
-            if (state is BookingLoading || state is BookingInitial) {
-              return const Center(child: CircularProgressIndicator());
-            }
+            if (state is BookingLoading || state is BookingInitial || state is BookingActionSuccess) {
+                // While an action just succeeded and we re-fetch details,
+                // keep showing a loading state instead of "No booking data".
+                return const Center(child: CircularProgressIndicator());
+              }
 
             if (state is BookingError) {
               return Center(
@@ -107,7 +109,8 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
             }
 
             if (state is! BookingDetailsLoaded) {
-              return Center(child: Text(l10n.bookingDetailsNoData));
+              // Fallback: show a lightweight loader rather than a blank message.
+              return const Center(child: CircularProgressIndicator());
             }
 
             final booking = state.bookingDetails['booking'] as Booking;
