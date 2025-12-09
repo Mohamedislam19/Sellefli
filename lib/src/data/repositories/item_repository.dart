@@ -1,31 +1,65 @@
 // ignore_for_file: unnecessary_null_comparison
 
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/item_model.dart';
 import '../models/item_image_model.dart';
 import '../local/local_item_repository.dart';
 
 class ItemRepository {
-  final SupabaseClient supabase;
+  /// Configure your backend base URL. Override via --dart-define=DJANGO_BASE_URL
+  /// if needed.
+  static const String _baseUrl = String.fromEnvironment(
+    'DJANGO_BASE_URL',
+    defaultValue: 'http://localhost:8000',
+  );
+
+  final http.Client _client;
   final LocalItemRepository _localRepo = LocalItemRepository();
 
-  ItemRepository(this.supabase);
+  ItemRepository([Object? client])
+    : _client = client is http.Client ? client : http.Client();
+
+  Uri _uri(String path, [Map<String, dynamic>? query]) {
+    final uri = Uri.parse('$_baseUrl$path');
+    if (query == null || query.isEmpty) return uri;
+    return uri.replace(
+      queryParameters: {
+        ...uri.queryParameters,
+        ...query.map((k, v) => MapEntry(k, v?.toString() ?? '')),
+      },
+    );
+  }
+
+  Map<String, String> get _jsonHeaders => {
+    HttpHeaders.contentTypeHeader: 'application/json',
+  };
+
+  T _decode<T>(http.Response res, T Function(dynamic) mapper) {
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      final body = res.body.isEmpty ? null : jsonDecode(res.body);
+      return mapper(body);
+    }
+    throw HttpException('HTTP ${res.statusCode}: ${res.body}');
+  }
 
   // ===========================================================================
   // CREATE ITEM
   // ===========================================================================
   Future<String> createItem(Item item) async {
-    final response = await supabase
-        .from('items')
-        .insert(item.toJson())
-        .select()
-        .single();
+    final res = await _client.post(
+      _uri('/api/items/'),
+      headers: _jsonHeaders,
+      body: jsonEncode(item.toJson()),
+    );
 
-    return response['id'] as String;
+    return _decode<String>(res, (body) => body['id'] as String);
   }
 
   // ===========================================================================
@@ -42,38 +76,16 @@ class ItemRepository {
       final file = images[i];
       final ext = file.path.split('.').last;
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
-      final storagePath = 'items/$itemId/$fileName';
+      final bytes = await file.readAsBytes();
+      final image = await _uploadMultipart(
+        itemId: itemId,
+        bytes: bytes,
+        fileName: fileName,
+        position: i + 1,
+        contentType: _guessContentType(ext),
+      );
 
-      // Upload to storage
-      final uploadResponse = await supabase.storage
-          .from('item-images')
-          .upload(storagePath, file);
-
-      // Supabase storage upload returns a Map on success; treat empty as failure
-      if (uploadResponse == null ||
-          // ignore: unnecessary_type_check
-          (uploadResponse is String && uploadResponse.isEmpty)) {
-        // some SDK versions return a map, some return void - we'll still proceed to check by trying to get a public URL
-        // but if you want stricter checking, wrap upload in try/catch and throw on exception
-      }
-
-      // Public URL
-      final publicUrl = supabase.storage
-          .from('item-images')
-          .getPublicUrl(storagePath);
-
-      // Insert DB record and return inserted row
-      final insertedRow = await supabase
-          .from('item_images')
-          .insert({
-            'item_id': itemId,
-            'image_url': publicUrl,
-            'position': i + 1,
-          })
-          .select()
-          .single();
-
-      inserted.add(ItemImage.fromJson(insertedRow));
+      inserted.add(image);
     }
 
     return inserted;
@@ -87,31 +99,14 @@ class ItemRepository {
   ) async {
     final ext = file.path.split('.').last;
     final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
-    final storagePath = 'items/$itemId/$fileName';
-    final contentType = _guessContentType(ext);
-    await supabase.storage
-        .from('item-images')
-        .upload(
-          storagePath,
-          file,
-          fileOptions: FileOptions(contentType: contentType),
-        );
-
-    final publicUrl = supabase.storage
-        .from('item-images')
-        .getPublicUrl(storagePath);
-
-    final insertedRow = await supabase
-        .from('item_images')
-        .insert({
-          'item_id': itemId,
-          'image_url': publicUrl,
-          'position': position,
-        })
-        .select()
-        .single();
-
-    return ItemImage.fromJson(insertedRow);
+    final bytes = await file.readAsBytes();
+    return _uploadMultipart(
+      itemId: itemId,
+      bytes: bytes,
+      fileName: fileName,
+      position: position,
+      contentType: _guessContentType(ext),
+    );
   }
 
   // Web-safe upload directly from XFile, falling back to File for non-web.
@@ -124,42 +119,26 @@ class ItemRepository {
         ? xfile.name.split('.').last
         : 'jpg';
     final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
-    final storagePath = 'items/$itemId/$fileName';
-
+    final contentType = _guessContentType(ext);
     if (kIsWeb) {
       final bytes = await xfile.readAsBytes();
-      final contentType = _guessContentType(ext);
-      await supabase.storage
-          .from('item-images')
-          .uploadBinary(
-            storagePath,
-            bytes,
-            fileOptions: FileOptions(contentType: contentType),
-          );
+      return _uploadMultipart(
+        itemId: itemId,
+        bytes: bytes,
+        fileName: fileName,
+        position: position,
+        contentType: contentType,
+      );
     } else {
-      final contentType = _guessContentType(ext);
-      await supabase.storage
-          .from('item-images')
-          .upload(
-            storagePath,
-            File(xfile.path),
-            fileOptions: FileOptions(contentType: contentType),
-          );
+      final bytes = await File(xfile.path).readAsBytes();
+      return _uploadMultipart(
+        itemId: itemId,
+        bytes: bytes,
+        fileName: fileName,
+        position: position,
+        contentType: contentType,
+      );
     }
-
-    final publicUrl = supabase.storage
-        .from('item-images')
-        .getPublicUrl(storagePath);
-    final insertedRow = await supabase
-        .from('item_images')
-        .insert({
-          'item_id': itemId,
-          'image_url': publicUrl,
-          'position': position,
-        })
-        .select()
-        .single();
-    return ItemImage.fromJson(insertedRow);
   }
 
   String _guessContentType(String ext) {
@@ -190,39 +169,30 @@ class ItemRepository {
     String? searchQuery,
   }) async {
     try {
-      dynamic query = supabase
-          .from('items')
-          .select(
-            '*, item_images(image_url, position), users!inner(username, avatar_url, rating_sum, rating_count)',
-          );
+      final query = <String, dynamic>{
+        'page': page.toString(),
+        'page_size': pageSize.toString(),
+      };
 
-      // Exclude current user's items
       if (excludeUserId != null) {
-        query = query.neq('owner_id', excludeUserId);
+        query['excludeUserId'] = excludeUserId;
       }
-
-      // Category Filter
       if (categories != null &&
           categories.isNotEmpty &&
           !categories.contains('All')) {
-        query = query.inFilter('category', categories);
+        query['categories'] = categories.join(',');
       }
-
-      // Search Filter (Partial match)
       if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.ilike('title', '%$searchQuery%');
+        query['searchQuery'] = searchQuery;
       }
 
-      // Order by creation date (newest first)
-      query = query.order('created_at', ascending: false);
-
-      // Pagination
-      final from = (page - 1) * pageSize;
-      final to = from + pageSize - 1;
-      query = query.range(from, to);
-
-      final data = await query;
-      final items = (data as List).map((json) => Item.fromJson(json)).toList();
+      final res = await _client.get(_uri('/api/items/', query));
+      final items = _decode<List<Item>>(res, (body) {
+        final results = body is Map<String, dynamic> ? body['results'] : body;
+        return (results as List)
+            .map((json) => Item.fromJson(json as Map<String, dynamic>))
+            .toList();
+      });
 
       // Cache first page if no filters are applied
       if (page == 1 &&
@@ -251,32 +221,25 @@ class ItemRepository {
   // GET ITEM
   // ===========================================================================
   Future<Item?> getItemById(String itemId) async {
-    final data = await supabase
-        .from('items')
-        .select()
-        .eq('id', itemId)
-        .maybeSingle();
-
-    if (data == null) return null;
-
-    return Item.fromJson(data);
+    final res = await _client.get(_uri('/api/items/$itemId/'));
+    try {
+      return _decode<Item?>(res, (body) => Item.fromJson(body));
+    } on HttpException {
+      if (res.statusCode == 404) return null;
+      rethrow;
+    }
   }
 
   // ===========================================================================
   // GET IMAGES
   // ===========================================================================
   Future<List<ItemImage>> getItemImages(String itemId) async {
-    final data = await supabase
-        .from('item_images')
-        .select()
-        .eq('item_id', itemId)
-        .order('position', ascending: true);
-
-    return (data as List)
-        .map<ItemImage>(
-          (json) => ItemImage.fromJson(json as Map<String, dynamic>),
-        )
-        .toList();
+    final res = await _client.get(_uri('/api/items/$itemId/images/'));
+    return _decode<List<ItemImage>>(res, (body) {
+      return (body as List)
+          .map<ItemImage>((json) => ItemImage.fromJson(json))
+          .toList();
+    });
   }
 
   // ===========================================================================
@@ -284,8 +247,12 @@ class ItemRepository {
   // ===========================================================================
   Future<void> updateItem(String itemId, Map<String, dynamic> updates) async {
     updates['updated_at'] = DateTime.now().toIso8601String();
-
-    await supabase.from('items').update(updates).eq('id', itemId);
+    final res = await _client.patch(
+      _uri('/api/items/$itemId/'),
+      headers: _jsonHeaders,
+      body: jsonEncode(updates),
+    );
+    _decode(res, (body) => body);
   }
 
   // ===========================================================================
@@ -293,68 +260,20 @@ class ItemRepository {
   // ===========================================================================
   Future<void> deleteImage(String imageUrl) async {
     if (imageUrl.isEmpty) return;
-
-    // Example public URL:
-    // https://<project>.supabase.co/storage/v1/object/public/item-images/items/<itemId>/<fileName>
-    // We need the internal path: 'items/<itemId>/<fileName>'
-    final marker = '/item-images/';
-    final idx = imageUrl.indexOf(marker);
-    if (idx == -1) {
-      // fallback: try to find '/public/' and take everything after bucket name
-      final altMarker = '/public/';
-      final altIdx = imageUrl.indexOf(altMarker);
-      if (altIdx == -1) {
-        // give up (avoid deleting storage) — still delete DB record to keep consistency
-        await supabase.from('item_images').delete().eq('image_url', imageUrl);
-        return;
-      } else {
-        final remainder = imageUrl.substring(altIdx + altMarker.length);
-        // remainder like 'item-images/items/...'
-        final afterBucket = remainder.split('/')..removeAt(0);
-        final internalPath = afterBucket.join('/');
-        await supabase.storage.from('item-images').remove([internalPath]);
-        await supabase.from('item_images').delete().eq('image_url', imageUrl);
-        return;
-      }
-    }
-
-    final internalPath = imageUrl.substring(
-      idx + marker.length,
-    ); // items/<itemId>/<fileName>
-
-    // Remove from storage (safe to ignore if it fails)
-    try {
-      await supabase.storage.from('item-images').remove([internalPath]);
-    } catch (_) {
-      // ignore storage deletion failure but continue to remove DB row
-    }
-
-    // Remove DB row
-    await supabase.from('item_images').delete().eq('image_url', imageUrl);
+    final res = await _client.post(
+      _uri('/api/item-images/delete-by-url/'),
+      headers: _jsonHeaders,
+      body: jsonEncode({'image_url': imageUrl}),
+    );
+    if (res.statusCode >= 200 && res.statusCode < 300) return;
+    throw HttpException('HTTP ${res.statusCode}: ${res.body}');
   }
 
   // Delete image by id (fetch row first to get URL), safer for RLS policies
   Future<void> deleteImageById(String imageId) async {
-    final row = await supabase
-        .from('item_images')
-        .select('image_url')
-        .eq('id', imageId)
-        .maybeSingle();
-    if (row == null) return;
-    final url = row['image_url'] as String?;
-    if (url != null && url.isNotEmpty) {
-      // Attempt storage removal using same logic as deleteImage
-      final marker = '/item-images/';
-      final idx = url.indexOf(marker);
-      if (idx != -1) {
-        final internalPath = url.substring(idx + marker.length);
-        try {
-          await supabase.storage.from('item-images').remove([internalPath]);
-        } catch (_) {}
-      }
-    }
-    // Always delete DB row by id (even if storage removal failed)
-    await supabase.from('item_images').delete().eq('id', imageId);
+    final res = await _client.delete(_uri('/api/item-images/$imageId/'));
+    if (res.statusCode >= 200 && res.statusCode < 300) return;
+    throw HttpException('HTTP ${res.statusCode}: ${res.body}');
   }
 
   // Delete all images for an item whose positions are NOT in the provided set.
@@ -363,30 +282,16 @@ class ItemRepository {
     String itemId,
     Set<int> allowedPositions,
   ) async {
-    final data =
-        await supabase
-                .from('item_images')
-                .select('id, image_url, position')
-                .eq('item_id', itemId)
-            as List<dynamic>;
-    for (final row in data) {
-      final pos = row['position'] as int?;
-      if (pos == null || !allowedPositions.contains(pos)) {
-        final id = row['id'] as String;
-        final url = row['image_url'] as String?;
-        if (url != null && url.isNotEmpty) {
-          final marker = '/item-images/';
-          final idx = url.indexOf(marker);
-          if (idx != -1) {
-            final internalPath = url.substring(idx + marker.length);
-            try {
-              await supabase.storage.from('item-images').remove([internalPath]);
-            } catch (_) {}
-          }
-        }
-        await supabase.from('item_images').delete().eq('id', id);
-      }
-    }
+    final res = await _client.post(
+      _uri('/api/item-images/delete-not-in-positions/'),
+      headers: _jsonHeaders,
+      body: jsonEncode({
+        'item_id': itemId,
+        'positions': allowedPositions.toList(),
+      }),
+    );
+    if (res.statusCode >= 200 && res.statusCode < 300) return;
+    throw HttpException('HTTP ${res.statusCode}: ${res.body}');
   }
 
   // Delete all images for an item EXCEPT the ones with ids in allowedIds.
@@ -395,48 +300,23 @@ class ItemRepository {
     String itemId,
     Set<String> allowedIds,
   ) async {
-    final data =
-        await supabase
-                .from('item_images')
-                .select('id, image_url')
-                .eq('item_id', itemId)
-            as List<dynamic>;
-    for (final row in data) {
-      final id = row['id'] as String?;
-      if (id == null || allowedIds.contains(id)) continue;
-      final url = row['image_url'] as String?;
-      if (url != null && url.isNotEmpty) {
-        final marker = '/item-images/';
-        final idx = url.indexOf(marker);
-        if (idx != -1) {
-          final internalPath = url.substring(idx + marker.length);
-          try {
-            await supabase.storage.from('item-images').remove([internalPath]);
-          } catch (_) {}
-        } else {
-          // Fallback: try after '/public/' bucket name
-          final altMarker = '/public/';
-          final altIdx = url.indexOf(altMarker);
-          if (altIdx != -1) {
-            final remainder = url.substring(altIdx + altMarker.length);
-            final parts = remainder.split('/')..removeAt(0); // drop bucket
-            final internalPath = parts.join('/');
-            try {
-              await supabase.storage.from('item-images').remove([internalPath]);
-            } catch (_) {}
-          }
-        }
-      }
-      await supabase.from('item_images').delete().eq('id', id);
-    }
+    final res = await _client.post(
+      _uri('/api/item-images/delete-except-ids/'),
+      headers: _jsonHeaders,
+      body: jsonEncode({'item_id': itemId, 'allowed_ids': allowedIds.toList()}),
+    );
+    if (res.statusCode >= 200 && res.statusCode < 300) return;
+    throw HttpException('HTTP ${res.statusCode}: ${res.body}');
   }
 
   // Update position of an existing item_images row by id
   Future<void> updateItemImagePosition(String imageId, int position) async {
-    await supabase
-        .from('item_images')
-        .update({'position': position})
-        .eq('id', imageId);
+    final res = await _client.patch(
+      _uri('/api/item-images/$imageId/'),
+      headers: _jsonHeaders,
+      body: jsonEncode({'position': position}),
+    );
+    _decode(res, (body) => body);
   }
 
   // ===========================================================================
@@ -487,14 +367,12 @@ class ItemRepository {
     String itemId,
     List<String> orderedImageIds,
   ) async {
-    for (int i = 0; i < orderedImageIds.length; i++) {
-      final imgId = orderedImageIds[i];
-      final pos = i + 1;
-      await supabase
-          .from('item_images')
-          .update({'position': pos})
-          .eq('id', imgId);
-    }
+    final res = await _client.post(
+      _uri('/api/items/$itemId/images/reorder/'),
+      headers: _jsonHeaders,
+      body: jsonEncode({'ordered_ids': orderedImageIds}),
+    );
+    _decode(res, (body) => body);
   }
 
   // ===========================================================================
@@ -507,8 +385,35 @@ class ItemRepository {
       await deleteImage(img.imageUrl);
     }
 
-    await supabase.from('items').delete().eq('id', itemId);
+    final res = await _client.delete(_uri('/api/items/$itemId/'));
+    if (res.statusCode >= 200 && res.statusCode < 300) return;
+    throw HttpException('HTTP ${res.statusCode}: ${res.body}');
+  }
+
+  Future<ItemImage> _uploadMultipart({
+    required String itemId,
+    required Uint8List bytes,
+    required String fileName,
+    required int position,
+    String? contentType,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      _uri('/api/item-images/upload/'),
+    );
+    request.fields['item_id'] = itemId;
+    request.fields['position'] = position.toString();
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: fileName,
+        contentType: contentType != null ? MediaType.parse(contentType) : null,
+      ),
+    );
+
+    final streamed = await request.send();
+    final res = await http.Response.fromStream(streamed);
+    return _decode<ItemImage>(res, (body) => ItemImage.fromJson(body));
   }
 }
-
-
