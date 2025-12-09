@@ -4,19 +4,29 @@ Fill secrets and Supabase connection values later.
 from pathlib import Path
 import os
 
-# Load environment variables from .env if present (local dev convenience).
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv(Path(__file__).resolve().parent / ".env")
-except ImportError:
-    pass
+# Load environment variables from .env files if present (local dev convenience),
+# without requiring python-dotenv.
+_env_paths = [Path(__file__).resolve().parent / ".env", Path(__file__).resolve().parent.parent / ".env"]
+for _env in _env_paths:
+    if _env.is_file():
+        with _env.open() as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    continue
+                key, val = line.split("=", 1)
+                os.environ.setdefault(key.strip(), val.strip())
 
 BASE_DIR = Path(__file__).resolve().parent
 
 SECRET_KEY = "CHANGE_ME_LATER"
 DEBUG = True
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS",
+    "localhost,127.0.0.1,10.0.2.2,10.141.254.109",
+).split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -25,8 +35,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "items",
+    "rest_framework",
     "users",
+    "items",
     "item_images",
     "bookings",
     "ratings",
@@ -66,9 +77,9 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("SUPABASE_DB_NAME", "postgres"),
-        "USER": os.getenv("SUPABASE_DB_USER", "postgres"),
+        "USER": os.getenv("SUPABASE_DB_USER", "postgres.usddlozrhceftmnhnknw"),
         "PASSWORD": os.getenv("SUPABASE_DB_PASSWORD", "AC672qRlo0cjtlzG"),
-        "HOST": os.getenv("SUPABASE_DB_HOST", "db.usddlozrhceftmnhnknw.supabase.co"),
+        "HOST": os.getenv("SUPABASE_DB_HOST", "aws-1-eu-central-1.pooler.supabase.com"),
         "PORT": os.getenv("SUPABASE_DB_PORT", "5432"),
         "OPTIONS": {
             "sslmode": os.getenv("SUPABASE_DB_SSLMODE", "require"),
@@ -97,3 +108,8 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+}

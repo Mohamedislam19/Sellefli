@@ -7,8 +7,6 @@ import 'package:sellefli/src/data/local/local_item_repository.dart';
 import '../../../data/models/item_model.dart';
 import '../../../data/repositories/item_repository.dart';
 
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:uuid/uuid.dart';
 
 part 'create_item_state.dart';
@@ -18,7 +16,7 @@ class CreateItemCubit extends Cubit<CreateItemState> {
   final LocalItemRepository _localRepo = LocalItemRepository();
 
   CreateItemCubit()
-    : itemRepository = ItemRepository(Supabase.instance.client),
+    : itemRepository = ItemRepository(),
       super(CreateItemInitial());
 
   // -----------------------------------------------------------------------------
@@ -43,7 +41,7 @@ class CreateItemCubit extends Cubit<CreateItemState> {
       // 1. Create an Item model instance
       final now = DateTime.now();
 
-      final item = Item(
+      var item = Item(
         id: const Uuid().v4(), // client-side UUID
         ownerId: ownerId,
         title: title,
@@ -62,6 +60,8 @@ class CreateItemCubit extends Cubit<CreateItemState> {
 
       // 2. Insert item row inside Supabase
       final itemId = await itemRepository.createItem(item);
+      // Backend returns authoritative id; keep local model in sync for caching
+      item = item.copyWith(id: itemId);
 
       // 3. Upload images to storage + table
       if (images.isNotEmpty) {
@@ -90,5 +90,3 @@ class CreateItemCubit extends Cubit<CreateItemState> {
     }
   }
 }
-
-
