@@ -90,6 +90,16 @@ class Item {
   }
 
   factory Item.fromJson(Map<String, dynamic> json) {
+    double? _toDouble(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toDouble();
+      if (v is String) {
+        final parsed = double.tryParse(v);
+        return parsed;
+      }
+      return null;
+    }
+
     // Parse images if available from join, sorted by position
     List<String> imagesList = [];
     if (json['item_images'] != null) {
@@ -123,16 +133,16 @@ class Item {
       title: json['title'] as String,
       category: json['category'] as String,
       description: json['description'] as String?,
-      estimatedValue: (json['estimated_value'] as num?)?.toDouble(),
-      depositAmount: (json['deposit_amount'] as num?)?.toDouble(),
+      estimatedValue: _toDouble(json['estimated_value']),
+      depositAmount: _toDouble(json['deposit_amount']),
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'] as String)
           : null,
       endDate: json['end_date'] != null
           ? DateTime.parse(json['end_date'] as String)
           : null,
-      lat: (json['lat'] as num?)?.toDouble(),
-      lng: (json['lng'] as num?)?.toDouble(),
+      lat: _toDouble(json['lat']),
+      lng: _toDouble(json['lng']),
       isAvailable: json['is_available'] as bool? ?? true,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -163,5 +173,3 @@ class Item {
     };
   }
 }
-
-
