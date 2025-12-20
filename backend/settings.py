@@ -23,10 +23,15 @@ BASE_DIR = Path(__file__).resolve().parent
 
 SECRET_KEY = "CHANGE_ME_LATER"
 DEBUG = True
-ALLOWED_HOSTS = os.getenv(
+# Parse ALLOWED_HOSTS from env (comma or semicolon separated), strip whitespace and ignore empty entries.
+_raw_allowed_hosts = os.getenv(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,10.0.2.2,10.141.254.109",
-).split(",")
+    "localhost,127.0.0.1,10.0.2.2,10.141.254.109,10.237.253.109",
+)
+ALLOWED_HOSTS = [h.strip() for h in _raw_allowed_hosts.replace(";", ",").split(",") if h.strip()]
+# Ensure the developer testing IP is present (helps when .env overrides are missing)
+if "10.237.253.109" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("10.237.253.109")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
