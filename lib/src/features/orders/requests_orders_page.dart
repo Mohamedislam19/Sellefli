@@ -361,7 +361,7 @@ class _TabButton extends StatelessWidget {
   }
 }
 
-// ------------------ REQUEST CARD ------------------
+// REQUEST CARD 
 
 // Use BookingStatus across list and detail for consistency
 
@@ -506,108 +506,14 @@ class _RequestCard extends StatelessWidget {
             ),
             SizedBox(height: isSmallMobile ? 8 : 12),
 
-            // Show different UI based on owner vs borrower view
-            if (isOwnerView)
-              // OWNER VIEW: Show Accept/Decline buttons
-              isMobile
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          height: 36,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: _buildStatusBadge(status),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: AdvancedButton(
-                                label: l10n.requestsAccept,
-                                onPressed: status == BookingStatus.pending
-                                    ? onAccept
-                                    : null,
-                                fullWidth: true,
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    AppColors.primary,
-                                    AppColors.primaryDark,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: isSmallMobile ? 6 : 8),
-                            Expanded(
-                              child: AdvancedButton(
-                                label: l10n.requestsDecline,
-                                onPressed: status == BookingStatus.pending
-                                    ? onDecline
-                                    : null,
-                                fullWidth: true,
-                                gradient: const LinearGradient(
-                                  colors: [AppColors.danger, Color(0xFFB63A2D)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        SizedBox(height: 36, child: _buildStatusBadge(status)),
-                        const Spacer(),
-                        SizedBox(
-                          width: 100,
-                          child: AdvancedButton(
-                            label: l10n.requestsAccept,
-                            onPressed: status == BookingStatus.pending
-                                ? onAccept
-                                : null,
-                            fullWidth: true,
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppColors.primary,
-                                AppColors.primaryDark,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 100,
-                          child: AdvancedButton(
-                            label: l10n.requestsDecline,
-                            onPressed: status == BookingStatus.pending
-                                ? onDecline
-                                : null,
-                            fullWidth: true,
-                            gradient: const LinearGradient(
-                              colors: [AppColors.danger, Color(0xFFB63A2D)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-            else
-              // BORROWER VIEW: Show status only (no action buttons)
-              SizedBox(
-                height: 36,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: _buildStatusBadge(status),
-                ),
+            // List view: show only the status badge (actions happen in detail page)
+            SizedBox(
+              height: 36,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _buildStatusBadge(status),
               ),
+            ),
           ],
         ),
       ),
