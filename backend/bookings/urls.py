@@ -1,4 +1,9 @@
-"""Booking routes placeholder."""
-from django.urls import path
+"""Booking routes."""
+from rest_framework.routers import DefaultRouter
 
-urlpatterns: list = []
+from .views import BookingViewSet
+
+router = DefaultRouter()
+router.register(r"", BookingViewSet, basename="bookings")
+
+urlpatterns = router.urls
