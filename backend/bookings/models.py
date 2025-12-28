@@ -9,16 +9,7 @@ from django.db import models
 
 
 class BookingStatus(models.TextChoices):
-    """
-    Enum-like choices for booking status.
-    
-    Usage in code:
-        booking.status = BookingStatus.PENDING
-        if booking.status == BookingStatus.ACCEPTED:
-            ...
-    
-    Values stored in DB: 'pending', 'accepted', 'active', etc.
-    """
+
     PENDING = 'pending', 'Pending'           # Initial state when borrower requests
     ACCEPTED = 'accepted', 'Accepted'        # Owner accepted the request
     ACTIVE = 'active', 'Active'              # Booking is currently in progress
@@ -28,15 +19,7 @@ class BookingStatus(models.TextChoices):
 
 
 class DepositStatus(models.TextChoices):
-    """
-    Enum-like choices for deposit status.
-    
-    Tracks the lifecycle of the security deposit:
-    - none: No deposit action taken yet
-    - received: Owner confirmed they received the deposit from borrower
-    - returned: Owner returned the deposit to borrower (item returned safely)
-    - kept: Owner kept the deposit (item damaged or not returned)
-    """
+
     NONE = 'none', 'None'                    # Default - no deposit action
     RECEIVED = 'received', 'Received'        # Owner received deposit from borrower
     RETURNED = 'returned', 'Returned'        # Deposit returned to borrower
