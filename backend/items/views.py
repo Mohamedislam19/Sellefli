@@ -1,5 +1,5 @@
 """DRF views for items."""
-from rest_framework import status, viewsets
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from item_images.models import ItemImage
 from item_images.serializers import ItemImageSerializer
 from .models import Item
+from .permissions import IsItemOwner
 from .serializers import ItemSerializer
 
 
@@ -31,6 +32,13 @@ class ItemViewSet(viewsets.ModelViewSet):
 	queryset = Item.objects.select_related("owner").prefetch_related("images")
 	serializer_class = ItemSerializer
 	pagination_class = ItemPagination
+	permission_classes = [permissions.IsAuthenticated]
+
+	def get_permissions(self):
+		"""Override to allow owner check only on mutating operations."""
+		if self.action in ['update', 'partial_update', 'destroy']:
+			return [permissions.IsAuthenticated(), IsItemOwner()]
+		return super().get_permissions()
 
 	def get_queryset(self):
 		qs = super().get_queryset()
@@ -88,8 +96,22 @@ class ItemViewSet(viewsets.ModelViewSet):
 
 		return Response({"status": "ok"})
 
+	def update(self, request, *args, **kwargs):
+		"""Update item (owner only)."""
+		item = self.get_object()
+		self.check_object_permissions(request, item)
+		return super().update(request, *args, **kwargs)
+
+	def partial_update(self, request, *args, **kwargs):
+		"""Partial update item (owner only)."""
+		item = self.get_object()
+		self.check_object_permissions(request, item)
+		return super().partial_update(request, *args, **kwargs)
+
 	def destroy(self, request, *args, **kwargs):
 		item = self.get_object()
+		# Check permissions before deletion
+		self.check_object_permissions(request, item)
 		# Clean up related images (DB and storage) before deleting item
 		images = list(item.images.all())
 		for img in images:

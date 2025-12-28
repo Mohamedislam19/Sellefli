@@ -2,20 +2,9 @@
 from rest_framework import serializers
 
 from users.models import User
+from users.serializers import UserPublicSerializer
 from item_images.serializers import ItemImageSerializer
 from .models import Item
-
-
-class UserPublicSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = User
-		fields = [
-			"id",
-			"username",
-			"avatar_url",
-			"rating_sum",
-			"rating_count",
-		]
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -61,9 +50,33 @@ class ItemSerializer(serializers.ModelSerializer):
 			"images",
 		]
 
+	def validate(self, data):
+		"""Validate date ranges and business logic."""
+		start_date = data.get("start_date")
+		end_date = data.get("end_date")
+		
+		# Validate date range if both are provided
+		if start_date and end_date and start_date >= end_date:
+			raise serializers.ValidationError({
+				"end_date": "end_date must be after start_date."
+			})
+		
+		# Validate deposit amount doesn't exceed estimated value
+		estimated_value = data.get("estimated_value")
+		deposit_amount = data.get("deposit_amount")
+		if estimated_value and deposit_amount and deposit_amount > estimated_value:
+			raise serializers.ValidationError({
+				"deposit_amount": "Deposit amount cannot exceed estimated value."
+			})
+		
+		return data
+
 	def create(self, validated_data):
 		owner_id = validated_data.pop("owner_id")
-		owner = User.objects.get(pk=owner_id)
+		try:
+			owner = User.objects.get(pk=owner_id)
+		except User.DoesNotExist:
+			raise serializers.ValidationError({"owner_id": "User not found."})
 		return Item.objects.create(owner=owner, **validated_data)
 
 	def update(self, instance, validated_data):

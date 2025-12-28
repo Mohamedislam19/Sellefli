@@ -1,4 +1,9 @@
-"""Rating routes placeholder."""
-from django.urls import path
+"""Rating routes."""
+from rest_framework.routers import DefaultRouter
 
-urlpatterns: list = []
+from .views import RatingViewSet
+
+router = DefaultRouter()
+router.register(r"", RatingViewSet, basename="ratings")
+
+urlpatterns = router.urls

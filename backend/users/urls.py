@@ -1,4 +1,9 @@
-"""User routes placeholder."""
-from django.urls import path
+"""User routes."""
+from rest_framework.routers import DefaultRouter
 
-urlpatterns: list = []
+from .views import UserViewSet
+
+router = DefaultRouter()
+router.register(r"", UserViewSet, basename="users")
+
+urlpatterns = router.urls

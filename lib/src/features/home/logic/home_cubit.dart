@@ -39,11 +39,9 @@ class HomeCubit extends Cubit<HomeState> {
     }
 
     try {
-      final currentUser = _authRepository.currentUser;
       final items = await _itemRepository.getItems(
         page: page,
         pageSize: _pageSize,
-        excludeUserId: currentUser?.id,
         categories: state.selectedCategories,
         searchQuery: state.searchQuery,
       );
