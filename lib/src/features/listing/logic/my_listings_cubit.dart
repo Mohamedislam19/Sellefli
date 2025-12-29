@@ -72,6 +72,18 @@ class MyListingsCubit extends Cubit<MyListingsState> {
   void onEditItemTapped(String itemId) {
     emit(MyListingsNavigateToEdit(itemId));
   }
+
+  Future<void> deleteItem(String itemId) async {
+    emit(MyListingsDeletingItem(itemId));
+    try {
+      await _itemRepository.deleteItem(itemId);
+      emit(MyListingsDeleteSuccess(itemId));
+      // Reload listings after successful deletion
+      await loadMyListings();
+    } catch (e) {
+      emit(MyListingsError('Failed to delete listing: ${e.toString()}'));
+    }
+  }
 }
 
 

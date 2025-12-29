@@ -96,6 +96,24 @@ class _MyListingsViewState extends State<_MyListingsView> {
         if (state is MyListingsNavigateToEdit) {
           Navigator.pushNamed(context, '/edit-item', arguments: state.itemId);
         }
+        if (state is MyListingsDeleteSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.myListingsDeleteSuccess),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+        if (state is MyListingsError && state.message.contains('Failed to delete')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -352,6 +370,22 @@ class _MyListingsViewState extends State<_MyListingsView> {
                         },
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _actionButton(
+                        label: l10n.myListingsDelete,
+                        color: Colors.red,
+                        icon: Icons.delete_outlined,
+                        onPressed: () {
+                          _showDeleteConfirmationDialog(
+                            context,
+                            itemId,
+                            title,
+                            l10n,
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -439,6 +473,41 @@ class _MyListingsViewState extends State<_MyListingsView> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(
+    BuildContext context,
+    String itemId,
+    String itemTitle,
+    AppLocalizations l10n,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.myListingsDeleteConfirmTitle),
+          content: Text(
+            l10n.myListingsDeleteConfirmMessage(itemTitle),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.myListingsCancel),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                context.read<MyListingsCubit>().deleteItem(itemId);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: Text(l10n.myListingsDeleteConfirm),
+            ),
+          ],
+        );
+      },
     );
   }
 }

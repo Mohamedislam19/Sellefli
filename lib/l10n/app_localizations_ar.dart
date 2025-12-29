@@ -896,4 +896,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get myListingsView => 'عرض';
+
+  @override
+  String get myListingsDelete => 'حذف';
+
+  @override
+  String get myListingsDeleteConfirmTitle => 'حذف العرض';
+
+  @override
+  String myListingsDeleteConfirmMessage(Object itemTitle) {
+    return 'هل تأكد من رغبتك في حذف \"$itemTitle\"؟ لا يمكن التراجع عن هذا الإجراء.';
+  }
+
+  @override
+  String get myListingsDeleteConfirm => 'حذف';
+
+  @override
+  String get myListingsCancel => 'إلغاء';
+
+  @override
+  String get myListingsDeleteSuccess => 'تم حذف العرض بنجاح';
 }
