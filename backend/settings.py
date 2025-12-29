@@ -26,12 +26,13 @@ DEBUG = True
 # Parse ALLOWED_HOSTS from env (comma or semicolon separated), strip whitespace and ignore empty entries.
 _raw_allowed_hosts = os.getenv(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,10.0.2.2,10.141.254.109,10.237.253.109",
+    "localhost,127.0.0.1,10.0.2.2,10.141.254.109,10.237.253.109,172.21.59.109",
 )
 ALLOWED_HOSTS = [h.strip() for h in _raw_allowed_hosts.replace(";", ",").split(",") if h.strip()]
-# Ensure the developer testing IP is present (helps when .env overrides are missing)
-if "10.237.253.109" not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append("10.237.253.109")
+# Ensure developer testing IPs are present (helps when .env overrides are missing)
+for _ip in ("10.237.253.109", "172.21.59.109"):
+    if _ip not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_ip)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
     "users",
     "items",
