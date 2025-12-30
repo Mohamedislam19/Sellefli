@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/user_model.dart' as models;
 import 'auth_repository.dart';
+import '../../core/services/api_client.dart';
 
 class ProfileRepository {
   static const String _baseUrl = String.fromEnvironment(
@@ -13,6 +14,7 @@ class ProfileRepository {
 
   final http.Client _client;
   final AuthRepository? _authRepository;
+  final ApiClient _apiClient = ApiClient();
 
   ProfileRepository({
     http.Client? client,
@@ -31,9 +33,9 @@ class ProfileRepository {
     );
   }
 
-  Map<String, String> get _jsonHeaders => {
-    HttpHeaders.contentTypeHeader: 'application/json',
-  };
+  Future<Map<String, String>> get _jsonHeaders async {
+    return await _apiClient.getAuthHeaders();
+  }
 
   T _decode<T>(http.Response res, T Function(dynamic) mapper) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -47,13 +49,13 @@ class ProfileRepository {
   /// GET /api/users/me/
   Future<models.User?> getMyProfile() async {
     try {
-      final currentUser = _authRepository?.currentUser;
-      final userId = currentUser?.id;
+      final userId = _apiClient.currentUserId ?? _authRepository?.currentUser?.id;
       if (userId == null) return null;
 
+      final headers = await _jsonHeaders;
       final res = await _client.get(
         _uri('/api/users/me/', {'id': userId}),
-        headers: _jsonHeaders,
+        headers: headers,
       );
 
       if (res.statusCode == 404) return null;
@@ -71,9 +73,10 @@ class ProfileRepository {
   /// GET /api/users/{userId}/
   Future<models.User?> getProfileById(String userId) async {
     try {
+      final headers = await _jsonHeaders;
       final res = await _client.get(
         _uri('/api/users/$userId/'),
-        headers: _jsonHeaders,
+        headers: headers,
       );
 
       if (res.statusCode == 404) return null;
@@ -91,16 +94,19 @@ class ProfileRepository {
   /// POST /api/users/{userId}/upload-avatar/ (multipart)
   Future<String?> uploadAvatar(File file) async {
     try {
-      final currentUser = _authRepository?.currentUser;
-      final userId = currentUser?.id;
+      final userId = _apiClient.currentUserId ?? _authRepository?.currentUser?.id;
       if (userId == null) {
         throw Exception('User not authenticated');
       }
 
+      final headers = await _jsonHeaders;
       final request = http.MultipartRequest(
         'POST',
         _uri('/api/users/$userId/upload-avatar/'),
       );
+
+      // Add authorization header to multipart request
+      request.headers.addAll(headers);
 
       request.files.add(
         await http.MultipartFile.fromPath('avatar', file.path),
@@ -127,8 +133,7 @@ class ProfileRepository {
     String? avatarUrl,
   }) async {
     try {
-      final currentUser = _authRepository?.currentUser;
-      final userId = currentUser?.id;
+      final userId = _apiClient.currentUserId ?? _authRepository?.currentUser?.id;
       if (userId == null) {
         throw Exception('User not authenticated');
       }
@@ -149,9 +154,10 @@ class ProfileRepository {
         return await getMyProfile();
       }
 
+      final headers = await _jsonHeaders;
       final res = await _client.patch(
         _uri('/api/users/$userId/update-profile/'),
-        headers: _jsonHeaders,
+        headers: headers,
         body: jsonEncode(updates),
       );
 
