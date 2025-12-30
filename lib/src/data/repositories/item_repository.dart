@@ -231,6 +231,33 @@ class ItemRepository {
   }
 
   // ===========================================================================
+  // GET MY ITEMS (current user's listings)
+  // ===========================================================================
+  Future<List<Item>> getMyItems({
+    required int page,
+    required int pageSize,
+  }) async {
+    try {
+      final query = <String, dynamic>{
+        'page': page.toString(),
+        'page_size': pageSize.toString(),
+      };
+
+      final res = await _client.get(_uri('/api/items/my-items/', query));
+      final items = _decode<List<Item>>(res, (body) {
+        final results = body is Map<String, dynamic> ? body['results'] : body;
+        return (results as List)
+            .map((json) => Item.fromJson(json as Map<String, dynamic>))
+            .toList();
+      });
+
+      return items;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ===========================================================================
   // GET IMAGES
   // ===========================================================================
   Future<List<ItemImage>> getItemImages(String itemId) async {

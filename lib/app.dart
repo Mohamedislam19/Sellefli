@@ -39,14 +39,15 @@ class MyApp extends StatelessWidget {
       providers: [
         RepositoryProvider(create: (context) => AuthRepository()),
         RepositoryProvider(
-          create: (context) => ItemRepository(Supabase.instance.client),
+          create: (context) => ItemRepository(),
         ),
         RepositoryProvider(
           create: (context) => RatingRepository(Supabase.instance.client),
         ),
         RepositoryProvider(
-          create: (context) =>
-              ProfileRepository(supabase: Supabase.instance.client),
+          create: (context) => ProfileRepository(
+            authRepository: context.read<AuthRepository>(),
+          ),
         ),
         RepositoryProvider(
           create: (context) => BookingRepository(Supabase.instance.client),

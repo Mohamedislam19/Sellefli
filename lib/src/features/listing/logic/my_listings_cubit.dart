@@ -1,6 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../data/models/item_model.dart';
 import '../../../data/repositories/item_repository.dart';
@@ -29,25 +28,12 @@ class MyListingsCubit extends Cubit<MyListingsState> {
   Future<void> loadMyListings() async {
     emit(MyListingsLoading());
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        emit(const MyListingsError('Not authenticated'));
-        return;
-      }
-
       if (await _isOnline()) {
-        // Online: fetch from Supabase with images join, then cache locally
-        final rows =
-            await Supabase.instance.client
-                    .from('items')
-                    .select('*, item_images(*)')
-                    .eq('owner_id', userId)
-                    .order('updated_at', ascending: false)
-                as List<dynamic>;
-
-        final items = rows
-            .map<Item>((e) => Item.fromJson(e as Map<String, dynamic>))
-            .toList();
+        // Online: fetch from Django API, then cache locally
+        final items = await _itemRepository.getMyItems(
+          page: 1,
+          pageSize: 100,
+        );
 
         // Cache items locally for offline use
         for (final item in items) {
