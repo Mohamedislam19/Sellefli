@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sellefli/src/data/repositories/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
@@ -11,8 +12,8 @@ class AuthCubit extends Cubit<AuthState> {
   StreamSubscription? _authStateSubscription;
 
   AuthCubit(this._authRepository, {Connectivity? connectivity})
-      : _connectivity = connectivity ?? Connectivity(),
-        super(AuthInitial()) {
+    : _connectivity = connectivity ?? Connectivity(),
+      super(AuthInitial()) {
     _initAuthListener();
     checkAuthStatus();
   }
@@ -28,10 +29,31 @@ class AuthCubit extends Cubit<AuthState> {
     });
   }
 
-  void checkAuthStatus() {
+  /// Check auth status and refresh session on app startup
+  Future<void> checkAuthStatus() async {
     final user = _authRepository.currentUser;
     if (user != null) {
-      emit(AuthAuthenticated(user));
+      // Try to refresh the session on app startup to ensure token is valid
+      try {
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null) {
+          final expiresAt = session.expiresAt;
+          final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          
+          // Refresh if token is expired or will expire within 10 minutes
+          if (expiresAt != null && (expiresAt - now) < 600) {
+            debugPrint('[AuthCubit] Session expiring/expired, refreshing...');
+            await Supabase.instance.client.auth.refreshSession();
+            debugPrint('[AuthCubit] Session refreshed successfully');
+          }
+        }
+        emit(AuthAuthenticated(Supabase.instance.client.auth.currentUser ?? user));
+      } catch (e) {
+        debugPrint('[AuthCubit] Session refresh failed: $e');
+        // If refresh fails, sign out the user so they can re-authenticate
+        await Supabase.instance.client.auth.signOut();
+        emit(AuthUnauthenticated());
+      }
     } else {
       emit(AuthUnauthenticated());
     }
@@ -145,17 +167,20 @@ class AuthCubit extends Cubit<AuthState> {
         errorMessage =
             'This phone number or email is already registered. Please use a different one.';
       } else {
-        errorMessage = 'Failed to create account. Please try again.';
+        // Log the actual error for debugging
+        debugPrint('PostgrestException during signup: ${e.message}');
+        debugPrint('PostgrestException code: ${e.code}');
+        debugPrint('PostgrestException details: ${e.details}');
+        errorMessage = 'Failed to create account: ${e.message}';
       }
       emit(AuthError(errorMessage));
     } catch (e) {
       // Handle custom exceptions from repository (like duplicate check)
+      debugPrint('Signup error: $e');
       if (e.toString().contains('already registered')) {
         emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
       } else {
-        emit(
-          const AuthError('An unexpected error occurred. Please try again.'),
-        );
+        emit(AuthError('An unexpected error occurred: ${e.toString()}'));
       }
     }
   }
@@ -170,5 +195,3 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 }
-
-

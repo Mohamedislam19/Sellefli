@@ -1,7 +1,8 @@
 """DRF views for item images."""
 import uuid
+import os
+from supabase import create_client, Client
 
-from django.core.files.storage import default_storage
 from django.db import transaction
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -33,7 +34,7 @@ class ItemImageViewSet(viewsets.ModelViewSet):
 
 	@action(detail=False, methods=["post"], url_path="upload")
 	def upload(self, request):
-		"""Upload a single file using Django file storage and create ItemImage row.
+		"""Upload a single file to Supabase Storage and create ItemImage row.
 
 		Expected form-data: file, item_id, position (1-3)
 		"""
@@ -52,17 +53,37 @@ class ItemImageViewSet(viewsets.ModelViewSet):
 		except ValueError:
 			return Response({"detail": "position must be int"}, status=400)
 
-		# Generate unique filename and save via Django storage
-		filename = f"{uuid.uuid4()}_{file.name}"
-		storage_path = f"items/{item_id}/{filename}"
+		# Initialize Supabase Client
+		supabase_url = os.getenv("SUPABASE_URL")
+		supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+		
+		if not supabase_url or not supabase_key:
+			return Response({"detail": "Server misconfiguration: missing Supabase credentials"}, status=500)
 
 		try:
-			# Save file to storage and get the file path/URL
-			saved_path = default_storage.save(storage_path, file)
-			# Get the public URL for the stored file
-			file_url = default_storage.url(saved_path)
-		except Exception as exc:  # pragma: no cover - storage failure
-			return Response({"detail": f"upload failed: {exc}"}, status=500)
+			supabase: Client = create_client(supabase_url, supabase_key)
+			
+			# Generate unique filename
+			filename = f"{uuid.uuid4()}_{file.name}"
+			# Bucket: item-images (verify this exists in your Supabase dashboard)
+			bucket_name = "item-images"
+			path_on_storage = f"{item_id}/{filename}"
+			
+			# Read file bytes
+			file_content = file.read()
+			
+			# Upload to Supabase
+			res = supabase.storage.from_(bucket_name).upload(
+				path=path_on_storage,
+				file=file_content,
+				file_options={"content-type": file.content_type}
+			)
+			
+			# Get Public URL
+			file_url = supabase.storage.from_(bucket_name).get_public_url(path_on_storage)
+			
+		except Exception as exc:
+			return Response({"detail": f"Supabase upload failed: {exc}"}, status=500)
 
 		serializer = ItemImageSerializer(
 			data={"item_id": item_id, "image_url": file_url, "position": position}
@@ -120,23 +141,27 @@ class ItemImageViewSet(viewsets.ModelViewSet):
 		return Response({"deleted": deleted})
 
 	def _delete_storage_file(self, image_url: str):
-		"""Delete file from Django storage using URL."""
+		"""Delete file from Supabase Storage using URL."""
 		if not image_url:
 			return
+		
+		# Try to extract path from URL
+		# URL format: .../storage/v1/object/public/item-images/item_id/filename
 		try:
-			# Extract storage path from URL if needed
-			# For local storage: /media/items/item_id/uuid_filename
-			# For cloud storage (S3): https://bucket.s3.amazonaws.com/items/...
+			supabase_url = os.getenv("SUPABASE_URL")
+			supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+			if not supabase_url or not supabase_key:
+				return
+
+			supabase: Client = create_client(supabase_url, supabase_key)
+			bucket_name = "item-images" # Match the bucket used in upload
 			
-			# Simple approach: try to delete by the URL path
-			# This works for local storage; for S3 would need storage-specific logic
-			if hasattr(default_storage, 'delete'):
-				# For file-based storage backends
-				try:
-					default_storage.delete(image_url)
-				except Exception:
-					# URL may be absolute; try extracting relative path
-					pass
+			# Simple heuristic to extract path: everything after bucket_name + /
+			if bucket_name in image_url:
+				parts = image_url.split(f"/{bucket_name}/")
+				if len(parts) > 1:
+					path_to_delete = parts[1]
+					supabase.storage.from_(bucket_name).remove([path_to_delete])
 		except Exception:
-			# Silent fail - file may already be deleted or URL format unexpected
+			# Silent fail allowed for delete
 			pass

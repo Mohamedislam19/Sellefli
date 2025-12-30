@@ -62,21 +62,31 @@ class ProductCard extends StatelessWidget {
                             ),
                           )
                         : imageUrl.startsWith('http')
-                        ? Image.network(
-                            imageUrl,
+                        ? CachedNetworkImage(
+                            imageUrl: imageUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.broken_image_outlined,
-                                    color: Colors.grey,
-                                    size: 40,
+                            placeholder: (context, url) => Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
                                   ),
                                 ),
-                              );
-                            },
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  color: Colors.grey,
+                                  size: 40,
+                                ),
+                              ),
+                            ),
                           )
                         : Image.asset(
                             imageUrl,
@@ -253,5 +263,3 @@ class ProductCard extends StatelessWidget {
     );
   }
 }
-
-

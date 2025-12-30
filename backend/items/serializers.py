@@ -8,7 +8,7 @@ from .models import Item
 
 
 class ItemSerializer(serializers.ModelSerializer):
-	owner_id = serializers.UUIDField()
+	owner_id = serializers.UUIDField(read_only=True)
 	owner = UserPublicSerializer(read_only=True)
 	images = ItemImageSerializer(many=True, read_only=True)
 
@@ -72,12 +72,10 @@ class ItemSerializer(serializers.ModelSerializer):
 		return data
 
 	def create(self, validated_data):
-		owner_id = validated_data.pop("owner_id")
-		try:
-			owner = User.objects.get(pk=owner_id)
-		except User.DoesNotExist:
-			raise serializers.ValidationError({"owner_id": "User not found."})
-		return Item.objects.create(owner=owner, **validated_data)
+		user = self.context['request'].user
+		if not user.is_authenticated:
+			raise serializers.ValidationError("Authentication required.")
+		return Item.objects.create(owner=user, **validated_data)
 
 	def update(self, instance, validated_data):
 		# owner_id is write-only; ignore if present during update

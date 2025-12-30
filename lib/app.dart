@@ -39,10 +39,11 @@ class MyApp extends StatelessWidget {
       providers: [
         RepositoryProvider(create: (context) => AuthRepository()),
         RepositoryProvider(
-          create: (context) => ItemRepository(),
+          create: (context) => ItemRepository(), // Uses Django backend via HTTP
         ),
         RepositoryProvider(
-          create: (context) => RatingRepository(Supabase.instance.client),
+          create: (context) =>
+              RatingRepository(), // Uses Django backend via HTTP
         ),
         RepositoryProvider(
           create: (context) => ProfileRepository(
@@ -144,5 +145,3 @@ class AuthWrapper extends StatelessWidget {
     );
   }
 }
-
-

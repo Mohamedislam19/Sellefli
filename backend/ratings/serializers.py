@@ -28,14 +28,12 @@ class RatingSerializer(serializers.ModelSerializer):
 			"target_user",
 			"stars",
 			"created_at",
-			"updated_at",
 		]
 		read_only_fields = [
 			"id",
 			"rater",
 			"target_user",
 			"created_at",
-			"updated_at",
 		]
 	
 	def get_rater(self, obj):

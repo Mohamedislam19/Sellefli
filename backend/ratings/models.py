@@ -18,17 +18,18 @@ class Rating(models.Model):
 		"users.User",
 		on_delete=models.CASCADE,
 		related_name="ratings_given",
+		db_column="rater_user_id",
 	)
 	target_user = models.ForeignKey(
 		"users.User",
 		on_delete=models.CASCADE,
 		related_name="ratings_received",
+		db_column="target_user_id",
 	)
 	stars = models.PositiveSmallIntegerField(
 		validators=[MinValueValidator(1), MaxValueValidator(5)]
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
-	updated_at = models.DateTimeField(auto_now=True)
 
 	class Meta:
 		db_table = "ratings"

@@ -13,6 +13,10 @@ class HomeCubit extends Cubit<HomeState> {
   final AuthRepository _authRepository;
   static const int _pageSize = 20;
 
+  // Cache instances to avoid recreating on every call
+  final Connectivity _connectivity = Connectivity();
+  static const Distance _distanceCalculator = Distance();
+
   HomeCubit(this._itemRepository, this._authRepository)
     : super(const HomeState());
 
@@ -22,10 +26,7 @@ class HomeCubit extends Cubit<HomeState> {
     final isInitial = state.status == HomeStatus.initial || refresh;
     final page = isInitial ? 1 : state.page;
 
-    // Check connectivity
-    final connectivityResult = await Connectivity().checkConnectivity();
-    final isOffline = connectivityResult.contains(ConnectivityResult.none);
-
+    // Show loading immediately for better UX
     if (isInitial) {
       emit(
         state.copyWith(
@@ -33,18 +34,25 @@ class HomeCubit extends Cubit<HomeState> {
           items: [],
           hasReachedMax: false,
           page: 1,
-          isOfflineMode: isOffline,
         ),
       );
     }
 
     try {
-      final items = await _itemRepository.getItems(
-        page: page,
-        pageSize: _pageSize,
-        categories: state.selectedCategories,
-        searchQuery: state.searchQuery,
-      );
+      // Run connectivity check and API call in parallel for faster loading
+      final results = await Future.wait([
+        _connectivity.checkConnectivity(),
+        _itemRepository.getItems(
+          page: page,
+          pageSize: _pageSize,
+          categories: state.selectedCategories,
+          searchQuery: state.searchQuery,
+        ),
+      ]);
+
+      final connectivityResult = results[0] as List<ConnectivityResult>;
+      final isOffline = connectivityResult.contains(ConnectivityResult.none);
+      final items = results[1] as List<Item>;
 
       // If we are offline and got items, we assume we reached max because we only cache one page
       final hasReachedMax = items.length < _pageSize || isOffline;
@@ -55,7 +63,7 @@ class HomeCubit extends Cubit<HomeState> {
         for (var item in items) {
           if (item.lat == null || item.lng == null) continue;
 
-          final distance = const Distance().as(
+          final distance = _distanceCalculator.as(
             LengthUnit.Kilometer,
             state.userLocation!,
             LatLng(item.lat!, item.lng!),
@@ -76,6 +84,7 @@ class HomeCubit extends Cubit<HomeState> {
             items: filteredItems,
             hasReachedMax: hasReachedMax,
             page: page + 1,
+            isOfflineMode: isOffline,
           ),
         );
       } else {
@@ -85,6 +94,7 @@ class HomeCubit extends Cubit<HomeState> {
             items: List.of(state.items)..addAll(filteredItems),
             hasReachedMax: hasReachedMax,
             page: page + 1,
+            isOfflineMode: isOffline,
           ),
         );
       }
@@ -209,5 +219,3 @@ class HomeCubit extends Cubit<HomeState> {
     return super.close();
   }
 }
-
-

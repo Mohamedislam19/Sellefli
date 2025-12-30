@@ -35,7 +35,9 @@ class ItemViewSet(viewsets.ModelViewSet):
 	permission_classes = [permissions.IsAuthenticated]
 
 	def get_permissions(self):
-		"""Override to allow owner check only on mutating operations."""
+		"""Override permissions: list/retrieve/images are public, create requires auth, update/delete require owner."""
+		if self.action in ['list', 'retrieve', 'images']:
+			return [permissions.AllowAny()]
 		if self.action in ['update', 'partial_update', 'destroy']:
 			return [permissions.IsAuthenticated(), IsItemOwner()]
 		return super().get_permissions()
