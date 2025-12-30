@@ -22,7 +22,7 @@ class ApiClient {
   /// Configure your backend base URL. Override via --dart-define=DJANGO_BASE_URL
   static const String baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://192.168.1.104:8000',
+    defaultValue: 'http://localhost:8000',
   );
 
   /// Request timeout duration

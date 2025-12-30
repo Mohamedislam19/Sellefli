@@ -9,7 +9,7 @@ class AuthRepository {
   // Uses the same default backend URL as other repositories
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://192.168.1.104:8000',
+    defaultValue: 'http://localhost:8000',
   );
 
   AuthRepository({

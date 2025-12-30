@@ -276,122 +276,175 @@ class _MyListingsViewState extends State<_MyListingsView> {
     required String imageUrl,
     required AppLocalizations l10n,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12.withAlpha(((0.05) * 255).toInt()),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Item image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: _buildImage(imageUrl),
-          ),
-          const SizedBox(width: 12),
-
-          // Info + Buttons
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final currentState = context.watch<MyListingsCubit>().state;
+    final isDeleting = currentState is MyListingsDeletingItem && 
+                       currentState.itemId == itemId;
+    
+    return AnimatedOpacity(
+      opacity: isDeleting ? 0.5 : 1.0,
+      duration: const Duration(milliseconds: 300),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryBlue.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Item image with overlay if deleting
+            Stack(
               children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: _buildImage(imageUrl),
                 ),
-                const SizedBox(height: 6),
-
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(
-                      status,
-                    ).withAlpha(((0.1) * 255).toInt()),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _statusLabel(status, l10n),
-                    style: GoogleFonts.outfit(
-                      color: _getStatusColor(status),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Action buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: _actionButton(
-                        label: l10n.myListingsEdit,
-                        color: Colors.grey.shade700,
-                        icon: Icons.edit_outlined,
-                        onPressed: () {
-                          context.read<MyListingsCubit>().onEditItemTapped(
-                            itemId,
-                          );
-                        },
+                if (isDeleting)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _actionButton(
-                        label: l10n.myListingsView,
-                        color: AppColors.primaryBlue,
-                        icon: Icons.visibility_outlined,
-                        isPrimary: true,
-                        onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/item-details',
-                            arguments: itemId,
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _actionButton(
-                        label: l10n.myListingsDelete,
-                        color: Colors.red,
-                        icon: Icons.delete_outlined,
-                        onPressed: () {
-                          _showDeleteConfirmationDialog(
-                            context,
-                            itemId,
-                            title,
-                            l10n,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(width: 14),
+
+            // Info + Buttons
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      letterSpacing: 0.2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Status badge with icon
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          _getStatusColor(status).withOpacity(0.15),
+                          _getStatusColor(status).withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _getStatusColor(status).withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          status == 'active' ? Icons.check_circle : Icons.info_outline,
+                          size: 14,
+                          color: _getStatusColor(status),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _statusLabel(status, l10n),
+                          style: GoogleFonts.outfit(
+                            color: _getStatusColor(status),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _actionButton(
+                          label: l10n.myListingsEdit,
+                          color: Colors.orange.shade700,
+                          icon: Icons.edit_rounded,
+                          onPressed: isDeleting ? () {} : () {
+                            context.read<MyListingsCubit>().onEditItemTapped(
+                              itemId,
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: _actionButton(
+                          label: l10n.myListingsView,
+                          color: AppColors.primaryBlue,
+                          icon: Icons.visibility_rounded,
+                          isPrimary: true,
+                          onPressed: isDeleting ? () {} : () {
+                            Navigator.pushNamed(
+                              context,
+                              '/item-details',
+                              arguments: itemId,
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: _actionButton(
+                          label: isDeleting ? 'Deleting...' : l10n.myListingsDelete,
+                          color: Colors.red.shade600,
+                          icon: isDeleting ? Icons.hourglass_empty : Icons.delete_rounded,
+                          onPressed: isDeleting ? () {} : () {
+                            _showDeleteConfirmationDialog(
+                              context,
+                              itemId,
+                              title,
+                              l10n,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -454,22 +507,26 @@ class _MyListingsViewState extends State<_MyListingsView> {
       style: ElevatedButton.styleFrom(
         backgroundColor: isPrimary ? color : Colors.white,
         foregroundColor: isPrimary ? Colors.white : color,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        elevation: isPrimary ? 2 : 0,
-        side: isPrimary ? null : BorderSide(color: color.withOpacity(0.3)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        elevation: isPrimary ? 3 : 0,
+        shadowColor: isPrimary ? color.withOpacity(0.4) : null,
+        side: isPrimary ? null : BorderSide(color: color.withOpacity(0.4), width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 4),
+          Icon(icon, size: 18),
+          const SizedBox(height: 2),
           Text(
             label,
             style: GoogleFonts.outfit(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -486,24 +543,125 @@ class _MyListingsViewState extends State<_MyListingsView> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text(l10n.myListingsDeleteConfirmTitle),
-          content: Text(
-            l10n.myListingsDeleteConfirmMessage(itemTitle),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red.shade700,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.myListingsDeleteConfirmTitle,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.myListingsDeleteConfirmMessage(itemTitle),
+                style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.red.shade200,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: Colors.red.shade700,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This action cannot be undone',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          color: Colors.red.shade900,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.myListingsCancel),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                l10n.myListingsCancel,
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
                 context.read<MyListingsCubit>().deleteItem(itemId);
               },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: Text(l10n.myListingsDeleteConfirm),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.delete_forever, size: 20),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.myListingsDeleteConfirm,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         );

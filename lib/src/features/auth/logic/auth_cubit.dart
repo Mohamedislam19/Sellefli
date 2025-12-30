@@ -5,10 +5,12 @@ import 'package:sellefli/src/data/repositories/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:sellefli/src/features/auth/logic/auth_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:sellefli/src/core/services/api_client.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _authRepository;
   final Connectivity _connectivity;
+  final ApiClient _apiClient = ApiClient();
   StreamSubscription? _authStateSubscription;
 
   AuthCubit(this._authRepository, {Connectivity? connectivity})
@@ -37,13 +39,35 @@ class AuthCubit extends Cubit<AuthState> {
       try {
         final session = Supabase.instance.client.auth.currentSession;
         if (session != null) {
+          // Store tokens in ApiClient if not already stored
+          if (_apiClient.currentUserId == null) {
+            await _apiClient.setTokens(
+              accessToken: session.accessToken,
+              refreshToken: session.refreshToken ?? '',
+              userId: user.id,
+              userEmail: user.email ?? '',
+              expiresAt: session.expiresAt,
+            );
+            debugPrint('[AuthCubit] Existing session tokens stored in ApiClient');
+          }
+          
           final expiresAt = session.expiresAt;
           final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
           
           // Refresh if token is expired or will expire within 10 minutes
           if (expiresAt != null && (expiresAt - now) < 600) {
             debugPrint('[AuthCubit] Session expiring/expired, refreshing...');
-            await Supabase.instance.client.auth.refreshSession();
+            final response = await Supabase.instance.client.auth.refreshSession();
+            // Update tokens in ApiClient after refresh
+            if (response.session != null) {
+              await _apiClient.setTokens(
+                accessToken: response.session!.accessToken,
+                refreshToken: response.session!.refreshToken ?? '',
+                userId: response.user!.id,
+                userEmail: response.user!.email ?? '',
+                expiresAt: response.session!.expiresAt,
+              );
+            }
             debugPrint('[AuthCubit] Session refreshed successfully');
           }
         }
@@ -52,6 +76,7 @@ class AuthCubit extends Cubit<AuthState> {
         debugPrint('[AuthCubit] Session refresh failed: $e');
         // If refresh fails, sign out the user so they can re-authenticate
         await Supabase.instance.client.auth.signOut();
+        await _apiClient.clearTokens();
         emit(AuthUnauthenticated());
       }
     } else {
@@ -86,7 +111,17 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await _authRepository.signIn(email: email, password: password);
       final user = _authRepository.currentUser;
-      if (user != null) {
+      final session = Supabase.instance.client.auth.currentSession;
+      
+      if (user != null && session != null) {
+        // Store tokens in ApiClient for Django backend calls
+        await _apiClient.setTokens(
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken ?? '',
+          userId: user.id,
+          userEmail: user.email ?? '',
+          expiresAt: session.expiresAt,
+        );
         emit(AuthAuthenticated(user));
       } else {
         emit(const AuthError('Login failed. Please try again.'));
@@ -135,7 +170,17 @@ class AuthCubit extends Cubit<AuthState> {
         username: username,
       );
       final user = _authRepository.currentUser;
-      if (user != null) {
+      final session = Supabase.instance.client.auth.currentSession;
+      
+      if (user != null && session != null) {
+        // Store tokens in ApiClient for Django backend calls
+        await _apiClient.setTokens(
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken ?? '',
+          userId: user.id,
+          userEmail: user.email ?? '',
+          expiresAt: session.expiresAt,
+        );
         emit(AuthAuthenticated(user));
         // Success message will be shown by BlocListener
       } else {
@@ -189,6 +234,8 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       await _authRepository.signOut();
+      // Clear tokens from ApiClient
+      await _apiClient.clearTokens();
       emit(AuthUnauthenticated());
     } catch (e) {
       emit(const AuthError('Logout failed. Please try again.'));

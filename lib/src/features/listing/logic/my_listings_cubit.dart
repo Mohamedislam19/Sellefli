@@ -26,6 +26,7 @@ class MyListingsCubit extends Cubit<MyListingsState> {
   }
 
   Future<void> loadMyListings() async {
+    if (isClosed) return;
     emit(MyListingsLoading());
     try {
       if (await _isOnline()) {
@@ -35,6 +36,8 @@ class MyListingsCubit extends Cubit<MyListingsState> {
           pageSize: 100,
         );
 
+        if (isClosed) return;
+
         // Cache items locally for offline use
         for (final item in items) {
           final thumb = item.images.isNotEmpty ? item.images.first : null;
@@ -43,30 +46,38 @@ class MyListingsCubit extends Cubit<MyListingsState> {
           final images = await _itemRepository.getItemImages(item.id);
           await _localRepo.replaceItemImages(item.id, images);
         }
+        
+        if (isClosed) return;
         emit(MyListingsLoaded(items: items, isOffline: false));
       } else {
         // Offline: read from local DB and return cached items
         final items = await _localRepo.getCachedItems(limit: 100);
+        if (isClosed) return;
         emit(MyListingsLoaded(items: items, isOffline: true));
       }
     } catch (e) {
+      if (isClosed) return;
       emit(MyListingsError(e.toString()));
     }
   }
 
   // Special rule: Edit Item should only navigate with itemId. Backend editing is not implemented here.
   void onEditItemTapped(String itemId) {
+    if (isClosed) return;
     emit(MyListingsNavigateToEdit(itemId));
   }
 
   Future<void> deleteItem(String itemId) async {
+    if (isClosed) return;
     emit(MyListingsDeletingItem(itemId));
     try {
       await _itemRepository.deleteItem(itemId);
+      if (isClosed) return;
       emit(MyListingsDeleteSuccess(itemId));
       // Reload listings after successful deletion
       await loadMyListings();
     } catch (e) {
+      if (isClosed) return;
       emit(MyListingsError('Failed to delete listing: ${e.toString()}'));
     }
   }

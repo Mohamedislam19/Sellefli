@@ -16,9 +16,10 @@ import '../local/local_item_repository.dart';
 class ItemRepository {
   /// Configure your backend base URL. Override via --dart-define=DJANGO_BASE_URL
   /// if needed.
+  /// Default: localhost for desktop, 10.0.2.2 for Android emulator
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://192.168.1.104:8000',
+    defaultValue: 'http://localhost:8000',
   );
 
   /// Request timeout duration - reduced to fail fast and use cache
@@ -374,7 +375,10 @@ class ItemRepository {
         'page_size': pageSize.toString(),
       };
 
-      final res = await _client.get(_uri('/api/items/my-items/', query));
+      final res = await _client.get(
+        _uri('/api/items/my-items/', query),
+        headers: await _authHeaders,
+      );
       final items = _decode<List<Item>>(res, (body) {
         final results = body is Map<String, dynamic> ? body['results'] : body;
         return (results as List)
@@ -392,7 +396,10 @@ class ItemRepository {
   // GET IMAGES
   // ===========================================================================
   Future<List<ItemImage>> getItemImages(String itemId) async {
-    final res = await _client.get(_uri('/api/items/$itemId/images/'));
+    final res = await _client.get(
+      _uri('/api/items/$itemId/images/'),
+      headers: await _authHeaders,
+    );
     return _decode<List<ItemImage>>(res, (body) {
       return (body as List)
           .map<ItemImage>((json) => ItemImage.fromJson(json))
@@ -537,13 +544,15 @@ class ItemRepository {
   // DELETE ITEM
   // ===========================================================================
   Future<void> deleteItem(String itemId) async {
-    final oldImages = await getItemImages(itemId);
-
-    for (final img in oldImages) {
-      await deleteImage(img.imageUrl);
-    }
-
-    final res = await _client.delete(_uri('/api/items/$itemId/'));
+    // First get auth headers for authenticated request
+    final headers = await _authHeaders;
+    
+    // Delete the item (backend will cascade delete images)
+    final res = await _client.delete(
+      _uri('/api/items/$itemId/'),
+      headers: headers,
+    );
+    
     if (res.statusCode >= 200 && res.statusCode < 300) return;
     throw HttpException('HTTP ${res.statusCode}: ${res.body}');
   }
