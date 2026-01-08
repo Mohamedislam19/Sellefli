@@ -1,0 +1,12 @@
+"""URL configuration for notifications app."""
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import NotificationViewSet, UserDeviceViewSet
+
+router = DefaultRouter()
+router.register(r'notifications', NotificationViewSet, basename='notification')
+router.register(r'devices', UserDeviceViewSet, basename='device')
+
+urlpatterns = [
+    path('', include(router.urls)),
+]

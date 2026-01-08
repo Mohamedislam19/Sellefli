@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "item_images",
     "bookings",
     "ratings",
+    "notifications",
 ]
 
 MIDDLEWARE = [
@@ -124,6 +125,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "zHhSOVlj/BQ6paZTPtfKFz7P3BNFrAEyEJeYkOKhfHgphqzBjaFfT/AUKFwKlbrJUsJysAcjLhJUiLiR2YJl3A==")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+# Firebase Cloud Messaging for push notifications
+FCM_SERVER_KEY = os.getenv("FCM_SERVER_KEY")
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
