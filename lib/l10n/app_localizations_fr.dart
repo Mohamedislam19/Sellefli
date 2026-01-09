@@ -912,4 +912,24 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get myListingsView => 'Voir';
+
+  @override
+  String get myListingsDelete => 'Supprimer';
+
+  @override
+  String get myListingsDeleteConfirmTitle => 'Supprimer l\'annonce';
+
+  @override
+  String myListingsDeleteConfirmMessage(Object itemTitle) {
+    return 'Êtes-vous sûr de vouloir supprimer \"$itemTitle\"? Cette action ne peut pas être annulée.';
+  }
+
+  @override
+  String get myListingsDeleteConfirm => 'Supprimer';
+
+  @override
+  String get myListingsCancel => 'Annuler';
+
+  @override
+  String get myListingsDeleteSuccess => 'Annonce supprimée avec succès';
 }

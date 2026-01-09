@@ -12,7 +12,7 @@ class BookingCubit extends Cubit<BookingState> {
 
   BookingCubit()
     : bookingRepository = BookingRepository(Supabase.instance.client),
-      ratingRepository = RatingRepository(Supabase.instance.client),
+      ratingRepository = RatingRepository(), // Uses Django backend via HTTP
       super(BookingInitial());
 
   // FETCH BOOKING DETAILS
@@ -233,5 +233,3 @@ class BookingCubit extends Cubit<BookingState> {
     );
   }
 }
-
-

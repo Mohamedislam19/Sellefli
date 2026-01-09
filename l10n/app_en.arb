@@ -274,5 +274,11 @@
   "myListingsStatusPending": "Pending Approval",
   "myListingsStatusUnavailable": "Unavailable",
   "myListingsEdit": "Edit",
-  "myListingsView": "View"
+  "myListingsView": "View",
+  "myListingsDelete": "Delete",
+  "myListingsDeleteConfirmTitle": "Delete Listing",
+  "myListingsDeleteConfirmMessage": "Are you sure you want to delete \"{itemTitle}\"? This action cannot be undone.",
+  "myListingsDeleteConfirm": "Delete",
+  "myListingsCancel": "Cancel",
+  "myListingsDeleteSuccess": "Listing deleted successfully"
 }

@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 		fields = [
 			"id",
 			"username",
+			"email",
 			"phone",
 			"avatar_url",
 			"rating_sum",
@@ -62,3 +63,34 @@ class UserPublicSerializer(serializers.ModelSerializer):
 			"rating_sum",
 			"rating_count",
 		]
+
+
+class UserLoginSerializer(serializers.Serializer):
+    """Serializer for user login."""
+    
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
+
+
+class UserRegistrationSerializer(serializers.Serializer):
+    """Serializer for user registration."""
+    
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, required=True, min_length=6)
+    username = serializers.CharField(required=True)
+    phone = serializers.CharField(required=True)
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        return value
+
+    def validate_phone(self, value):
+        if User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("This phone number is already registered.")
+        return value
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("This username is taken.")
+        return value

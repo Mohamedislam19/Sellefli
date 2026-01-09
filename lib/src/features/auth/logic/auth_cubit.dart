@@ -1,18 +1,21 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sellefli/src/data/repositories/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:sellefli/src/features/auth/logic/auth_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:sellefli/src/core/services/api_client.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _authRepository;
   final Connectivity _connectivity;
+  final ApiClient _apiClient = ApiClient();
   StreamSubscription? _authStateSubscription;
 
   AuthCubit(this._authRepository, {Connectivity? connectivity})
-      : _connectivity = connectivity ?? Connectivity(),
-        super(AuthInitial()) {
+    : _connectivity = connectivity ?? Connectivity(),
+      super(AuthInitial()) {
     _initAuthListener();
     checkAuthStatus();
   }
@@ -28,10 +31,54 @@ class AuthCubit extends Cubit<AuthState> {
     });
   }
 
-  void checkAuthStatus() {
+  /// Check auth status and refresh session on app startup
+  Future<void> checkAuthStatus() async {
     final user = _authRepository.currentUser;
     if (user != null) {
-      emit(AuthAuthenticated(user));
+      // Try to refresh the session on app startup to ensure token is valid
+      try {
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null) {
+          // Store tokens in ApiClient if not already stored
+          if (_apiClient.currentUserId == null) {
+            await _apiClient.setTokens(
+              accessToken: session.accessToken,
+              refreshToken: session.refreshToken ?? '',
+              userId: user.id,
+              userEmail: user.email ?? '',
+              expiresAt: session.expiresAt,
+            );
+            debugPrint('[AuthCubit] Existing session tokens stored in ApiClient');
+          }
+          
+          final expiresAt = session.expiresAt;
+          final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          
+          // Refresh if token is expired or will expire within 10 minutes
+          if (expiresAt != null && (expiresAt - now) < 600) {
+            debugPrint('[AuthCubit] Session expiring/expired, refreshing...');
+            final response = await Supabase.instance.client.auth.refreshSession();
+            // Update tokens in ApiClient after refresh
+            if (response.session != null) {
+              await _apiClient.setTokens(
+                accessToken: response.session!.accessToken,
+                refreshToken: response.session!.refreshToken ?? '',
+                userId: response.user!.id,
+                userEmail: response.user!.email ?? '',
+                expiresAt: response.session!.expiresAt,
+              );
+            }
+            debugPrint('[AuthCubit] Session refreshed successfully');
+          }
+        }
+        emit(AuthAuthenticated(Supabase.instance.client.auth.currentUser ?? user));
+      } catch (e) {
+        debugPrint('[AuthCubit] Session refresh failed: $e');
+        // If refresh fails, sign out the user so they can re-authenticate
+        await Supabase.instance.client.auth.signOut();
+        await _apiClient.clearTokens();
+        emit(AuthUnauthenticated());
+      }
     } else {
       emit(AuthUnauthenticated());
     }
@@ -64,7 +111,17 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await _authRepository.signIn(email: email, password: password);
       final user = _authRepository.currentUser;
-      if (user != null) {
+      final session = Supabase.instance.client.auth.currentSession;
+      
+      if (user != null && session != null) {
+        // Store tokens in ApiClient for Django backend calls
+        await _apiClient.setTokens(
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken ?? '',
+          userId: user.id,
+          userEmail: user.email ?? '',
+          expiresAt: session.expiresAt,
+        );
         emit(AuthAuthenticated(user));
       } else {
         emit(const AuthError('Login failed. Please try again.'));
@@ -113,7 +170,17 @@ class AuthCubit extends Cubit<AuthState> {
         username: username,
       );
       final user = _authRepository.currentUser;
-      if (user != null) {
+      final session = Supabase.instance.client.auth.currentSession;
+      
+      if (user != null && session != null) {
+        // Store tokens in ApiClient for Django backend calls
+        await _apiClient.setTokens(
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken ?? '',
+          userId: user.id,
+          userEmail: user.email ?? '',
+          expiresAt: session.expiresAt,
+        );
         emit(AuthAuthenticated(user));
         // Success message will be shown by BlocListener
       } else {
@@ -145,17 +212,20 @@ class AuthCubit extends Cubit<AuthState> {
         errorMessage =
             'This phone number or email is already registered. Please use a different one.';
       } else {
-        errorMessage = 'Failed to create account. Please try again.';
+        // Log the actual error for debugging
+        debugPrint('PostgrestException during signup: ${e.message}');
+        debugPrint('PostgrestException code: ${e.code}');
+        debugPrint('PostgrestException details: ${e.details}');
+        errorMessage = 'Failed to create account: ${e.message}';
       }
       emit(AuthError(errorMessage));
     } catch (e) {
       // Handle custom exceptions from repository (like duplicate check)
+      debugPrint('Signup error: $e');
       if (e.toString().contains('already registered')) {
         emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
       } else {
-        emit(
-          const AuthError('An unexpected error occurred. Please try again.'),
-        );
+        emit(AuthError('An unexpected error occurred: ${e.toString()}'));
       }
     }
   }
@@ -164,11 +234,11 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       await _authRepository.signOut();
+      // Clear tokens from ApiClient
+      await _apiClient.clearTokens();
       emit(AuthUnauthenticated());
     } catch (e) {
       emit(const AuthError('Logout failed. Please try again.'));
     }
   }
 }
-
-

@@ -274,7 +274,13 @@
   "myListingsStatusPending": "بانتظار الموافقة",
   "myListingsStatusUnavailable": "غير متاح",
   "myListingsEdit": "تعديل",
-  "myListingsView": "عرض"
+  "myListingsView": "عرض",
+  "myListingsDelete": "حذف",
+  "myListingsDeleteConfirmTitle": "حذف العرض",
+  "myListingsDeleteConfirmMessage": "هل تأكد من رغبتك في حذف \"{itemTitle}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+  "myListingsDeleteConfirm": "حذف",
+  "myListingsCancel": "إلغاء",
+  "myListingsDeleteSuccess": "تم حذف العرض بنجاح"
 }
 
 

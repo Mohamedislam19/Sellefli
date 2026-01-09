@@ -897,4 +897,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myListingsView => 'View';
+
+  @override
+  String get myListingsDelete => 'Delete';
+
+  @override
+  String get myListingsDeleteConfirmTitle => 'Delete Listing';
+
+  @override
+  String myListingsDeleteConfirmMessage(Object itemTitle) {
+    return 'Are you sure you want to delete \"$itemTitle\"? This action cannot be undone.';
+  }
+
+  @override
+  String get myListingsDeleteConfirm => 'Delete';
+
+  @override
+  String get myListingsCancel => 'Cancel';
+
+  @override
+  String get myListingsDeleteSuccess => 'Listing deleted successfully';
 }

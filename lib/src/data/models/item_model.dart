@@ -101,10 +101,12 @@ class Item {
     }
 
     // Parse images if available from join, sorted by position
+    // Django returns 'images', Supabase might return 'item_images'
     List<String> imagesList = [];
-    if (json['item_images'] != null) {
+    final imagesKey = json.containsKey('images') ? 'images' : 'item_images';
+    if (json[imagesKey] != null && json[imagesKey] is List) {
       final imagesData = List<Map<String, dynamic>>.from(
-        json['item_images'] as List,
+        json[imagesKey] as List,
       );
       // Sort by position to ensure first image is at index 0
       imagesData.sort(
@@ -116,15 +118,17 @@ class Item {
     }
 
     // Parse owner data if available from join
+    // Django returns 'owner', Supabase might return 'users'
     String? ownerUsername;
     String? ownerAvatarUrl;
     int ownerRatingSum = 0;
     int ownerRatingCount = 0;
-    if (json['users'] != null && json['users'] is Map) {
-      ownerUsername = json['users']['username'] as String?;
-      ownerAvatarUrl = json['users']['avatar_url'] as String?;
-      ownerRatingSum = json['users']['rating_sum'] as int? ?? 0;
-      ownerRatingCount = json['users']['rating_count'] as int? ?? 0;
+    final ownerData = json['owner'] ?? json['users'];
+    if (ownerData != null && ownerData is Map) {
+      ownerUsername = ownerData['username'] as String?;
+      ownerAvatarUrl = ownerData['avatar_url'] as String?;
+      ownerRatingSum = ownerData['rating_sum'] as int? ?? 0;
+      ownerRatingCount = ownerData['rating_count'] as int? ?? 0;
     }
 
     return Item(

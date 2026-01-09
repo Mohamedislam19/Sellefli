@@ -1,6 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../data/models/item_model.dart';
 import '../../../data/repositories/item_repository.dart';
@@ -27,27 +26,17 @@ class MyListingsCubit extends Cubit<MyListingsState> {
   }
 
   Future<void> loadMyListings() async {
+    if (isClosed) return;
     emit(MyListingsLoading());
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        emit(const MyListingsError('Not authenticated'));
-        return;
-      }
-
       if (await _isOnline()) {
-        // Online: fetch from Supabase with images join, then cache locally
-        final rows =
-            await Supabase.instance.client
-                    .from('items')
-                    .select('*, item_images(*)')
-                    .eq('owner_id', userId)
-                    .order('updated_at', ascending: false)
-                as List<dynamic>;
+        // Online: fetch from Django API, then cache locally
+        final items = await _itemRepository.getMyItems(
+          page: 1,
+          pageSize: 100,
+        );
 
-        final items = rows
-            .map<Item>((e) => Item.fromJson(e as Map<String, dynamic>))
-            .toList();
+        if (isClosed) return;
 
         // Cache items locally for offline use
         for (final item in items) {
@@ -57,20 +46,40 @@ class MyListingsCubit extends Cubit<MyListingsState> {
           final images = await _itemRepository.getItemImages(item.id);
           await _localRepo.replaceItemImages(item.id, images);
         }
+        
+        if (isClosed) return;
         emit(MyListingsLoaded(items: items, isOffline: false));
       } else {
         // Offline: read from local DB and return cached items
         final items = await _localRepo.getCachedItems(limit: 100);
+        if (isClosed) return;
         emit(MyListingsLoaded(items: items, isOffline: true));
       }
     } catch (e) {
+      if (isClosed) return;
       emit(MyListingsError(e.toString()));
     }
   }
 
   // Special rule: Edit Item should only navigate with itemId. Backend editing is not implemented here.
   void onEditItemTapped(String itemId) {
+    if (isClosed) return;
     emit(MyListingsNavigateToEdit(itemId));
+  }
+
+  Future<void> deleteItem(String itemId) async {
+    if (isClosed) return;
+    emit(MyListingsDeletingItem(itemId));
+    try {
+      await _itemRepository.deleteItem(itemId);
+      if (isClosed) return;
+      emit(MyListingsDeleteSuccess(itemId));
+      // Reload listings after successful deletion
+      await loadMyListings();
+    } catch (e) {
+      if (isClosed) return;
+      emit(MyListingsError('Failed to delete listing: ${e.toString()}'));
+    }
   }
 }
 

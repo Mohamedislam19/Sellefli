@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/item_model.dart';
 import '../models/item_image_model.dart';
@@ -15,10 +16,14 @@ import '../local/local_item_repository.dart';
 class ItemRepository {
   /// Configure your backend base URL. Override via --dart-define=DJANGO_BASE_URL
   /// if needed.
+  /// Default: localhost for desktop, 10.0.2.2 for Android emulator
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
     defaultValue: 'http://localhost:8000',
   );
+
+  /// Request timeout duration - reduced to fail fast and use cache
+  static const Duration _timeout = Duration(seconds: 5);
 
   final http.Client _client;
   final LocalItemRepository _localRepo = LocalItemRepository();
@@ -37,9 +42,47 @@ class ItemRepository {
     );
   }
 
-  Map<String, String> get _jsonHeaders => {
-    HttpHeaders.contentTypeHeader: 'application/json',
-  };
+  /// Get auth headers with Supabase JWT token
+  /// Refreshes session if token is expired or about to expire (within 5 minutes)
+  Future<Map<String, String>> get _authHeaders async {
+    var session = Supabase.instance.client.auth.currentSession;
+
+    if (session != null) {
+      final expiresAt = session.expiresAt;
+      if (expiresAt != null) {
+        final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        final timeUntilExpiry = expiresAt - now;
+
+        // Refresh if token is EXPIRED (timeUntilExpiry <= 0) or about to expire within 5 minutes
+        if (timeUntilExpiry < 300) {
+          try {
+            print(
+              '[ItemRepository] Token ${timeUntilExpiry <= 0 ? "EXPIRED" : "expiring soon"}, refreshing...',
+            );
+            final response = await Supabase.instance.client.auth
+                .refreshSession();
+            session = response.session;
+            print('[ItemRepository] Token refreshed successfully');
+          } catch (e) {
+            print('[ItemRepository] Token refresh failed: $e');
+            // If refresh fails and token is already expired, we need to re-authenticate
+            if (timeUntilExpiry <= 0) {
+              throw Exception('Session expired. Please log in again.');
+            }
+            // Otherwise continue with current token (it's still valid for a bit)
+          }
+        }
+      }
+    }
+
+    final currentSession = Supabase.instance.client.auth.currentSession;
+    final token = currentSession?.accessToken;
+
+    return {
+      HttpHeaders.contentTypeHeader: 'application/json',
+      if (token != null) HttpHeaders.authorizationHeader: 'Bearer $token',
+    };
+  }
 
   T _decode<T>(http.Response res, T Function(dynamic) mapper) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -55,7 +98,7 @@ class ItemRepository {
   Future<String> createItem(Item item) async {
     final res = await _client.post(
       _uri('/api/items/'),
-      headers: _jsonHeaders,
+      headers: await _authHeaders,
       body: jsonEncode(item.toJson()),
     );
 
@@ -159,7 +202,7 @@ class ItemRepository {
   }
 
   // ===========================================================================
-  // GET ITEMS (Feed)
+  // GET ITEMS (Feed) - Uses Supabase directly for speed, Django as fallback
   // ===========================================================================
   Future<List<Item>> getItems({
     required int page,
@@ -168,53 +211,142 @@ class ItemRepository {
     List<String>? categories,
     String? searchQuery,
   }) async {
+    final stopwatch = Stopwatch()..start();
+
+    // Try Supabase first (faster, direct connection)
     try {
-      final query = <String, dynamic>{
-        'page': page.toString(),
-        'page_size': pageSize.toString(),
-      };
+      final items = await _getItemsFromSupabase(
+        page: page,
+        pageSize: pageSize,
+        excludeUserId: excludeUserId,
+        categories: categories,
+        searchQuery: searchQuery,
+      );
+      print(
+        '[ItemRepository] Supabase fetch took ${stopwatch.elapsedMilliseconds}ms, got ${items.length} items',
+      );
 
-      if (excludeUserId != null) {
-        query['excludeUserId'] = excludeUserId;
-      }
-      if (categories != null &&
-          categories.isNotEmpty &&
-          !categories.contains('All')) {
-        query['categories'] = categories.join(',');
-      }
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        query['searchQuery'] = searchQuery;
-      }
-
-      final res = await _client.get(_uri('/api/items/', query));
-      final items = _decode<List<Item>>(res, (body) {
-        final results = body is Map<String, dynamic> ? body['results'] : body;
-        return (results as List)
-            .map((json) => Item.fromJson(json as Map<String, dynamic>))
-            .toList();
-      });
-
-      // Cache first page if no filters are applied
+      // Cache first page if no filters are applied (fire and forget)
       if (page == 1 &&
           (searchQuery == null || searchQuery.isEmpty) &&
           (categories == null ||
               categories.isEmpty ||
               categories.contains('All'))) {
-        // Fire and forget caching
         _localRepo.cacheItems(items.take(10).toList());
       }
 
       return items;
-    } catch (e) {
-      // If network fails and it's the first page, try local cache
-      if (page == 1) {
-        final cachedItems = await _localRepo.getCachedItems();
-        if (cachedItems.isNotEmpty) {
-          return cachedItems;
+    } catch (supabaseError) {
+      print(
+        '[ItemRepository] Supabase failed: $supabaseError, trying Django...',
+      );
+
+      // Fallback to Django backend
+      try {
+        return await _getItemsFromDjango(
+          page: page,
+          pageSize: pageSize,
+          excludeUserId: excludeUserId,
+          categories: categories,
+          searchQuery: searchQuery,
+        );
+      } catch (djangoError) {
+        print('[ItemRepository] Django also failed: $djangoError');
+
+        // Last resort: try local cache for first page
+        if (page == 1) {
+          print('[ItemRepository] Attempting to use cached items...');
+          final cachedItems = await _localRepo.getCachedItems();
+          if (cachedItems.isNotEmpty) {
+            print(
+              '[ItemRepository] Returning ${cachedItems.length} cached items',
+            );
+            return cachedItems;
+          }
         }
+        rethrow;
       }
-      rethrow;
     }
+  }
+
+  /// Fetch items directly from Supabase (faster)
+  Future<List<Item>> _getItemsFromSupabase({
+    required int page,
+    required int pageSize,
+    String? excludeUserId,
+    List<String>? categories,
+    String? searchQuery,
+  }) async {
+    final offset = (page - 1) * pageSize;
+
+    // Build query with joins for images and owner
+    var query = Supabase.instance.client
+        .from('items')
+        .select(
+          '*, item_images(*), owner:users!items_owner_id_fkey(id, username, avatar_url, rating_sum, rating_count)',
+        )
+        .order('created_at', ascending: false)
+        .range(offset, offset + pageSize - 1);
+
+    // Only use supported filters in Supabase query
+    final rows = await query as List<dynamic>;
+
+    List<Item> items = rows
+        .map<Item>((e) => Item.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    // Filter in Dart for unsupported filters
+    if (excludeUserId != null) {
+      items = items.where((item) => item.ownerId != excludeUserId).toList();
+    }
+    if (categories != null &&
+        categories.isNotEmpty &&
+        !categories.contains('All')) {
+      items = items
+          .where((item) => categories.contains(item.category))
+          .toList();
+    }
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      final q = searchQuery.toLowerCase();
+      items = items
+          .where((item) => item.title.toLowerCase().contains(q))
+          .toList();
+    }
+    return items;
+  }
+
+  /// Fetch items from Django backend (fallback)
+  Future<List<Item>> _getItemsFromDjango({
+    required int page,
+    required int pageSize,
+    String? excludeUserId,
+    List<String>? categories,
+    String? searchQuery,
+  }) async {
+    final query = <String, dynamic>{
+      'page': page.toString(),
+      'page_size': pageSize.toString(),
+    };
+
+    if (excludeUserId != null) {
+      query['excludeUserId'] = excludeUserId;
+    }
+    if (categories != null &&
+        categories.isNotEmpty &&
+        !categories.contains('All')) {
+      query['categories'] = categories.join(',');
+    }
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      query['searchQuery'] = searchQuery;
+    }
+
+    final res = await _client.get(_uri('/api/items/', query)).timeout(_timeout);
+    return _decode<List<Item>>(res, (body) {
+      final results = body is Map<String, dynamic> ? body['results'] : body;
+      return (results as List)
+          .map((json) => Item.fromJson(json as Map<String, dynamic>))
+          .toList();
+    });
   }
 
   // ===========================================================================
@@ -231,10 +363,43 @@ class ItemRepository {
   }
 
   // ===========================================================================
+  // GET MY ITEMS (current user's listings)
+  // ===========================================================================
+  Future<List<Item>> getMyItems({
+    required int page,
+    required int pageSize,
+  }) async {
+    try {
+      final query = <String, dynamic>{
+        'page': page.toString(),
+        'page_size': pageSize.toString(),
+      };
+
+      final res = await _client.get(
+        _uri('/api/items/my-items/', query),
+        headers: await _authHeaders,
+      );
+      final items = _decode<List<Item>>(res, (body) {
+        final results = body is Map<String, dynamic> ? body['results'] : body;
+        return (results as List)
+            .map((json) => Item.fromJson(json as Map<String, dynamic>))
+            .toList();
+      });
+
+      return items;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ===========================================================================
   // GET IMAGES
   // ===========================================================================
   Future<List<ItemImage>> getItemImages(String itemId) async {
-    final res = await _client.get(_uri('/api/items/$itemId/images/'));
+    final res = await _client.get(
+      _uri('/api/items/$itemId/images/'),
+      headers: await _authHeaders,
+    );
     return _decode<List<ItemImage>>(res, (body) {
       return (body as List)
           .map<ItemImage>((json) => ItemImage.fromJson(json))
@@ -249,7 +414,7 @@ class ItemRepository {
     updates['updated_at'] = DateTime.now().toIso8601String();
     final res = await _client.patch(
       _uri('/api/items/$itemId/'),
-      headers: _jsonHeaders,
+      headers: await _authHeaders,
       body: jsonEncode(updates),
     );
     _decode(res, (body) => body);
@@ -262,7 +427,7 @@ class ItemRepository {
     if (imageUrl.isEmpty) return;
     final res = await _client.post(
       _uri('/api/item-images/delete-by-url/'),
-      headers: _jsonHeaders,
+      headers: await _authHeaders,
       body: jsonEncode({'image_url': imageUrl}),
     );
     if (res.statusCode >= 200 && res.statusCode < 300) return;
@@ -284,7 +449,7 @@ class ItemRepository {
   ) async {
     final res = await _client.post(
       _uri('/api/item-images/delete-not-in-positions/'),
-      headers: _jsonHeaders,
+      headers: await _authHeaders,
       body: jsonEncode({
         'item_id': itemId,
         'positions': allowedPositions.toList(),
@@ -302,7 +467,7 @@ class ItemRepository {
   ) async {
     final res = await _client.post(
       _uri('/api/item-images/delete-except-ids/'),
-      headers: _jsonHeaders,
+      headers: await _authHeaders,
       body: jsonEncode({'item_id': itemId, 'allowed_ids': allowedIds.toList()}),
     );
     if (res.statusCode >= 200 && res.statusCode < 300) return;
@@ -313,7 +478,7 @@ class ItemRepository {
   Future<void> updateItemImagePosition(String imageId, int position) async {
     final res = await _client.patch(
       _uri('/api/item-images/$imageId/'),
-      headers: _jsonHeaders,
+      headers: await _authHeaders,
       body: jsonEncode({'position': position}),
     );
     _decode(res, (body) => body);
@@ -369,7 +534,7 @@ class ItemRepository {
   ) async {
     final res = await _client.post(
       _uri('/api/items/$itemId/images/reorder/'),
-      headers: _jsonHeaders,
+      headers: await _authHeaders,
       body: jsonEncode({'ordered_ids': orderedImageIds}),
     );
     _decode(res, (body) => body);
@@ -379,13 +544,15 @@ class ItemRepository {
   // DELETE ITEM
   // ===========================================================================
   Future<void> deleteItem(String itemId) async {
-    final oldImages = await getItemImages(itemId);
-
-    for (final img in oldImages) {
-      await deleteImage(img.imageUrl);
-    }
-
-    final res = await _client.delete(_uri('/api/items/$itemId/'));
+    // First get auth headers for authenticated request
+    final headers = await _authHeaders;
+    
+    // Delete the item (backend will cascade delete images)
+    final res = await _client.delete(
+      _uri('/api/items/$itemId/'),
+      headers: headers,
+    );
+    
     if (res.statusCode >= 200 && res.statusCode < 300) return;
     throw HttpException('HTTP ${res.statusCode}: ${res.body}');
   }
@@ -401,6 +568,14 @@ class ItemRepository {
       'POST',
       _uri('/api/item-images/upload/'),
     );
+
+    // Add auth headers
+    final authHeaders = await _authHeaders;
+    if (authHeaders.containsKey(HttpHeaders.authorizationHeader)) {
+      request.headers[HttpHeaders.authorizationHeader] =
+          authHeaders[HttpHeaders.authorizationHeader]!;
+    }
+
     request.fields['item_id'] = itemId;
     request.fields['position'] = position.toString();
     request.files.add(

@@ -35,7 +35,9 @@ class ItemViewSet(viewsets.ModelViewSet):
 	permission_classes = [permissions.IsAuthenticated]
 
 	def get_permissions(self):
-		"""Override to allow owner check only on mutating operations."""
+		"""Override permissions: list/retrieve/images are public, create requires auth, update/delete require owner."""
+		if self.action in ['list', 'retrieve', 'images']:
+			return [permissions.AllowAny()]
 		if self.action in ['update', 'partial_update', 'destroy']:
 			return [permissions.IsAuthenticated(), IsItemOwner()]
 		return super().get_permissions()
@@ -62,6 +64,31 @@ class ItemViewSet(viewsets.ModelViewSet):
 			qs = qs.filter(title__icontains=search)
 
 		return qs
+
+	@action(detail=False, methods=["get"], url_path="my-items")
+	def my_items(self, request):
+		"""Get current user's items (their listings).
+		
+		GET /api/items/my-items/
+		"""
+		user = request.user
+		if not user or not user.is_authenticated:
+			return Response(
+				{"detail": "Not authenticated"},
+				status=status.HTTP_401_UNAUTHORIZED
+			)
+		
+		# Filter items by owner
+		qs = self.get_queryset().filter(owner=user)
+		
+		# Apply pagination
+		page = self.paginate_queryset(qs)
+		if page is not None:
+			serializer = self.get_serializer(page, many=True)
+			return self.get_paginated_response(serializer.data)
+		
+		serializer = self.get_serializer(qs, many=True)
+		return Response(serializer.data)
 
 	@action(detail=True, methods=["get", "post"], url_path="images")
 	def images(self, request, pk=None):

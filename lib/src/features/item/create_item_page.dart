@@ -10,7 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
 import 'package:sellefli/src/core/widgets/snackbar.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sellefli/src/core/services/auth_service.dart';
 import 'package:sellefli/src/core/constants/categories.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -32,17 +32,18 @@ class _CreateItemPageState extends State<CreateItemPage>
 
   String? _userId;
 
-  final supabase = Supabase.instance.client;
+  /// Use AuthService to get current user - no direct Supabase SDK calls
+  final AuthService _authService = AuthService();
 
   void setUserId() async {
-    final user = supabase.auth.currentUser;
-    if (user == null) {
+    final userId = _authService.currentUserId;
+    if (userId == null) {
       print('No user is currently signed in.');
     } else {
       setState(() {
-        _userId = user.id;
+        _userId = userId;
       });
-      print('Current signed-in user ID: ${user.id}');
+      print('Current signed-in user ID: $userId');
     }
   }
 
