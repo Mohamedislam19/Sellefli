@@ -361,7 +361,7 @@ class _TabButton extends StatelessWidget {
   }
 }
 
-// ------------------ REQUEST CARD ------------------
+// REQUEST CARD 
 
 // Use BookingStatus across list and detail for consistency
 
