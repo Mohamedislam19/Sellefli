@@ -109,7 +109,7 @@ class _BookingDetailPageContentState extends State<_BookingDetailPageContent> {
             }
 
             if (state is! BookingDetailsLoaded) {
-              // Fallback: show a lightweight loader rather than a blank message.
+              // Fallback: show a lightweight loader 
               return const Center(child: CircularProgressIndicator());
             }
 

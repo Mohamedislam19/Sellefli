@@ -26,11 +26,11 @@ DEBUG = True
 # Parse ALLOWED_HOSTS from env (comma or semicolon separated), strip whitespace and ignore empty entries.
 _raw_allowed_hosts = os.getenv(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1,10.0.2.2,10.141.254.109,10.237.253.109,172.21.59.109,10.156.219.188,10.80.20.225",
+    "localhost,127.0.0.1,10.0.2.2,10.141.254.109,10.237.253.109,172.21.59.109,192.168.1.9,10.156.219.188,10.80.20.225",
 )
 ALLOWED_HOSTS = [h.strip() for h in _raw_allowed_hosts.replace(";", ",").split(",") if h.strip()]
 # Ensure developer testing IPs are present (helps when .env overrides are missing)
-for _ip in ("10.237.253.109", "172.21.59.109", "10.156.219.188", "10.80.20.225"):
+for _ip in ("10.237.253.109", "172.21.59.109", "192.168.1.9", "10.156.219.188", "10.80.20.225"):
     if _ip not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(_ip)
 
