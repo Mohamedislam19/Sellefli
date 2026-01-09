@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/user_model.dart' as models;
 import 'auth_repository.dart';
@@ -9,18 +10,18 @@ import '../../core/services/api_client.dart';
 class ProfileRepository {
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://localhost:8000',
+    defaultValue: 'http://localhost:9000',
   );
+
+  static const Duration _timeout = Duration(seconds: 5);
 
   final http.Client _client;
   final AuthRepository? _authRepository;
   final ApiClient _apiClient = ApiClient();
 
-  ProfileRepository({
-    http.Client? client,
-    AuthRepository? authRepository,
-  })  : _client = client ?? http.Client(),
-        _authRepository = authRepository;
+  ProfileRepository({http.Client? client, AuthRepository? authRepository})
+    : _client = client ?? http.Client(),
+      _authRepository = authRepository;
 
   Uri _uri(String path, [Map<String, dynamic>? query]) {
     final uri = Uri.parse('$_baseUrl$path');
@@ -35,6 +36,17 @@ class ProfileRepository {
 
   Future<Map<String, String>> get _jsonHeaders async {
     return await _apiClient.getAuthHeaders();
+  }
+
+  /// Get auth headers with Supabase JWT token
+  Future<Map<String, String>> get _authHeaders async {
+    final session = Supabase.instance.client.auth.currentSession;
+    final token = session?.accessToken;
+
+    return {
+      HttpHeaders.contentTypeHeader: 'application/json',
+      if (token != null) HttpHeaders.authorizationHeader: 'Bearer $token',
+    };
   }
 
   T _decode<T>(http.Response res, T Function(dynamic) mapper) {
@@ -56,7 +68,7 @@ class ProfileRepository {
       final res = await _client.get(
         _uri('/api/users/me/', {'id': userId}),
         headers: headers,
-      );
+      ).timeout(_timeout);
 
       if (res.statusCode == 404) return null;
 
@@ -77,7 +89,7 @@ class ProfileRepository {
       final res = await _client.get(
         _uri('/api/users/$userId/'),
         headers: headers,
-      );
+      ).timeout(_timeout);
 
       if (res.statusCode == 404) return null;
 
@@ -170,5 +182,3 @@ class ProfileRepository {
     }
   }
 }
-
-

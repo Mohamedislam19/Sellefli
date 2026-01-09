@@ -1,8 +1,10 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/src/data/repositories/auth_repository.dart';
 import 'package:sellefli/src/data/repositories/rating_repository.dart';
+import 'package:sellefli/src/features/profile/logic/profile_cubit.dart';
 
 class RatingPageArguments {
   final String bookingId;
@@ -68,11 +70,25 @@ class _RatingWidgetState extends State<RatingWidget>
     setState(() => _isLoading = true);
 
     try {
-      final args =
-          ModalRoute.of(context)!.settings.arguments as RatingPageArguments;
+      // Safely get arguments
+      final routeArgs = ModalRoute.of(context)?.settings.arguments;
+      if (routeArgs == null || routeArgs is! RatingPageArguments) {
+        throw Exception('Invalid rating page arguments');
+      }
+      final args = routeArgs;
+
       final authRepo = context.read<AuthRepository>();
       final ratingRepo = context.read<RatingRepository>();
       final currentUser = authRepo.currentUser;
+
+      developer.log(
+        'Submitting rating for booking: ${args.bookingId}',
+        name: 'RatingWidget',
+      );
+      developer.log(
+        'Rater: ${currentUser?.id}, Target: ${args.targetUserId}, Stars: $_selectedRating',
+        name: 'RatingWidget',
+      );
 
       if (currentUser == null) {
         throw Exception('User not logged in');
@@ -85,7 +101,16 @@ class _RatingWidgetState extends State<RatingWidget>
         stars: _selectedRating,
       );
 
+      developer.log('Rating submitted successfully!', name: 'RatingWidget');
+
       if (mounted) {
+        // Refresh the profile to reflect the new rating
+        try {
+          context.read<ProfileCubit>().loadMyProfile();
+        } catch (e) {
+          developer.log('Could not refresh profile: $e', name: 'RatingWidget');
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Rating submitted successfully!'),
@@ -94,11 +119,22 @@ class _RatingWidgetState extends State<RatingWidget>
         );
         Navigator.pushNamedAndRemoveUntil(context, "/home", (route) => false);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      developer.log(
+        'Error submitting rating: $e',
+        name: 'RatingWidget',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
-        final errorMessage = e.toString().contains('already rated')
-            ? 'You have already rated this booking'
-            : 'Error submitting rating: $e';
+        String errorMessage;
+        if (e.toString().contains('already rated')) {
+          errorMessage = 'You have already rated this booking';
+        } else if (e.toString().contains('TimeoutException')) {
+          errorMessage = 'Request timed out. Please check your connection.';
+        } else {
+          errorMessage = 'Error submitting rating: $e';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
         );
@@ -430,5 +466,3 @@ class RatingScreen extends StatelessWidget {
     );
   }
 }
-
-

@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -19,7 +18,7 @@ class ItemRepository {
   /// Default: localhost for desktop, 10.0.2.2 for Android emulator
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://localhost:8000',
+    defaultValue: 'http://localhost:9000',
   );
 
   /// Request timeout duration - reduced to fail fast and use cache
@@ -56,15 +55,10 @@ class ItemRepository {
         // Refresh if token is EXPIRED (timeUntilExpiry <= 0) or about to expire within 5 minutes
         if (timeUntilExpiry < 300) {
           try {
-            print(
-              '[ItemRepository] Token ${timeUntilExpiry <= 0 ? "EXPIRED" : "expiring soon"}, refreshing...',
-            );
             final response = await Supabase.instance.client.auth
                 .refreshSession();
             session = response.session;
-            print('[ItemRepository] Token refreshed successfully');
           } catch (e) {
-            print('[ItemRepository] Token refresh failed: $e');
             // If refresh fails and token is already expired, we need to re-authenticate
             if (timeUntilExpiry <= 0) {
               throw Exception('Session expired. Please log in again.');
@@ -222,10 +216,6 @@ class ItemRepository {
         categories: categories,
         searchQuery: searchQuery,
       );
-      print(
-        '[ItemRepository] Supabase fetch took ${stopwatch.elapsedMilliseconds}ms, got ${items.length} items',
-      );
-
       // Cache first page if no filters are applied (fire and forget)
       if (page == 1 &&
           (searchQuery == null || searchQuery.isEmpty) &&
@@ -237,10 +227,6 @@ class ItemRepository {
 
       return items;
     } catch (supabaseError) {
-      print(
-        '[ItemRepository] Supabase failed: $supabaseError, trying Django...',
-      );
-
       // Fallback to Django backend
       try {
         return await _getItemsFromDjango(
@@ -251,16 +237,10 @@ class ItemRepository {
           searchQuery: searchQuery,
         );
       } catch (djangoError) {
-        print('[ItemRepository] Django also failed: $djangoError');
-
         // Last resort: try local cache for first page
         if (page == 1) {
-          print('[ItemRepository] Attempting to use cached items...');
           final cachedItems = await _localRepo.getCachedItems();
           if (cachedItems.isNotEmpty) {
-            print(
-              '[ItemRepository] Returning ${cachedItems.length} cached items',
-            );
             return cachedItems;
           }
         }
@@ -353,7 +333,9 @@ class ItemRepository {
   // GET ITEM
   // ===========================================================================
   Future<Item?> getItemById(String itemId) async {
-    final res = await _client.get(_uri('/api/items/$itemId/'));
+    final res = await _client
+        .get(_uri('/api/items/$itemId/'))
+        .timeout(_timeout);
     try {
       return _decode<Item?>(res, (body) => Item.fromJson(body));
     } on HttpException {
@@ -399,7 +381,7 @@ class ItemRepository {
     final res = await _client.get(
       _uri('/api/items/$itemId/images/'),
       headers: await _authHeaders,
-    );
+    ).timeout(_timeout);
     return _decode<List<ItemImage>>(res, (body) {
       return (body as List)
           .map<ItemImage>((json) => ItemImage.fromJson(json))
