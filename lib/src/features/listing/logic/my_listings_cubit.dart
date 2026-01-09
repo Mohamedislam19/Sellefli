@@ -1,7 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../data/models/item_model.dart';
 import '../../../data/repositories/item_repository.dart';
 import '../../../data/local/local_item_repository.dart';
 import 'my_listings_state.dart';
@@ -30,10 +29,7 @@ class MyListingsCubit extends Cubit<MyListingsState> {
     try {
       if (await _isOnline()) {
         // Online: fetch from Django API, then cache locally
-        final items = await _itemRepository.getMyItems(
-          page: 1,
-          pageSize: 100,
-        );
+        final items = await _itemRepository.getMyItems(page: 1, pageSize: 100);
 
         // Cache items locally for offline use
         for (final item in items) {
@@ -71,5 +67,3 @@ class MyListingsCubit extends Cubit<MyListingsState> {
     }
   }
 }
-
-

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/user_model.dart' as models;
 import 'auth_repository.dart';
@@ -8,17 +9,17 @@ import 'auth_repository.dart';
 class ProfileRepository {
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://localhost:8000',
+    defaultValue: 'http://localhost:9000',
   );
+
+  static const Duration _timeout = Duration(seconds: 5);
 
   final http.Client _client;
   final AuthRepository? _authRepository;
 
-  ProfileRepository({
-    http.Client? client,
-    AuthRepository? authRepository,
-  })  : _client = client ?? http.Client(),
-        _authRepository = authRepository;
+  ProfileRepository({http.Client? client, AuthRepository? authRepository})
+    : _client = client ?? http.Client(),
+      _authRepository = authRepository;
 
   Uri _uri(String path, [Map<String, dynamic>? query]) {
     final uri = Uri.parse('$_baseUrl$path');
@@ -34,6 +35,17 @@ class ProfileRepository {
   Map<String, String> get _jsonHeaders => {
     HttpHeaders.contentTypeHeader: 'application/json',
   };
+
+  /// Get auth headers with Supabase JWT token
+  Future<Map<String, String>> get _authHeaders async {
+    final session = Supabase.instance.client.auth.currentSession;
+    final token = session?.accessToken;
+
+    return {
+      HttpHeaders.contentTypeHeader: 'application/json',
+      if (token != null) HttpHeaders.authorizationHeader: 'Bearer $token',
+    };
+  }
 
   T _decode<T>(http.Response res, T Function(dynamic) mapper) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -51,10 +63,10 @@ class ProfileRepository {
       final userId = currentUser?.id;
       if (userId == null) return null;
 
-      final res = await _client.get(
-        _uri('/api/users/me/', {'id': userId}),
-        headers: _jsonHeaders,
-      );
+      final headers = await _authHeaders;
+      final res = await _client
+          .get(_uri('/api/users/me/', {'id': userId}), headers: headers)
+          .timeout(_timeout);
 
       if (res.statusCode == 404) return null;
 
@@ -71,10 +83,10 @@ class ProfileRepository {
   /// GET /api/users/{userId}/
   Future<models.User?> getProfileById(String userId) async {
     try {
-      final res = await _client.get(
-        _uri('/api/users/$userId/'),
-        headers: _jsonHeaders,
-      );
+      final headers = await _authHeaders;
+      final res = await _client
+          .get(_uri('/api/users/$userId/'), headers: headers)
+          .timeout(_timeout);
 
       if (res.statusCode == 404) return null;
 
@@ -102,9 +114,7 @@ class ProfileRepository {
         _uri('/api/users/$userId/upload-avatar/'),
       );
 
-      request.files.add(
-        await http.MultipartFile.fromPath('avatar', file.path),
-      );
+      request.files.add(await http.MultipartFile.fromPath('avatar', file.path));
 
       final response = await request.send();
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -164,5 +174,3 @@ class ProfileRepository {
     }
   }
 }
-
-

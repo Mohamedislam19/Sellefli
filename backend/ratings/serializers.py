@@ -11,7 +11,7 @@ class RatingSerializer(serializers.ModelSerializer):
 	
 	rater_id = serializers.UUIDField(write_only=True)
 	target_user_id = serializers.UUIDField(write_only=True)
-	booking_id = serializers.UUIDField(write_only=True)
+	booking_id = serializers.UUIDField()  # Both read and write
 	
 	# Read-only nested details
 	rater = serializers.SerializerMethodField(read_only=True)
@@ -105,17 +105,13 @@ class RatingSerializer(serializers.ModelSerializer):
 		rater = User.objects.get(pk=rater_id)
 		target_user = User.objects.get(pk=target_user_id)
 		
-		# Update target user's rating sum
+		# Create the rating - the post_save signal in signals.py will
+		# automatically update the target user's rating_sum and rating_count
 		rating = Rating.objects.create(
 			booking=booking,
 			rater=rater,
 			target_user=target_user,
 			**validated_data,
 		)
-		
-		# Update target user's rating stats
-		target_user.rating_sum += rating.stars
-		target_user.rating_count += 1
-		target_user.save(update_fields=['rating_sum', 'rating_count'])
 		
 		return rating

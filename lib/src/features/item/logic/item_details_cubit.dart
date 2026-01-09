@@ -11,28 +11,33 @@ class ItemDetailsCubit extends Cubit<ItemDetailsState> {
   ItemDetailsCubit({
     required ItemRepository itemRepository,
     required ProfileRepository profileRepository,
-  })  : _itemRepository = itemRepository,
-        _profileRepository = profileRepository,
-        super(ItemDetailsInitial());
+  }) : _itemRepository = itemRepository,
+       _profileRepository = profileRepository,
+       super(ItemDetailsInitial());
 
   Future<void> load(String itemId) async {
+    if (isClosed) return;
     emit(ItemDetailsLoading());
     try {
       final item = await _itemRepository.getItemById(itemId);
       if (item == null) {
-        emit(const ItemDetailsError('Item not found'));
+        if (!isClosed) {
+          emit(const ItemDetailsError('Item not found'));
+        }
         return;
       }
       final images = await _itemRepository.getItemImages(itemId);
-      
+
       // Fetch owner profile
       final owner = await _profileRepository.getProfileById(item.ownerId);
-      
-      emit(ItemDetailsLoaded(item: item, images: images, owner: owner));
+
+      if (!isClosed) {
+        emit(ItemDetailsLoaded(item: item, images: images, owner: owner));
+      }
     } catch (e) {
-      emit(ItemDetailsError(e.toString()));
+      if (!isClosed) {
+        emit(ItemDetailsError(e.toString()));
+      }
     }
   }
 }
-
-

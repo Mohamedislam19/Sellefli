@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,7 +12,7 @@ class RatingRepository {
   /// Configure your backend base URL. Override via --dart-define=DJANGO_BASE_URL
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://192.168.1.104:8000',
+    defaultValue: 'http://localhost:9000',
   );
 
   final http.Client _client;
@@ -97,25 +98,41 @@ class RatingRepository {
     required String targetUserId,
     required int stars,
   }) async {
-    final res = await _client.post(
-      _uri('/api/ratings/'),
-      headers: await _authHeaders,
-      body: jsonEncode({
-        'booking_id': bookingId,
-        'rater_id': raterUserId,
-        'target_user_id': targetUserId,
-        'stars': stars,
-      }),
-    );
+    final url = _uri('/api/ratings/');
+    final headers = await _authHeaders;
+    final body = jsonEncode({
+      'booking_id': bookingId,
+      'rater_id': raterUserId,
+      'target_user_id': targetUserId,
+      'stars': stars,
+    });
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      final error = jsonDecode(res.body);
-      final message = error is Map
-          ? (error['detail'] ??
-                error.values.first?.toString() ??
-                'Rating failed')
-          : 'Rating failed';
-      throw Exception(message);
+    developer.log('Creating rating: POST $url', name: 'RatingRepository');
+    developer.log('Request body: $body', name: 'RatingRepository');
+
+    try {
+      final res = await _client
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
+
+      developer.log(
+        'Response status: ${res.statusCode}',
+        name: 'RatingRepository',
+      );
+      developer.log('Response body: ${res.body}', name: 'RatingRepository');
+
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        final error = jsonDecode(res.body);
+        final message = error is Map
+            ? (error['detail'] ??
+                  error.values.first?.toString() ??
+                  'Rating failed')
+            : 'Rating failed';
+        throw Exception(message);
+      }
+    } catch (e) {
+      developer.log('Error creating rating: $e', name: 'RatingRepository');
+      rethrow;
     }
   }
 

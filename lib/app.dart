@@ -46,9 +46,8 @@ class MyApp extends StatelessWidget {
               RatingRepository(), // Uses Django backend via HTTP
         ),
         RepositoryProvider(
-          create: (context) => ProfileRepository(
-            authRepository: context.read<AuthRepository>(),
-          ),
+          create: (context) =>
+              ProfileRepository(authRepository: context.read<AuthRepository>()),
         ),
         RepositoryProvider(
           create: (context) => BookingRepository(Supabase.instance.client),

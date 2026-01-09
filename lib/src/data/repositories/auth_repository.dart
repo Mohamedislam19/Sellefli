@@ -9,14 +9,12 @@ class AuthRepository {
   // Uses the same default backend URL as other repositories
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://192.168.1.104:8000',
+    defaultValue: 'http://localhost:9000',
   );
 
-  AuthRepository({
-    SupabaseClient? supabase,
-    http.Client? client,
-  })  : _supabase = supabase ?? Supabase.instance.client,
-        _client = client ?? http.Client();
+  AuthRepository({SupabaseClient? supabase, http.Client? client})
+    : _supabase = supabase ?? Supabase.instance.client,
+      _client = client ?? http.Client();
 
   // Get current user
   User? get currentUser => _supabase.auth.currentUser;
@@ -61,11 +59,15 @@ class AuthRepository {
               errorMessage = body['detail'];
             } else {
               // Flatten other errors (like validation dicts)
-              errorMessage = body.values.map((v) => v is List ? v.join(' ') : v).join('\n');
+              errorMessage = body.values
+                  .map((v) => v is List ? v.join(' ') : v)
+                  .join('\n');
             }
           }
         } catch (_) {
-          errorMessage = response.body.isEmpty ? 'Unknown error' : response.body;
+          errorMessage = response.body.isEmpty
+              ? 'Unknown error'
+              : response.body;
         }
         throw Exception(errorMessage);
       }
@@ -84,17 +86,14 @@ class AuthRepository {
       final response = await _client.post(
         uri,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final body = jsonDecode(response.body);
         final accessToken = body['access_token'];
         final refreshToken = body['refresh_token'];
-        
+
         if (accessToken == null || refreshToken == null) {
           throw Exception('Login successful but no tokens returned');
         }
@@ -102,7 +101,7 @@ class AuthRepository {
         // Set the session manually in Supabase SDK so the rest of the app works
         return await _supabase.auth.setSession(refreshToken);
       } else {
-         String errorMessage = 'Login failed';
+        String errorMessage = 'Login failed';
         try {
           final body = jsonDecode(response.body);
           if (body is Map && body.containsKey('error')) {
