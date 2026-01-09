@@ -6,14 +6,51 @@ from django.conf import settings
 
 class NotificationType(models.TextChoices):
     """Notification event types."""
+    # Booking/Renting Lifecycle
     BOOKING_CREATED = "booking_created", "Booking Request Created"
+    BOOKING_CANCELED = "booking_canceled", "Booking Request Canceled"
     BOOKING_ACCEPTED = "booking_accepted", "Booking Request Accepted"
     BOOKING_DECLINED = "booking_declined", "Booking Request Declined"
+    BOOKING_EXPIRED = "booking_expired", "Booking Request Expired"
+    ITEM_UNAVAILABLE = "item_unavailable", "Item Marked Unavailable"
+    ITEM_DELETED = "item_deleted", "Item Deleted"
+    BOOKING_STARTED = "booking_started", "Borrowing Started"
+    BOOKING_COMPLETED = "booking_completed", "Borrowing Completed"
+    BOOKING_OVERDUE = "booking_overdue", "Borrowing Overdue"
+    DISPUTE_OPENED = "dispute_opened", "Dispute Opened"
+    DISPUTE_RESOLVED = "dispute_resolved", "Dispute Resolved"
     ITEM_RETURNED = "item_returned", "Item Returned"
-    DEPOSIT_RELEASED = "deposit_released", "Deposit Released"
+    
+    # Trust, Safety & Reputation
     RATING_RECEIVED = "rating_received", "Rating Received"
+    RATING_MODIFIED = "rating_modified", "Rating Modified"
+    REPORT_SUBMITTED = "report_submitted", "Report Submitted"
+    REPORT_REVIEWED = "report_reviewed", "Report Under Review"
+    REPORT_RESOLVED = "report_resolved", "Report Resolved"
+    WARNING_ISSUED = "warning_issued", "Warning Issued"
+    RESTRICTION_APPLIED = "restriction_applied", "Restriction Applied"
+    RESTRICTION_LIFTED = "restriction_lifted", "Restriction Lifted"
+    
+    # Deposits & Payments
+    DEPOSIT_REQUIRED = "deposit_required", "Deposit Required"
+    DEPOSIT_PAID = "deposit_paid", "Deposit Paid"
+    DEPOSIT_HELD = "deposit_held", "Deposit Held"
+    DEPOSIT_RELEASED = "deposit_released", "Deposit Released"
+    DEPOSIT_PARTIAL_REFUND = "deposit_partial_refund", "Partial Deposit Refund"
+    PAYMENT_FAILURE = "payment_failure", "Payment Failed"
+    PAYMENT_SUCCESS = "payment_success", "Payment Successful"
+    
+    # Account & System Events
+    ACCOUNT_VERIFIED = "account_verified", "Account Verified"
+    PASSWORD_CHANGED = "password_changed", "Password Changed"
+    NEW_LOGIN = "new_login", "New Login Detected"
+    ACCOUNT_SUSPENDED = "account_suspended", "Account Suspended"
+    ACCOUNT_REACTIVATED = "account_reactivated", "Account Reactivated"
+    TERMS_UPDATE = "terms_update", "Terms & Conditions Updated"
+    SYSTEM_ANNOUNCEMENT = "system_announcement", "System Announcement"
+    
+    # Legacy (to be removed if no chat system)
     BOOKING_REMINDER = "booking_reminder", "Booking Reminder"
-    CHAT_MESSAGE = "chat_message", "New Chat Message"
 
 
 class Notification(models.Model):

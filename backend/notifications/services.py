@@ -222,6 +222,207 @@ class NotificationService:
         )
     
     @classmethod
+    def create_booking_canceled_notification(cls, booking) -> Optional[Notification]:
+        """Create notification when booking request is canceled by requester."""
+        idempotency_key = cls._generate_idempotency_key(
+            booking.owner.id,
+            NotificationType.BOOKING_CANCELED,
+            str(booking.id)
+        )
+        
+        return cls.create_notification(
+            recipient=booking.owner,
+            notification_type=NotificationType.BOOKING_CANCELED,
+            title=f"Booking Request Canceled",
+            body=f"{booking.borrower.username} canceled their request for {booking.item.title}",
+            payload={
+                "booking_id": str(booking.id),
+                "item_id": str(booking.item.id),
+                "borrower_id": str(booking.borrower.id),
+            },
+            idempotency_key=idempotency_key
+        )
+    
+    @classmethod
+    def create_booking_started_notification(cls, booking) -> Optional[Notification]:
+        """Create notification when borrowing period starts (deposit received)."""
+        # Notify borrower
+        idempotency_key_borrower = cls._generate_idempotency_key(
+            booking.borrower.id,
+            NotificationType.BOOKING_STARTED,
+            str(booking.id)
+        )
+        
+        cls.create_notification(
+            recipient=booking.borrower,
+            notification_type=NotificationType.BOOKING_STARTED,
+            title=f"Borrowing Started",
+            body=f"Your borrowing of {booking.item.title} has started. Return by {booking.return_by_date.strftime('%B %d, %Y')}",
+            payload={
+                "booking_id": str(booking.id),
+                "item_id": str(booking.item.id),
+                "owner_id": str(booking.owner.id),
+                "return_by_date": booking.return_by_date.isoformat(),
+            },
+            idempotency_key=idempotency_key_borrower
+        )
+        
+        # Notify owner
+        idempotency_key_owner = cls._generate_idempotency_key(
+            booking.owner.id,
+            NotificationType.BOOKING_STARTED,
+            str(booking.id) + "_owner"
+        )
+        
+        return cls.create_notification(
+            recipient=booking.owner,
+            notification_type=NotificationType.BOOKING_STARTED,
+            title=f"Item Lending Started",
+            body=f"{booking.borrower.username} has started borrowing your {booking.item.title}",
+            payload={
+                "booking_id": str(booking.id),
+                "item_id": str(booking.item.id),
+                "borrower_id": str(booking.borrower.id),
+                "return_by_date": booking.return_by_date.isoformat(),
+            },
+            idempotency_key=idempotency_key_owner
+        )
+    
+    @classmethod
+    def create_booking_completed_notification(cls, booking) -> Optional[Notification]:
+        """Create notification when booking is completed."""
+        # Notify both owner and borrower
+        idempotency_key_borrower = cls._generate_idempotency_key(
+            booking.borrower.id,
+            NotificationType.BOOKING_COMPLETED,
+            str(booking.id)
+        )
+        
+        cls.create_notification(
+            recipient=booking.borrower,
+            notification_type=NotificationType.BOOKING_COMPLETED,
+            title=f"Booking Completed",
+            body=f"Your borrowing of {booking.item.title} is now complete. Please rate your experience!",
+            payload={
+                "booking_id": str(booking.id),
+                "item_id": str(booking.item.id),
+                "owner_id": str(booking.owner.id),
+            },
+            idempotency_key=idempotency_key_borrower
+        )
+        
+        idempotency_key_owner = cls._generate_idempotency_key(
+            booking.owner.id,
+            NotificationType.BOOKING_COMPLETED,
+            str(booking.id) + "_owner"
+        )
+        
+        return cls.create_notification(
+            recipient=booking.owner,
+            notification_type=NotificationType.BOOKING_COMPLETED,
+            title=f"Lending Completed",
+            body=f"{booking.borrower.username} has completed borrowing your {booking.item.title}",
+            payload={
+                "booking_id": str(booking.id),
+                "item_id": str(booking.item.id),
+                "borrower_id": str(booking.borrower.id),
+            },
+            idempotency_key=idempotency_key_owner
+        )
+    
+    @classmethod
+    def create_deposit_paid_notification(cls, booking) -> Optional[Notification]:
+        """Create notification when deposit is marked as received."""
+        idempotency_key = cls._generate_idempotency_key(
+            booking.borrower.id,
+            NotificationType.DEPOSIT_PAID,
+            str(booking.id)
+        )
+        
+        return cls.create_notification(
+            recipient=booking.borrower,
+            notification_type=NotificationType.DEPOSIT_PAID,
+            title=f"Deposit Confirmed",
+            body=f"Your deposit for {booking.item.title} has been confirmed by {booking.owner.username}",
+            payload={
+                "booking_id": str(booking.id),
+                "item_id": str(booking.item.id),
+                "owner_id": str(booking.owner.id),
+            },
+            idempotency_key=idempotency_key
+        )
+    
+    @classmethod
+    def create_deposit_held_notification(cls, booking) -> Optional[Notification]:
+        """Create notification when deposit is kept by owner."""
+        idempotency_key = cls._generate_idempotency_key(
+            booking.borrower.id,
+            NotificationType.DEPOSIT_HELD,
+            str(booking.id)
+        )
+        
+        return cls.create_notification(
+            recipient=booking.borrower,
+            notification_type=NotificationType.DEPOSIT_HELD,
+            title=f"Deposit Kept",
+            body=f"Your deposit for {booking.item.title} has been kept due to damage or loss",
+            payload={
+                "booking_id": str(booking.id),
+                "item_id": str(booking.item.id),
+                "owner_id": str(booking.owner.id),
+            },
+            idempotency_key=idempotency_key
+        )
+    
+    @classmethod
+    def create_item_deleted_notification(cls, item, affected_bookings) -> None:
+        """Create notifications when item is deleted while bookings exist."""
+        for booking in affected_bookings:
+            if booking.status in [BookingStatus.PENDING, BookingStatus.ACCEPTED]:
+                idempotency_key = cls._generate_idempotency_key(
+                    booking.borrower.id,
+                    NotificationType.ITEM_DELETED,
+                    str(booking.id)
+                )
+                
+                cls.create_notification(
+                    recipient=booking.borrower,
+                    notification_type=NotificationType.ITEM_DELETED,
+                    title=f"Item Deleted",
+                    body=f"The item '{item.title}' you requested has been removed by the owner",
+                    payload={
+                        "booking_id": str(booking.id),
+                        "item_id": str(item.id),
+                        "owner_id": str(item.owner.id),
+                    },
+                    idempotency_key=idempotency_key
+                )
+    
+    @classmethod
+    def create_item_unavailable_notification(cls, item, affected_bookings) -> None:
+        """Create notifications when item is marked unavailable while bookings exist."""
+        for booking in affected_bookings:
+            if booking.status == BookingStatus.PENDING:
+                idempotency_key = cls._generate_idempotency_key(
+                    booking.borrower.id,
+                    NotificationType.ITEM_UNAVAILABLE,
+                    str(booking.id)
+                )
+                
+                cls.create_notification(
+                    recipient=booking.borrower,
+                    notification_type=NotificationType.ITEM_UNAVAILABLE,
+                    title=f"Item Unavailable",
+                    body=f"The item '{item.title}' you requested is no longer available",
+                    payload={
+                        "booking_id": str(booking.id),
+                        "item_id": str(item.id),
+                        "owner_id": str(item.owner.id),
+                    },
+                    idempotency_key=idempotency_key
+                )
+    
+    @classmethod
     def mark_as_read(cls, notification_id: str, user) -> bool:
         """Mark notification as read."""
         try:

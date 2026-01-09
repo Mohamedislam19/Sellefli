@@ -16,7 +16,7 @@ def booking_notification_handler(sender, instance, created, **kwargs):
     
     # Booking status changed (not on creation)
     elif not created:
-        # Track previous status using a field or check manually
+        # Use update_fields to track what changed
         # For now, we'll trigger on status changes
         
         if instance.status == BookingStatus.ACCEPTED:
@@ -25,12 +25,21 @@ def booking_notification_handler(sender, instance, created, **kwargs):
         elif instance.status == BookingStatus.DECLINED:
             NotificationService.create_booking_declined_notification(instance)
         
-        elif instance.status == BookingStatus.COMPLETED:
-            NotificationService.create_item_returned_notification(instance)
+        elif instance.status == BookingStatus.ACTIVE:
+            NotificationService.create_booking_started_notification(instance)
         
-        # Deposit released
+        elif instance.status == BookingStatus.COMPLETED:
+            NotificationService.create_booking_completed_notification(instance)
+        
+        # Deposit status changes
+        if instance.deposit_status == DepositStatus.RECEIVED:
+            NotificationService.create_deposit_paid_notification(instance)
+        
         if instance.deposit_status == DepositStatus.RETURNED:
             NotificationService.create_deposit_released_notification(instance)
+        
+        if instance.deposit_status == DepositStatus.KEPT:
+            NotificationService.create_deposit_held_notification(instance)
 
 
 @receiver(post_save, sender=Rating)
