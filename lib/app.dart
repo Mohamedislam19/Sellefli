@@ -29,9 +29,60 @@ import 'src/core/theme/app_theme.dart';
 import 'src/core/l10n/language_cubit.dart';
 import 'package:sellefli/l10n/app_localizations.dart';
 import 'src/features/profile/logic/profile_cubit.dart';
+import 'src/features/notifications/notifications_page.dart';
+import 'src/core/services/notification_service.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _setupNotifications();
+  }
+
+  void _setupNotifications() {
+    // Listen to auth state changes to subscribe/unsubscribe
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final userId = data.session?.user.id;
+      if (userId != null) {
+        _notificationService.subscribeToNotifications(
+          userId,
+          _handleNotification,
+        );
+      } else {
+        _notificationService.unsubscribe();
+      }
+    });
+
+    // Subscribe if already logged in
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      _notificationService.subscribeToNotifications(
+        userId,
+        _handleNotification,
+      );
+    }
+  }
+
+  void _handleNotification(Map<String, dynamic> notification) {
+    // Show notification banner when received
+    // This will be handled by the MaterialApp's scaffoldMessengerKey
+    print('📬 New notification: ${notification['title']}');
+  }
+
+  @override
+  void dispose() {
+    _notificationService.unsubscribe();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +140,8 @@ class MyApp extends StatelessWidget {
               home: const AuthWrapper(),
               routes: {
                 '/landing': (context) => const LandingPage(),
+                '/notifications': (context) =>
+                    const ProtectedRoute(child: NotificationsPage()),
                 '/map-picker': (context) =>
                     const ProtectedRoute(child: MapPickerPage()),
                 '/settings': (context) =>

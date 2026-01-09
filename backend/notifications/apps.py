@@ -1,10 +1,11 @@
+"""App configuration for notifications."""
 from django.apps import AppConfig
 
 
-class ItemsConfig(AppConfig):
+class NotificationsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "items"
-    
+    name = "notifications"
+
     def ready(self):
         """Import signals when app is ready."""
-        import items.signals  # noqa: F401
+        import notifications.signals  # noqa: F401

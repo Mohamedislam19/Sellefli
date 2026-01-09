@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sellefli/src/core/theme/app_theme.dart';
 import 'package:sellefli/l10n/app_localizations.dart';
 import 'package:sellefli/src/core/widgets/nav/bottom_nav.dart';
@@ -11,6 +12,7 @@ import 'package:sellefli/src/core/widgets/home/home_search_bar.dart';
 import 'package:sellefli/src/core/widgets/home/product_card.dart';
 import 'package:sellefli/src/data/repositories/auth_repository.dart';
 import 'package:sellefli/src/data/repositories/item_repository.dart';
+import 'package:sellefli/src/core/services/notification_service.dart';
 import 'logic/home_cubit.dart';
 import 'logic/home_state.dart';
 
@@ -39,6 +41,24 @@ class _HomePageView extends StatefulWidget {
 class _HomePageViewState extends State<_HomePageView> {
   int _currentIndex = 0;
   final ScrollController _scrollController = ScrollController();
+  final _notificationService = NotificationService();
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      final count = await _notificationService.getUnreadCount(userId);
+      if (mounted) {
+        setState(() => _unreadCount = count);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -99,6 +119,46 @@ class _HomePageViewState extends State<_HomePageView> {
             textAlign: TextAlign.center,
           ),
         ),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                color: AppColors.primaryBlue,
+                onPressed: () {
+                  Navigator.pushNamed(context, '/notifications')
+                      .then((_) => _loadUnreadCount());
+                },
+              ),
+              if (_unreadCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadCount > 99 ? '99+' : '$_unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       backgroundColor: AppColors.surface,
       body: Container(
