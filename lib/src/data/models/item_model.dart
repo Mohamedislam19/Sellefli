@@ -100,6 +100,19 @@ class Item {
       return null;
     }
 
+    int _toInt(dynamic v, {int fallback = 0}) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final parsedInt = int.tryParse(v);
+        if (parsedInt != null) return parsedInt;
+        final parsedDouble = double.tryParse(v);
+        if (parsedDouble != null) return parsedDouble.toInt();
+      }
+      return fallback;
+    }
+
     // Parse images if available from join, sorted by position
     // Django returns 'images', Supabase might return 'item_images'
     List<String> imagesList = [];
@@ -110,9 +123,7 @@ class Item {
       );
       // Sort by position to ensure first image is at index 0
       imagesData.sort(
-        (a, b) => ((a['position'] as int?) ?? 0).compareTo(
-          (b['position'] as int?) ?? 0,
-        ),
+        (a, b) => _toInt(a['position']).compareTo(_toInt(b['position'])),
       );
       imagesList = imagesData.map((img) => img['image_url'] as String).toList();
     }
@@ -127,8 +138,8 @@ class Item {
     if (ownerData != null && ownerData is Map) {
       ownerUsername = ownerData['username'] as String?;
       ownerAvatarUrl = ownerData['avatar_url'] as String?;
-      ownerRatingSum = ownerData['rating_sum'] as int? ?? 0;
-      ownerRatingCount = ownerData['rating_count'] as int? ?? 0;
+      ownerRatingSum = _toInt(ownerData['rating_sum']);
+      ownerRatingCount = _toInt(ownerData['rating_count']);
     }
 
     return Item(

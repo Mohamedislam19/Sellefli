@@ -20,6 +20,19 @@ class Rating {
   });
 
   factory Rating.fromJson(Map<String, dynamic> json) {
+    int _toInt(dynamic v, {int fallback = 0}) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final parsedInt = int.tryParse(v);
+        if (parsedInt != null) return parsedInt;
+        final parsedDouble = double.tryParse(v);
+        if (parsedDouble != null) return parsedDouble.toInt();
+      }
+      return fallback;
+    }
+
     // Handle both flat and nested formats
     String raterId;
     String? raterUsername;
@@ -51,7 +64,7 @@ class Rating {
       bookingId: json['booking_id'] as String,
       raterUserId: raterId,
       targetUserId: targetUserId,
-      stars: json['stars'] as int,
+      stars: _toInt(json['stars']),
       createdAt: DateTime.parse(json['created_at'] as String),
       raterUsername: raterUsername,
       raterAvatarUrl: raterAvatarUrl,

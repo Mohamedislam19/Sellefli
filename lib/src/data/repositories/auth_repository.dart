@@ -19,6 +19,9 @@ class AuthRepository {
   // Get current user
   User? get currentUser => _supabase.auth.currentUser;
 
+  /// Access token for calling the Django API (Bearer token).
+  String? get accessToken => _supabase.auth.currentSession?.accessToken;
+
   // Get auth state change stream
   Stream<AuthState> get onAuthStateChange => _supabase.auth.onAuthStateChange;
 

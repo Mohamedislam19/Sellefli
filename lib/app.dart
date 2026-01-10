@@ -101,7 +101,10 @@ class _MyAppState extends State<MyApp> {
               ProfileRepository(authRepository: context.read<AuthRepository>()),
         ),
         RepositoryProvider(
-          create: (context) => BookingRepository(Supabase.instance.client),
+          create: (context) => BookingRepository(
+            Supabase.instance.client,
+            authRepository: context.read<AuthRepository>(),
+          ),
         ),
         RepositoryProvider(create: (context) => LocalItemRepository()),
       ],

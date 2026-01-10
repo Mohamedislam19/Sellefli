@@ -5,17 +5,39 @@ import '../../core/api/api_config.dart';
 import '../models/booking_model.dart';
 import '../models/item_model.dart';
 import '../models/user_model.dart' as models;
+import 'auth_repository.dart';
 
 class BookingRepository {
   final SupabaseClient supabase;
   final String _baseUrl;
   final http.Client _client;
+  final AuthRepository? _authRepository;
 
-  BookingRepository(this.supabase, {String? baseUrl, http.Client? httpClient})
-      : _baseUrl = (baseUrl ?? ApiConfig.apiBaseUrl).replaceAll(RegExp(r'/+$'), ''),
-        _client = httpClient ?? http.Client();
+  BookingRepository(
+    this.supabase, {
+    String? baseUrl,
+    http.Client? httpClient,
+    AuthRepository? authRepository,
+  }) : _baseUrl = (baseUrl ?? ApiConfig.apiBaseUrl).replaceAll(
+         RegExp(r'/+$'),
+         '',
+       ),
+       _client = httpClient ?? http.Client(),
+       _authRepository = authRepository;
 
-  // CREATE BOOKING 
+  Map<String, String> get _authHeaders {
+    final token = _authRepository?.accessToken;
+    return {
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  Map<String, String> get _jsonHeaders => {
+    'Content-Type': 'application/json',
+    ..._authHeaders,
+  };
+
+  // CREATE BOOKING
   Future<String> createBooking(Booking booking) async {
     // Keep creation via Supabase for now since i don't know how islam implemented it on the backend
     final response = await supabase
@@ -30,7 +52,7 @@ class BookingRepository {
   // GET BOOKING BY ID (with Item and User details)
   Future<Map<String, dynamic>?> getBookingDetails(String bookingId) async {
     final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/');
-    final resp = await _client.get(uri);
+    final resp = await _client.get(uri, headers: _authHeaders);
     if (resp.statusCode == 404) return null;
     if (resp.statusCode != 200) {
       throw Exception('Failed to load booking: ${resp.statusCode}');
@@ -43,7 +65,9 @@ class BookingRepository {
     return {
       'booking': booking,
       'item': itemJson != null ? Item.fromJson(itemJson) : null,
-      'borrower': borrowerJson != null ? models.User.fromJson(borrowerJson) : null,
+      'borrower': borrowerJson != null
+          ? models.User.fromJson(borrowerJson)
+          : null,
       'owner': ownerJson != null ? models.User.fromJson(ownerJson) : null,
       'imageUrl': data['image_url'] as String?,
     };
@@ -52,7 +76,7 @@ class BookingRepository {
   // GET INCOMING REQUESTS (For Owner)
   Future<List<Map<String, dynamic>>> getIncomingRequests(String ownerId) async {
     final uri = Uri.parse('$_baseUrl/api/bookings/incoming/?owner_id=$ownerId');
-    final resp = await _client.get(uri);
+    final resp = await _client.get(uri, headers: _authHeaders);
     if (resp.statusCode != 200) {
       throw Exception('Failed to load incoming bookings: ${resp.statusCode}');
     }
@@ -61,9 +85,15 @@ class BookingRepository {
       final m = e as Map<String, dynamic>;
       return {
         'booking': Booking.fromJson(m),
-        'item': m['item'] != null ? Item.fromJson(m['item'] as Map<String, dynamic>) : null,
-        'borrower': m['borrower'] != null ? models.User.fromJson(m['borrower'] as Map<String, dynamic>) : null,
-        'owner': m['owner'] != null ? models.User.fromJson(m['owner'] as Map<String, dynamic>) : null,
+        'item': m['item'] != null
+            ? Item.fromJson(m['item'] as Map<String, dynamic>)
+            : null,
+        'borrower': m['borrower'] != null
+            ? models.User.fromJson(m['borrower'] as Map<String, dynamic>)
+            : null,
+        'owner': m['owner'] != null
+            ? models.User.fromJson(m['owner'] as Map<String, dynamic>)
+            : null,
         'imageUrl': m['image_url'] as String?,
       };
     }).toList();
@@ -71,8 +101,10 @@ class BookingRepository {
 
   // GET MY REQUESTS (For Borrower)
   Future<List<Map<String, dynamic>>> getMyRequests(String borrowerId) async {
-    final uri = Uri.parse('$_baseUrl/api/bookings/my-requests/?borrower_id=$borrowerId');
-    final resp = await _client.get(uri);
+    final uri = Uri.parse(
+      '$_baseUrl/api/bookings/my-requests/?borrower_id=$borrowerId',
+    );
+    final resp = await _client.get(uri, headers: _authHeaders);
     if (resp.statusCode != 200) {
       throw Exception('Failed to load my requests: ${resp.statusCode}');
     }
@@ -81,9 +113,15 @@ class BookingRepository {
       final m = e as Map<String, dynamic>;
       return {
         'booking': Booking.fromJson(m),
-        'item': m['item'] != null ? Item.fromJson(m['item'] as Map<String, dynamic>) : null,
-        'borrower': m['borrower'] != null ? models.User.fromJson(m['borrower'] as Map<String, dynamic>) : null,
-        'owner': m['owner'] != null ? models.User.fromJson(m['owner'] as Map<String, dynamic>) : null,
+        'item': m['item'] != null
+            ? Item.fromJson(m['item'] as Map<String, dynamic>)
+            : null,
+        'borrower': m['borrower'] != null
+            ? models.User.fromJson(m['borrower'] as Map<String, dynamic>)
+            : null,
+        'owner': m['owner'] != null
+            ? models.User.fromJson(m['owner'] as Map<String, dynamic>)
+            : null,
         'imageUrl': m['image_url'] as String?,
       };
     }).toList();
@@ -97,7 +135,7 @@ class BookingRepository {
     final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/status/');
     final resp = await _client.patch(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _jsonHeaders,
       body: jsonEncode({'status': status.name}),
     );
     if (resp.statusCode < 200 || resp.statusCode >= 300) {
@@ -113,7 +151,7 @@ class BookingRepository {
     final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/deposit/');
     final resp = await _client.patch(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _jsonHeaders,
       body: jsonEncode({'deposit_status': depositStatus.name}),
     );
     if (resp.statusCode < 200 || resp.statusCode >= 300) {
@@ -124,7 +162,7 @@ class BookingRepository {
   // GENERATE BOOKING CODE
   Future<void> generateBookingCode(String bookingId) async {
     final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/generate-code/');
-    final resp = await _client.post(uri);
+    final resp = await _client.post(uri, headers: _authHeaders);
     if (resp.statusCode < 200 || resp.statusCode >= 300) {
       throw Exception('Failed to generate code: ${resp.statusCode}');
     }
@@ -133,7 +171,7 @@ class BookingRepository {
   // DELETE BOOKING
   Future<void> deleteBooking(String bookingId) async {
     final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/');
-    final resp = await _client.delete(uri);
+    final resp = await _client.delete(uri, headers: _authHeaders);
     if (resp.statusCode < 200 || resp.statusCode >= 300) {
       throw Exception('Failed to delete booking: ${resp.statusCode}');
     }
@@ -141,8 +179,10 @@ class BookingRepository {
 
   // GET USER TRANSACTIONS (History)
   Future<List<Map<String, dynamic>>> getUserTransactions(String userId) async {
-    final uri = Uri.parse('$_baseUrl/api/bookings/user-transactions/?user_id=$userId&limit=10');
-    final resp = await _client.get(uri);
+    final uri = Uri.parse(
+      '$_baseUrl/api/bookings/user-transactions/?user_id=$userId&limit=10',
+    );
+    final resp = await _client.get(uri, headers: _authHeaders);
     if (resp.statusCode != 200) {
       throw Exception('Failed to load transactions: ${resp.statusCode}');
     }
@@ -152,12 +192,13 @@ class BookingRepository {
       final booking = Booking.fromJson(m);
       return {
         'booking': booking,
-        'item': m['item'] != null ? Item.fromJson(m['item'] as Map<String, dynamic>) : null,
+        'item': m['item'] != null
+            ? Item.fromJson(m['item'] as Map<String, dynamic>)
+            : null,
         'imageUrl': m['image_url'] as String?,
-        'isBorrower': m['is_borrower'] as bool? ?? (booking.borrowerId == userId),
+        'isBorrower':
+            m['is_borrower'] as bool? ?? (booking.borrowerId == userId),
       };
     }).toList();
   }
 }
-
-
