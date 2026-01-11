@@ -24,4 +24,14 @@ class MyListingsNavigateToEdit extends MyListingsState {
   const MyListingsNavigateToEdit(this.itemId);
 }
 
+class MyListingsDeletingItem extends MyListingsState {
+  final String itemId;
+  const MyListingsDeletingItem(this.itemId);
+}
+
+class MyListingsDeleteSuccess extends MyListingsState {
+  final String itemId;
+  const MyListingsDeleteSuccess(this.itemId);
+}
+
 

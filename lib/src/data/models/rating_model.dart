@@ -5,6 +5,8 @@ class Rating {
   final String targetUserId;
   final int stars;
   final DateTime createdAt;
+  final String? raterUsername;
+  final String? raterAvatarUrl;
 
   Rating({
     required this.id,
@@ -13,16 +15,59 @@ class Rating {
     required this.targetUserId,
     required this.stars,
     required this.createdAt,
+    this.raterUsername,
+    this.raterAvatarUrl,
   });
 
   factory Rating.fromJson(Map<String, dynamic> json) {
+    int _toInt(dynamic v, {int fallback = 0}) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final parsedInt = int.tryParse(v);
+        if (parsedInt != null) return parsedInt;
+        final parsedDouble = double.tryParse(v);
+        if (parsedDouble != null) return parsedDouble.toInt();
+      }
+      return fallback;
+    }
+
+    // Handle both flat and nested formats
+    String raterId;
+    String? raterUsername;
+    String? raterAvatarUrl;
+    String targetUserId;
+
+    if (json['rater'] is Map<String, dynamic>) {
+      // Nested format from API
+      final rater = json['rater'] as Map<String, dynamic>;
+      raterId = rater['id'] as String;
+      raterUsername = rater['username'] as String?;
+      raterAvatarUrl = rater['avatar_url'] as String?;
+    } else {
+      // Flat format (rater_id or rater_user_id)
+      raterId = (json['rater_id'] ?? json['rater_user_id']) as String;
+    }
+
+    if (json['target_user'] is Map<String, dynamic>) {
+      // Nested format from API
+      final targetUser = json['target_user'] as Map<String, dynamic>;
+      targetUserId = targetUser['id'] as String;
+    } else {
+      // Flat format
+      targetUserId = json['target_user_id'] as String;
+    }
+
     return Rating(
       id: json['id'] as String,
       bookingId: json['booking_id'] as String,
-      raterUserId: json['rater_user_id'] as String,
-      targetUserId: json['target_user_id'] as String,
-      stars: json['stars'] as int,
+      raterUserId: raterId,
+      targetUserId: targetUserId,
+      stars: _toInt(json['stars']),
       createdAt: DateTime.parse(json['created_at'] as String),
+      raterUsername: raterUsername,
+      raterAvatarUrl: raterAvatarUrl,
     );
   }
 
@@ -37,5 +82,3 @@ class Rating {
     };
   }
 }
-
-

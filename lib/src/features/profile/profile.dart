@@ -345,27 +345,7 @@ class _ProfileViewState extends State<_ProfileView> {
                         ),
                         if (widget.userId == null) ...[
                           const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: AppColors.primaryBlue),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                            ),
-                            onPressed: () => _showLanguageDialog(l10n),
-                            icon: Icon(
-                              Icons.language,
-                              color: AppColors.primaryBlue,
-                            ),
-                            label: Text(
-                              l10n.language,
-                              style: TextStyle(color: AppColors.primaryBlue),
-                            ),
-                          ),
+                          
                         ],
                       ],
                     ),

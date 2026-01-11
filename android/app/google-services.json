@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "446379664290",
+    "project_id": "sellefli",
+    "storage_bucket": "sellefli.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:446379664290:android:e42b5cf29ca4786e3cc8fb",
+        "android_client_info": {
+          "package_name": "com.example.sellefli"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVnp_-XUq_JTqN0fNoVFD2DLHyfqsb4xo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

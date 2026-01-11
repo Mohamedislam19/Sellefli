@@ -12,11 +12,24 @@ class ItemImage {
   });
 
   factory ItemImage.fromJson(Map<String, dynamic> json) {
+    int? _toIntOrNull(dynamic v) {
+      if (v == null) return null;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final parsedInt = int.tryParse(v);
+        if (parsedInt != null) return parsedInt;
+        final parsedDouble = double.tryParse(v);
+        if (parsedDouble != null) return parsedDouble.toInt();
+      }
+      return null;
+    }
+
     return ItemImage(
       id: json['id'] as String,
       itemId: json['item_id'] as String,
       imageUrl: json['image_url'] as String,
-      position: json['position'] as int?,
+      position: _toIntOrNull(json['position']),
     );
   }
 
@@ -29,5 +42,3 @@ class ItemImage {
     };
   }
 }
-
-

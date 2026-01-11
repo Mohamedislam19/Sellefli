@@ -22,14 +22,27 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    int _toInt(dynamic v, {int fallback = 0}) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final parsedInt = int.tryParse(v);
+        if (parsedInt != null) return parsedInt;
+        final parsedDouble = double.tryParse(v);
+        if (parsedDouble != null) return parsedDouble.toInt();
+      }
+      return fallback;
+    }
+
     return User(
       id: json['id'] as String,
       username: json['username'] as String?,
       phone: json['phone'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       email: json['email'] as String?,
-      ratingSum: json['rating_sum'] as int? ?? 0,
-      ratingCount: json['rating_count'] as int? ?? 0,
+      ratingSum: _toInt(json['rating_sum']),
+      ratingCount: _toInt(json['rating_count']),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -49,5 +62,3 @@ class User {
     };
   }
 }
-
-

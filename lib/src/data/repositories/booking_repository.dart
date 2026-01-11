@@ -1,15 +1,45 @@
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import '../../core/api/api_config.dart';
 import '../models/booking_model.dart';
 import '../models/item_model.dart';
 import '../models/user_model.dart' as models;
+import 'auth_repository.dart';
 
 class BookingRepository {
   final SupabaseClient supabase;
+  final String _baseUrl;
+  final http.Client _client;
+  final AuthRepository? _authRepository;
 
-  BookingRepository(this.supabase);
+  BookingRepository(
+    this.supabase, {
+    String? baseUrl,
+    http.Client? httpClient,
+    AuthRepository? authRepository,
+  }) : _baseUrl = (baseUrl ?? ApiConfig.apiBaseUrl).replaceAll(
+         RegExp(r'/+$'),
+         '',
+       ),
+       _client = httpClient ?? http.Client(),
+       _authRepository = authRepository;
 
-  // CREATE BOOKING (Request)
+  Map<String, String> get _authHeaders {
+    final token = _authRepository?.accessToken;
+    return {
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  Map<String, String> get _jsonHeaders => {
+    'Content-Type': 'application/json',
+    ..._authHeaders,
+  };
+
+  // CREATE BOOKING
   Future<String> createBooking(Booking booking) async {
+    // Keep creation via Supabase for now since i don't know how islam implemented it on the backend
     final response = await supabase
         .from('bookings')
         .insert(booking.toJson())
@@ -21,151 +51,80 @@ class BookingRepository {
 
   // GET BOOKING BY ID (with Item and User details)
   Future<Map<String, dynamic>?> getBookingDetails(String bookingId) async {
-    final bookingData = await supabase
-        .from('bookings')
-        .select()
-        .eq('id', bookingId)
-        .maybeSingle();
-
-    if (bookingData == null) return null;
-
-    final booking = Booking.fromJson(bookingData);
-
-    // Fetch related item
-    final itemData = await supabase
-        .from('items')
-        .select()
-        .eq('id', booking.itemId)
-        .maybeSingle();
-
-    // Fetch first image for item (if any)
-    final imageData = await supabase
-        .from('item_images')
-        .select()
-        .eq('item_id', booking.itemId)
-        .order('position')
-        .limit(1)
-        .maybeSingle();
-
-    // Fetch borrower details
-    final borrowerData = await supabase
-        .from('users')
-        .select()
-        .eq('id', booking.borrowerId)
-        .maybeSingle();
-
-    // Fetch owner details
-    final ownerData = await supabase
-        .from('users')
-        .select()
-        .eq('id', booking.ownerId)
-        .maybeSingle();
-
+    final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/');
+    final resp = await _client.get(uri, headers: _authHeaders);
+    if (resp.statusCode == 404) return null;
+    if (resp.statusCode != 200) {
+      throw Exception('Failed to load booking: ${resp.statusCode}');
+    }
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    final booking = Booking.fromJson(data);
+    final itemJson = data['item'] as Map<String, dynamic>?;
+    final borrowerJson = data['borrower'] as Map<String, dynamic>?;
+    final ownerJson = data['owner'] as Map<String, dynamic>?;
     return {
       'booking': booking,
-      'item': itemData != null ? Item.fromJson(itemData) : null,
-      'borrower': borrowerData != null
-          ? models.User.fromJson(borrowerData)
+      'item': itemJson != null ? Item.fromJson(itemJson) : null,
+      'borrower': borrowerJson != null
+          ? models.User.fromJson(borrowerJson)
           : null,
-      'owner': ownerData != null ? models.User.fromJson(ownerData) : null,
-      'imageUrl': imageData?['image_url'] as String?,
+      'owner': ownerJson != null ? models.User.fromJson(ownerJson) : null,
+      'imageUrl': data['image_url'] as String?,
     };
   }
 
   // GET INCOMING REQUESTS (For Owner)
   Future<List<Map<String, dynamic>>> getIncomingRequests(String ownerId) async {
-    final bookingsData = await supabase
-        .from('bookings')
-        .select()
-        .eq('owner_id', ownerId)
-        .order('created_at', ascending: false);
-
-    List<Map<String, dynamic>> results = [];
-
-    for (var bookingJson in bookingsData) {
-      final booking = Booking.fromJson(bookingJson);
-
-      // Fetch item details
-      final itemData = await supabase
-          .from('items')
-          .select()
-          .eq('id', booking.itemId)
-          .maybeSingle();
-
-      // Fetch borrower details
-      final borrowerData = await supabase
-          .from('users')
-          .select()
-          .eq('id', booking.borrowerId)
-          .maybeSingle();
-
-      // Get first image
-      final imageData = await supabase
-          .from('item_images')
-          .select()
-          .eq('item_id', booking.itemId)
-          .order('position')
-          .limit(1)
-          .maybeSingle();
-
-      results.add({
-        'booking': booking,
-        'item': itemData != null ? Item.fromJson(itemData) : null,
-        'borrower': borrowerData != null
-            ? models.User.fromJson(borrowerData)
-            : null,
-        'imageUrl': imageData?['image_url'] as String?,
-      });
+    final uri = Uri.parse('$_baseUrl/api/bookings/incoming/?owner_id=$ownerId');
+    final resp = await _client.get(uri, headers: _authHeaders);
+    if (resp.statusCode != 200) {
+      throw Exception('Failed to load incoming bookings: ${resp.statusCode}');
     }
-
-    return results;
+    final list = jsonDecode(resp.body) as List<dynamic>;
+    return list.map<Map<String, dynamic>>((e) {
+      final m = e as Map<String, dynamic>;
+      return {
+        'booking': Booking.fromJson(m),
+        'item': m['item'] != null
+            ? Item.fromJson(m['item'] as Map<String, dynamic>)
+            : null,
+        'borrower': m['borrower'] != null
+            ? models.User.fromJson(m['borrower'] as Map<String, dynamic>)
+            : null,
+        'owner': m['owner'] != null
+            ? models.User.fromJson(m['owner'] as Map<String, dynamic>)
+            : null,
+        'imageUrl': m['image_url'] as String?,
+      };
+    }).toList();
   }
 
   // GET MY REQUESTS (For Borrower)
   Future<List<Map<String, dynamic>>> getMyRequests(String borrowerId) async {
-    final bookingsData = await supabase
-        .from('bookings')
-        .select()
-        .eq('borrower_id', borrowerId)
-        .order('created_at', ascending: false);
-
-    List<Map<String, dynamic>> results = [];
-
-    for (var bookingJson in bookingsData) {
-      final booking = Booking.fromJson(bookingJson);
-
-      // Fetch item details
-      final itemData = await supabase
-          .from('items')
-          .select()
-          .eq('id', booking.itemId)
-          .maybeSingle();
-
-      // Fetch owner details
-      final ownerData = await supabase
-          .from('users')
-          .select()
-          .eq('id', booking.ownerId)
-          .maybeSingle();
-
-      // Get first image
-      final imageData = await supabase
-          .from('item_images')
-          .select()
-          .eq('item_id', booking.itemId)
-          .order('position')
-          .limit(1)
-          .maybeSingle();
-
-      results.add({
-        'booking': booking,
-        'item': itemData != null ? Item.fromJson(itemData) : null,
-        'owner': ownerData != null ? models.User.fromJson(ownerData) : null,
-        'imageUrl': imageData?['image_url'] as String?,
-      });
+    final uri = Uri.parse(
+      '$_baseUrl/api/bookings/my-requests/?borrower_id=$borrowerId',
+    );
+    final resp = await _client.get(uri, headers: _authHeaders);
+    if (resp.statusCode != 200) {
+      throw Exception('Failed to load my requests: ${resp.statusCode}');
     }
-
-    return results;
+    final list = jsonDecode(resp.body) as List<dynamic>;
+    return list.map<Map<String, dynamic>>((e) {
+      final m = e as Map<String, dynamic>;
+      return {
+        'booking': Booking.fromJson(m),
+        'item': m['item'] != null
+            ? Item.fromJson(m['item'] as Map<String, dynamic>)
+            : null,
+        'borrower': m['borrower'] != null
+            ? models.User.fromJson(m['borrower'] as Map<String, dynamic>)
+            : null,
+        'owner': m['owner'] != null
+            ? models.User.fromJson(m['owner'] as Map<String, dynamic>)
+            : null,
+        'imageUrl': m['image_url'] as String?,
+      };
+    }).toList();
   }
 
   // UPDATE BOOKING STATUS (Accept/Decline)
@@ -173,13 +132,15 @@ class BookingRepository {
     String bookingId,
     BookingStatus status,
   ) async {
-    await supabase
-        .from('bookings')
-        .update({
-          'status': status.name,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', bookingId);
+    final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/status/');
+    final resp = await _client.patch(
+      uri,
+      headers: _jsonHeaders,
+      body: jsonEncode({'status': status.name}),
+    );
+    if (resp.statusCode < 200 || resp.statusCode >= 300) {
+      throw Exception('Failed to update status: ${resp.statusCode}');
+    }
   }
 
   // UPDATE DEPOSIT STATUS
@@ -187,75 +148,57 @@ class BookingRepository {
     String bookingId,
     DepositStatus depositStatus,
   ) async {
-    await supabase
-        .from('bookings')
-        .update({
-          'deposit_status': depositStatus.name,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', bookingId);
+    final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/deposit/');
+    final resp = await _client.patch(
+      uri,
+      headers: _jsonHeaders,
+      body: jsonEncode({'deposit_status': depositStatus.name}),
+    );
+    if (resp.statusCode < 200 || resp.statusCode >= 300) {
+      throw Exception('Failed to update deposit: ${resp.statusCode}');
+    }
   }
 
   // GENERATE BOOKING CODE
   Future<void> generateBookingCode(String bookingId) async {
-    // Generate a unique code (SF-XXX-XXX format)
-    final code =
-        'SF-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
-
-    await supabase
-        .from('bookings')
-        .update({
-          'booking_code': code,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', bookingId);
+    final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/generate-code/');
+    final resp = await _client.post(uri, headers: _authHeaders);
+    if (resp.statusCode < 200 || resp.statusCode >= 300) {
+      throw Exception('Failed to generate code: ${resp.statusCode}');
+    }
   }
 
   // DELETE BOOKING
   Future<void> deleteBooking(String bookingId) async {
-    await supabase.from('bookings').delete().eq('id', bookingId);
+    final uri = Uri.parse('$_baseUrl/api/bookings/$bookingId/');
+    final resp = await _client.delete(uri, headers: _authHeaders);
+    if (resp.statusCode < 200 || resp.statusCode >= 300) {
+      throw Exception('Failed to delete booking: ${resp.statusCode}');
+    }
   }
 
   // GET USER TRANSACTIONS (History)
   Future<List<Map<String, dynamic>>> getUserTransactions(String userId) async {
-    final bookingsData = await supabase
-        .from('bookings')
-        .select()
-        .or('borrower_id.eq.$userId,owner_id.eq.$userId')
-        .order('created_at', ascending: false)
-        .limit(10); // Limit to recent 10
-
-    List<Map<String, dynamic>> results = [];
-
-    for (var bookingJson in bookingsData) {
-      final booking = Booking.fromJson(bookingJson);
-
-      // Fetch item details
-      final itemData = await supabase
-          .from('items')
-          .select()
-          .eq('id', booking.itemId)
-          .maybeSingle();
-
-      // Get first image
-      final imageData = await supabase
-          .from('item_images')
-          .select()
-          .eq('item_id', booking.itemId)
-          .order('position')
-          .limit(1)
-          .maybeSingle();
-
-      results.add({
-        'booking': booking,
-        'item': itemData != null ? Item.fromJson(itemData) : null,
-        'imageUrl': imageData?['image_url'] as String?,
-        'isBorrower': booking.borrowerId == userId,
-      });
+    final uri = Uri.parse(
+      '$_baseUrl/api/bookings/user-transactions/?user_id=$userId&limit=10',
+    );
+    final resp = await _client.get(uri, headers: _authHeaders);
+    if (resp.statusCode != 200) {
+      throw Exception('Failed to load transactions: ${resp.statusCode}');
     }
-
-    return results;
+    final list = jsonDecode(resp.body) as List<dynamic>;
+    return list.map<Map<String, dynamic>>((e) {
+      final m = e as Map<String, dynamic>;
+      final booking = Booking.fromJson(m);
+      return {
+        'booking': booking,
+        'item': m['item'] != null
+            ? Item.fromJson(m['item'] as Map<String, dynamic>)
+            : null,
+        'imageUrl': m['image_url'] as String?,
+        'isBorrower':
+            m['is_borrower'] as bool? ?? (booking.borrowerId == userId),
+      };
+    }).toList();
   }
 }
-
-

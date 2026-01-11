@@ -10,7 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:sellefli/src/core/widgets/snackbar.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sellefli/src/core/services/auth_service.dart';
 import 'package:sellefli/src/core/constants/categories.dart';
 
 import 'package:sellefli/src/core/widgets/animated_return_button.dart';
@@ -35,7 +35,8 @@ class _EditItemPageState extends State<EditItemPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
-  final supabase = Supabase.instance.client;
+  /// Use AuthService to get current user - no direct Supabase SDK calls
+  final AuthService _authService = AuthService();
 
   String? _userId;
 
@@ -64,14 +65,14 @@ class _EditItemPageState extends State<EditItemPage>
   bool _prefilledOnce = false;
 
   void setUserId() async {
-    final user = supabase.auth.currentUser;
-    if (user == null) {
+    final userId = _authService.currentUserId;
+    if (userId == null) {
       print('No user is currently signed in.');
     } else {
       setState(() {
-        _userId = user.id;
+        _userId = userId;
       });
-      print('Current signed-in user ID: ${user.id}');
+      print('Current signed-in user ID: $userId');
     }
   }
 
@@ -83,10 +84,8 @@ class _EditItemPageState extends State<EditItemPage>
       duration: const Duration(milliseconds: 730),
     )..forward();
 
-    // Create cubit with repository (using global Supabase instance)
-    _cubit = EditItemCubit(
-      itemRepository: ItemRepository(Supabase.instance.client),
-    );
+    // Create cubit with repository (uses Django backend for all operations)
+    _cubit = EditItemCubit(itemRepository: ItemRepository());
 
     setUserId();
   }
@@ -926,5 +925,3 @@ class _EditItemPageState extends State<EditItemPage>
     );
   }
 }
-
-

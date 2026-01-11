@@ -1,18 +1,6 @@
-enum BookingStatus {
-  pending,
-  accepted,
-  active,
-  completed,
-  declined,
-  closed
-}
+enum BookingStatus { pending, accepted, active, completed, declined, closed }
 
-enum DepositStatus {
-  none,
-  received,
-  returned,
-  kept
-}
+enum DepositStatus { none, received, returned, kept }
 
 class Booking {
   final String id;
@@ -44,6 +32,13 @@ class Booking {
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
+    double? _toDouble(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v);
+      return null;
+    }
+
     return Booking(
       id: json['id'] as String,
       itemId: json['item_id'] as String,
@@ -60,7 +55,7 @@ class Booking {
       bookingCode: json['booking_code'] as String?,
       startDate: DateTime.parse(json['start_date'] as String),
       returnByDate: DateTime.parse(json['return_by_date'] as String),
-      totalCost: (json['total_cost'] as num?)?.toDouble(),
+      totalCost: _toDouble(json['total_cost']),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -83,5 +78,3 @@ class Booking {
     };
   }
 }
-
-

@@ -274,5 +274,11 @@
   "myListingsStatusPending": "En attente d'approbation",
   "myListingsStatusUnavailable": "Indisponible",
   "myListingsEdit": "Modifier",
-  "myListingsView": "Voir"
+  "myListingsView": "Voir",
+  "myListingsDelete": "Supprimer",
+  "myListingsDeleteConfirmTitle": "Supprimer l'annonce",
+  "myListingsDeleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer \"{itemTitle}\"? Cette action ne peut pas être annulée.",
+  "myListingsDeleteConfirm": "Supprimer",
+  "myListingsCancel": "Annuler",
+  "myListingsDeleteSuccess": "Annonce supprimée avec succès"
 }

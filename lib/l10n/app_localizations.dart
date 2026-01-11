@@ -1755,6 +1755,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View'**
   String get myListingsView;
+
+  /// No description provided for @myListingsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get myListingsDelete;
+
+  /// No description provided for @myListingsDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Listing'**
+  String get myListingsDeleteConfirmTitle;
+
+  /// No description provided for @myListingsDeleteConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{itemTitle}\"? This action cannot be undone.'**
+  String myListingsDeleteConfirmMessage(Object itemTitle);
+
+  /// No description provided for @myListingsDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get myListingsDeleteConfirm;
+
+  /// No description provided for @myListingsCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get myListingsCancel;
+
+  /// No description provided for @myListingsDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Listing deleted successfully'**
+  String get myListingsDeleteSuccess;
 }
 
 class _AppLocalizationsDelegate

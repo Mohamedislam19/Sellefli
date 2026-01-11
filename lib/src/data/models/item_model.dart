@@ -90,31 +90,56 @@ class Item {
   }
 
   factory Item.fromJson(Map<String, dynamic> json) {
+    double? _toDouble(dynamic v) {
+      if (v == null) return null;
+      if (v is num) return v.toDouble();
+      if (v is String) {
+        final parsed = double.tryParse(v);
+        return parsed;
+      }
+      return null;
+    }
+
+    int _toInt(dynamic v, {int fallback = 0}) {
+      if (v == null) return fallback;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final parsedInt = int.tryParse(v);
+        if (parsedInt != null) return parsedInt;
+        final parsedDouble = double.tryParse(v);
+        if (parsedDouble != null) return parsedDouble.toInt();
+      }
+      return fallback;
+    }
+
     // Parse images if available from join, sorted by position
+    // Django returns 'images', Supabase might return 'item_images'
     List<String> imagesList = [];
-    if (json['item_images'] != null) {
+    final imagesKey = json.containsKey('images') ? 'images' : 'item_images';
+    if (json[imagesKey] != null && json[imagesKey] is List) {
       final imagesData = List<Map<String, dynamic>>.from(
-        json['item_images'] as List,
+        json[imagesKey] as List,
       );
       // Sort by position to ensure first image is at index 0
       imagesData.sort(
-        (a, b) => ((a['position'] as int?) ?? 0).compareTo(
-          (b['position'] as int?) ?? 0,
-        ),
+        (a, b) => _toInt(a['position']).compareTo(_toInt(b['position'])),
       );
       imagesList = imagesData.map((img) => img['image_url'] as String).toList();
     }
 
     // Parse owner data if available from join
+    // Django returns 'owner', Supabase might return 'users'
     String? ownerUsername;
     String? ownerAvatarUrl;
     int ownerRatingSum = 0;
     int ownerRatingCount = 0;
-    if (json['users'] != null && json['users'] is Map) {
-      ownerUsername = json['users']['username'] as String?;
-      ownerAvatarUrl = json['users']['avatar_url'] as String?;
-      ownerRatingSum = json['users']['rating_sum'] as int? ?? 0;
-      ownerRatingCount = json['users']['rating_count'] as int? ?? 0;
+    final ownerData = json['owner'] ?? json['users'];
+    if (ownerData != null && ownerData is Map) {
+      ownerUsername = ownerData['username'] as String?;
+      ownerAvatarUrl = ownerData['avatar_url'] as String?;
+      ownerRatingSum = _toInt(ownerData['rating_sum']);
+      ownerRatingCount = _toInt(ownerData['rating_count']);
     }
 
     return Item(
@@ -123,16 +148,16 @@ class Item {
       title: json['title'] as String,
       category: json['category'] as String,
       description: json['description'] as String?,
-      estimatedValue: (json['estimated_value'] as num?)?.toDouble(),
-      depositAmount: (json['deposit_amount'] as num?)?.toDouble(),
+      estimatedValue: _toDouble(json['estimated_value']),
+      depositAmount: _toDouble(json['deposit_amount']),
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'] as String)
           : null,
       endDate: json['end_date'] != null
           ? DateTime.parse(json['end_date'] as String)
           : null,
-      lat: (json['lat'] as num?)?.toDouble(),
-      lng: (json['lng'] as num?)?.toDouble(),
+      lat: _toDouble(json['lat']),
+      lng: _toDouble(json['lng']),
       isAvailable: json['is_available'] as bool? ?? true,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -163,5 +188,3 @@ class Item {
     };
   }
 }
-
-
