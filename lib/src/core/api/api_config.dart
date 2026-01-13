@@ -6,12 +6,13 @@
 /// if needed.
 class ApiConfig {
   /// The base URL for the Django backend API.
-  /// Defaults to localhost:8000 for local development.
+  /// Production: https://sellefli.onrender.com
+  /// Override via --dart-define=DJANGO_BASE_URL for local development.
   static const String apiBaseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
     defaultValue: String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue: 'http://localhost:8000',
+      defaultValue: 'https://sellefli.onrender.com',
     ),
   );
 

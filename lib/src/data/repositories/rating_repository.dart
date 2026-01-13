@@ -10,9 +10,10 @@ import '../models/rating_model.dart';
 /// Django handles validation, calculation, and database updates.
 class RatingRepository {
   /// Configure your backend base URL. Override via --dart-define=DJANGO_BASE_URL
+  /// Production: https://sellefli.onrender.com
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://localhost:9000',
+    defaultValue: 'https://sellefli.onrender.com',
   );
 
   final http.Client _client;

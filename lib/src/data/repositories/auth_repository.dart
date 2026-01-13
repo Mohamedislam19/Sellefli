@@ -7,9 +7,10 @@ class AuthRepository {
   final http.Client _client;
 
   // Uses the same default backend URL as other repositories
+  /// Production: https://sellefli.onrender.com
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://localhost:9000',
+    defaultValue: 'https://sellefli.onrender.com',
   );
 
   AuthRepository({SupabaseClient? supabase, http.Client? client})

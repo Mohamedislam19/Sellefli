@@ -15,10 +15,10 @@ import '../local/local_item_repository.dart';
 class ItemRepository {
   /// Configure your backend base URL. Override via --dart-define=DJANGO_BASE_URL
   /// if needed.
-  /// Default: localhost for desktop, 10.0.2.2 for Android emulator
+  /// Production: https://sellefli.onrender.com
   static const String _baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://localhost:9000',
+    defaultValue: 'https://sellefli.onrender.com',
   );
 
   /// Request timeout duration - reduced to fail fast and use cache

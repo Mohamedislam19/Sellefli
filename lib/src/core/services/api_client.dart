@@ -20,9 +20,10 @@ class ApiClient {
   ApiClient._internal();
 
   /// Configure your backend base URL. Override via --dart-define=DJANGO_BASE_URL
+  /// Production: https://sellefli.onrender.com
   static const String baseUrl = String.fromEnvironment(
     'DJANGO_BASE_URL',
-    defaultValue: 'http://localhost:9000',
+    defaultValue: 'https://sellefli.onrender.com',
   );
 
   /// Request timeout duration
