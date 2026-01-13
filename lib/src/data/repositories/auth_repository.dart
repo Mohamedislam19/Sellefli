@@ -102,8 +102,11 @@ class AuthRepository {
           throw Exception('Login successful but no tokens returned');
         }
 
-        // Set the session manually in Supabase SDK so the rest of the app works
-        return await _supabase.auth.setSession(refreshToken);
+        // Set the session in Supabase SDK using the tokens from Django
+        // This makes currentSession and currentUser available throughout the app
+        final authResponse = await _supabase.auth.setSession(refreshToken);
+        
+        return authResponse;
       } else {
         String errorMessage = 'Login failed';
         try {
