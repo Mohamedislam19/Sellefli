@@ -378,10 +378,9 @@ class ItemRepository {
   // GET IMAGES
   // ===========================================================================
   Future<List<ItemImage>> getItemImages(String itemId) async {
-    final res = await _client.get(
-      _uri('/api/items/$itemId/images/'),
-      headers: await _authHeaders,
-    ).timeout(_timeout);
+    final res = await _client
+        .get(_uri('/api/items/$itemId/images/'), headers: await _authHeaders)
+        .timeout(_timeout);
     return _decode<List<ItemImage>>(res, (body) {
       return (body as List)
           .map<ItemImage>((json) => ItemImage.fromJson(json))
@@ -528,13 +527,13 @@ class ItemRepository {
   Future<void> deleteItem(String itemId) async {
     // First get auth headers for authenticated request
     final headers = await _authHeaders;
-    
+
     // Delete the item (backend will cascade delete images)
     final res = await _client.delete(
       _uri('/api/items/$itemId/'),
       headers: headers,
     );
-    
+
     if (res.statusCode >= 200 && res.statusCode < 300) return;
     throw HttpException('HTTP ${res.statusCode}: ${res.body}');
   }

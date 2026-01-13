@@ -62,14 +62,14 @@ class ProfileRepository {
   /// GET /api/users/me/
   Future<models.User?> getMyProfile() async {
     try {
-      final userId = _apiClient.currentUserId ?? _authRepository?.currentUser?.id;
+      final userId =
+          _apiClient.currentUserId ?? _authRepository?.currentUser?.id;
       if (userId == null) return null;
 
       final headers = await _jsonHeaders;
-      final res = await _client.get(
-        _uri('/api/users/me/', {'id': userId}),
-        headers: headers,
-      ).timeout(_timeout);
+      final res = await _client
+          .get(_uri('/api/users/me/', {'id': userId}), headers: headers)
+          .timeout(_timeout);
 
       if (res.statusCode == 404) return null;
 
@@ -87,10 +87,9 @@ class ProfileRepository {
   Future<models.User?> getProfileById(String userId) async {
     try {
       final headers = await _jsonHeaders;
-      final res = await _client.get(
-        _uri('/api/users/$userId/'),
-        headers: headers,
-      ).timeout(_timeout);
+      final res = await _client
+          .get(_uri('/api/users/$userId/'), headers: headers)
+          .timeout(_timeout);
 
       if (res.statusCode == 404) return null;
 
@@ -107,7 +106,8 @@ class ProfileRepository {
   /// POST /api/users/{userId}/upload-avatar/ (multipart)
   Future<String?> uploadAvatar(File file) async {
     try {
-      final userId = _apiClient.currentUserId ?? _authRepository?.currentUser?.id;
+      final userId =
+          _apiClient.currentUserId ?? _authRepository?.currentUser?.id;
       if (userId == null) {
         throw Exception('User not authenticated');
       }
@@ -121,9 +121,7 @@ class ProfileRepository {
       // Add authorization header to multipart request
       request.headers.addAll(headers);
 
-      request.files.add(
-        await http.MultipartFile.fromPath('avatar', file.path),
-      );
+      request.files.add(await http.MultipartFile.fromPath('avatar', file.path));
 
       final response = await request.send();
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -146,7 +144,8 @@ class ProfileRepository {
     String? avatarUrl,
   }) async {
     try {
-      final userId = _apiClient.currentUserId ?? _authRepository?.currentUser?.id;
+      final userId =
+          _apiClient.currentUserId ?? _authRepository?.currentUser?.id;
       if (userId == null) {
         throw Exception('User not authenticated');
       }
