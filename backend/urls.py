@@ -11,6 +11,7 @@ def health_check(request):
     # Check Supabase configuration status
     supabase_url = getattr(settings, 'SUPABASE_URL', None)
     supabase_key = getattr(settings, 'SUPABASE_SERVICE_ROLE_KEY', None)
+    jwt_secret = getattr(settings, 'SUPABASE_JWT_SECRET', None)
     
     supabase_status = "configured" if supabase_url and supabase_key else "missing"
     
@@ -20,6 +21,8 @@ def health_check(request):
         "supabase_auth": supabase_status,
         "supabase_url_set": bool(supabase_url),
         "supabase_key_set": bool(supabase_key),
+        "jwt_secret_set": bool(jwt_secret),
+        "jwt_secret_length": len(jwt_secret) if jwt_secret else 0,
     })
 
 
