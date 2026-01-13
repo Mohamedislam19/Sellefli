@@ -56,6 +56,12 @@ flutter {
     source = "../.."
 }
 
+// Allow local release builds without requiring network access to Crashlytics
+// symbol upload endpoints (can fail behind some DNS/proxy/firewall setups).
+tasks.matching { it.name.startsWith("uploadCrashlyticsMappingFile") }.configureEach {
+    enabled = false
+}
+
 dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-crashlytics")
