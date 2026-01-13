@@ -1,5 +1,5 @@
-"""Django settings placeholder for Supabase-hosted PostgreSQL.
-Fill secrets and Supabase connection values later.
+"""Django settings for Sellefli Backend.
+Configured for Render.com hosting with Supabase PostgreSQL.
 """
 from pathlib import Path
 import os
@@ -21,8 +21,9 @@ for _env in _env_paths:
 
 BASE_DIR = Path(__file__).resolve().parent
 
-SECRET_KEY = "CHANGE_ME_LATER"
-DEBUG = True
+# Security settings - use environment variables in production
+SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME_LATER_dev_only_key_12345")
+DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 # Parse ALLOWED_HOSTS from env (comma or semicolon separated), strip whitespace and ignore empty entries.
 _raw_allowed_hosts = os.getenv(
     "ALLOWED_HOSTS",
@@ -33,6 +34,16 @@ ALLOWED_HOSTS = [h.strip() for h in _raw_allowed_hosts.replace(";", ",").split("
 for _ip in ("10.237.253.109", "172.21.59.109", "192.168.1.9", "10.156.219.188", "10.80.20.225"):
     if _ip not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(_ip)
+
+# Add Render host automatically
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# CSRF trusted origins for production
+CSRF_TRUSTED_ORIGINS = []
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -54,6 +65,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -118,6 +130,19 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# WhiteNoise configuration for static files
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# Security settings for production
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
