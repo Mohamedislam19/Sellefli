@@ -8,7 +8,19 @@ from django.http import JsonResponse
 
 def health_check(request):
     """Health check endpoint for Render."""
-    return JsonResponse({"status": "healthy", "service": "sellefli-backend"})
+    # Check Supabase configuration status
+    supabase_url = getattr(settings, 'SUPABASE_URL', None)
+    supabase_key = getattr(settings, 'SUPABASE_SERVICE_ROLE_KEY', None)
+    
+    supabase_status = "configured" if supabase_url and supabase_key else "missing"
+    
+    return JsonResponse({
+        "status": "healthy",
+        "service": "sellefli-backend",
+        "supabase_auth": supabase_status,
+        "supabase_url_set": bool(supabase_url),
+        "supabase_key_set": bool(supabase_key),
+    })
 
 
 urlpatterns = [
