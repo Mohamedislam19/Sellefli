@@ -33,14 +33,11 @@ void main() {
       'fetchBookingDetails: emits [Loading, Error("Booking not found")] when booking missing',
       setUp: () {
         FakeHttpRouter.instance.setRoutes([
-          // Supabase PostgREST: return an empty list for no rows.
           FakeHttpRoute(
             matches: (method, uri) =>
-                method == 'GET' &&
-                uri.path == '/rest/v1/bookings' &&
-                uri.queryParameters['id'] == 'eq.missing-booking',
-            statusCode: 200,
-            body: '[]',
+                method == 'GET' && uri.path == '/api/bookings/missing-booking/',
+            statusCode: 404,
+            body: '{}',
           ),
         ]);
       },
@@ -53,7 +50,11 @@ void main() {
       act: (cubit) => cubit.fetchBookingDetails('missing-booking'),
       expect: () => [
         isA<BookingLoading>(),
-        isA<BookingError>().having((s) => s.error, 'error', 'Booking not found'),
+        isA<BookingError>().having(
+          (s) => s.error,
+          'error',
+          'Booking not found',
+        ),
       ],
     );
 
@@ -78,24 +79,10 @@ void main() {
         FakeHttpRouter.instance.setRoutes([
           FakeHttpRoute(
             matches: (method, uri) =>
-                method == 'GET' && uri.path == '/rest/v1/bookings',
+                method == 'GET' && uri.path == '/api/bookings/b1/',
             statusCode: 200,
-            body: jsonEncode([bookingJson]),
-            headers: const {
-              // PostgREST single-object response
-              'content-type': 'application/json; charset=utf-8',
-            },
-          ),
-          // These are called for related fetches (items/users/images). Returning
-          // 406 makes `.maybeSingle()` resolve to null.
-          FakeHttpRoute(
-            matches: (method, uri) =>
-                method == 'GET' &&
-                (uri.path == '/rest/v1/items' ||
-                    uri.path == '/rest/v1/users' ||
-                    uri.path == '/rest/v1/item_images'),
-            statusCode: 200,
-            body: '[]',
+            body: jsonEncode(bookingJson),
+            headers: const {'content-type': 'application/json; charset=utf-8'},
           ),
         ]);
       },
@@ -133,23 +120,20 @@ void main() {
         FakeHttpRouter.instance.setRoutes([
           FakeHttpRoute(
             matches: (method, uri) =>
-                method == 'GET' && uri.path == '/rest/v1/bookings',
+                method == 'GET' && uri.path == '/api/bookings/b1/',
             statusCode: 200,
-            body: jsonEncode([bookingJson]),
+            body: jsonEncode(bookingJson),
           ),
           FakeHttpRoute(
             matches: (method, uri) =>
-                method == 'GET' &&
-                (uri.path == '/rest/v1/items' ||
-                    uri.path == '/rest/v1/users' ||
-                    uri.path == '/rest/v1/item_images'),
-            statusCode: 200,
-            body: '[]',
+                method == 'PATCH' && uri.path == '/api/bookings/b1/deposit/',
+            statusCode: 204,
+            body: '',
+            headers: const {'content-type': 'application/json; charset=utf-8'},
           ),
           FakeHttpRoute(
             matches: (method, uri) =>
-                (method == 'PATCH' || method == 'POST') &&
-                uri.path == '/rest/v1/bookings',
+                method == 'PATCH' && uri.path == '/api/bookings/b1/status/',
             statusCode: 204,
             body: '',
             headers: const {'content-type': 'application/json; charset=utf-8'},
@@ -175,8 +159,14 @@ void main() {
         FakeHttpRouter.instance.setRoutes([
           FakeHttpRoute(
             matches: (method, uri) =>
-                (method == 'PATCH' || method == 'POST') &&
-                uri.path == '/rest/v1/bookings',
+                method == 'PATCH' && uri.path == '/api/bookings/b1/status/',
+            statusCode: 204,
+            body: '',
+          ),
+          FakeHttpRoute(
+            matches: (method, uri) =>
+                method == 'POST' &&
+                uri.path == '/api/bookings/b1/generate-code/',
             statusCode: 204,
             body: '',
           ),
@@ -201,8 +191,7 @@ void main() {
         FakeHttpRouter.instance.setRoutes([
           FakeHttpRoute(
             matches: (method, uri) =>
-                (method == 'PATCH' || method == 'POST') &&
-                uri.path == '/rest/v1/bookings',
+                method == 'PATCH' && uri.path == '/api/bookings/b1/status/',
             statusCode: 400,
             body: jsonEncode({'message': 'bad update'}),
           ),
@@ -211,10 +200,7 @@ void main() {
       tearDown: () => FakeHttpRouter.instance.clearRoutes(),
       build: () => BookingCubit(),
       act: (cubit) => cubit.acceptBooking('b1'),
-      expect: () => [
-        isA<BookingActionLoading>(),
-        isA<BookingError>(),
-      ],
+      expect: () => [isA<BookingActionLoading>(), isA<BookingError>()],
     );
 
     blocTest<BookingCubit, BookingState>(
@@ -222,7 +208,7 @@ void main() {
       setUp: () {
         FakeHttpRouter.instance.setRoutes([
           const FakeHttpRoute(
-            matches: _matchPatchBookings,
+            matches: _matchPatchBookingStatus,
             statusCode: 204,
             body: '',
           ),
@@ -233,8 +219,11 @@ void main() {
       act: (cubit) => cubit.declineBooking('b1'),
       expect: () => [
         isA<BookingActionLoading>(),
-        isA<BookingActionSuccess>()
-            .having((s) => s.message, 'message', 'Booking declined'),
+        isA<BookingActionSuccess>().having(
+          (s) => s.message,
+          'message',
+          'Booking declined',
+        ),
       ],
     );
 
@@ -243,7 +232,7 @@ void main() {
       setUp: () {
         FakeHttpRouter.instance.setRoutes([
           const FakeHttpRoute(
-            matches: _matchPatchBookings,
+            matches: _matchPatchBookingDepositOrStatus,
             statusCode: 204,
             body: '',
           ),
@@ -254,8 +243,11 @@ void main() {
       act: (cubit) => cubit.keepDeposit('b1'),
       expect: () => [
         isA<BookingActionLoading>(),
-        isA<BookingActionSuccess>()
-            .having((s) => s.message, 'message', 'Deposit kept'),
+        isA<BookingActionSuccess>().having(
+          (s) => s.message,
+          'message',
+          'Deposit kept',
+        ),
       ],
     );
 
@@ -264,7 +256,7 @@ void main() {
       setUp: () {
         FakeHttpRouter.instance.setRoutes([
           const FakeHttpRoute(
-            matches: _matchPatchBookings,
+            matches: _matchPatchBookingDepositOrStatus,
             statusCode: 204,
             body: '',
           ),
@@ -275,8 +267,11 @@ void main() {
       act: (cubit) => cubit.markDepositReturned('b1'),
       expect: () => [
         isA<BookingActionLoading>(),
-        isA<BookingActionSuccess>()
-            .having((s) => s.message, 'message', 'Deposit marked as returned'),
+        isA<BookingActionSuccess>().having(
+          (s) => s.message,
+          'message',
+          'Deposit marked as returned',
+        ),
       ],
     );
 
@@ -285,7 +280,7 @@ void main() {
       setUp: () {
         FakeHttpRouter.instance.setRoutes([
           FakeHttpRoute(
-            matches: _matchPatchBookings,
+            matches: _matchPatchBookingDepositOrStatus,
             statusCode: 400,
             body: jsonEncode({'message': 'bad update'}),
           ),
@@ -294,10 +289,7 @@ void main() {
       tearDown: () => FakeHttpRouter.instance.clearRoutes(),
       build: () => BookingCubit(),
       act: (cubit) => cubit.markDepositReturned('b1'),
-      expect: () => [
-        isA<BookingActionLoading>(),
-        isA<BookingError>(),
-      ],
+      expect: () => [isA<BookingActionLoading>(), isA<BookingError>()],
     );
 
     blocTest<BookingCubit, BookingState>(
@@ -425,8 +417,16 @@ void main() {
   });
 }
 
-bool _matchPatchBookings(String method, Uri uri) {
-  return method == 'PATCH' && uri.path == '/rest/v1/bookings';
+bool _matchPatchBookingStatus(String method, Uri uri) {
+  return method == 'PATCH' &&
+      uri.path.startsWith('/api/bookings/') &&
+      uri.path.endsWith('/status/');
+}
+
+bool _matchPatchBookingDepositOrStatus(String method, Uri uri) {
+  if (method != 'PATCH') return false;
+  if (!uri.path.startsWith('/api/bookings/')) return false;
+  return uri.path.endsWith('/deposit/') || uri.path.endsWith('/status/');
 }
 
 bool _matchPostRatings(String method, Uri uri) {

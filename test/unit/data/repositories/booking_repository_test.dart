@@ -95,9 +95,9 @@ void main() {
       FakeHttpRouter.instance.setRoutes([
         FakeHttpRoute(
           matches: (method, uri) =>
-              method == 'GET' && uri.path == '/rest/v1/bookings',
-          statusCode: 200,
-          body: '[]',
+              method == 'GET' && uri.path == '/api/bookings/missing/',
+          statusCode: 404,
+          body: '{}',
         ),
       ]);
 
@@ -159,37 +159,15 @@ void main() {
       FakeHttpRouter.instance.setRoutes([
         FakeHttpRoute(
           matches: (method, uri) =>
-              method == 'GET' && uri.path == '/rest/v1/bookings',
+              method == 'GET' && uri.path == '/api/bookings/$bookingId/',
           statusCode: 200,
-          body: jsonEncode([bookingJson]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' && uri.path == '/rest/v1/items',
-          statusCode: 200,
-          body: jsonEncode([itemJson]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' && uri.path == '/rest/v1/item_images',
-          statusCode: 200,
-          body: jsonEncode([imageJson]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/users' &&
-              uri.queryParameters['id'] == 'eq.u1',
-          statusCode: 200,
-          body: jsonEncode([borrowerJson]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/users' &&
-              uri.queryParameters['id'] == 'eq.o1',
-          statusCode: 200,
-          body: jsonEncode([ownerJson]),
+          body: jsonEncode({
+            ...bookingJson,
+            'item': itemJson,
+            'borrower': borrowerJson,
+            'owner': ownerJson,
+            'image_url': imageJson['image_url'],
+          }),
         ),
       ]);
 
@@ -234,25 +212,9 @@ void main() {
       FakeHttpRouter.instance.setRoutes([
         FakeHttpRoute(
           matches: (method, uri) =>
-              method == 'GET' && uri.path == '/rest/v1/bookings',
+              method == 'GET' && uri.path == '/api/bookings/$bookingId/',
           statusCode: 200,
-          body: jsonEncode([bookingJson]),
-        ),
-        // related lookups return empty arrays
-        const FakeHttpRoute(
-          matches: _matchGetItems,
-          statusCode: 200,
-          body: '[]',
-        ),
-        const FakeHttpRoute(
-          matches: _matchGetUsers,
-          statusCode: 200,
-          body: '[]',
-        ),
-        const FakeHttpRoute(
-          matches: _matchGetItemImages,
-          statusCode: 200,
-          body: '[]',
+          body: jsonEncode({...bookingJson}),
         ),
       ]);
 
@@ -271,8 +233,9 @@ void main() {
       FakeHttpRouter.instance
         ..setOnRequest((m, u) => seen.add('$m ${u.path}'))
         ..setRoutes([
-          const FakeHttpRoute(
-            matches: _matchPatchBookings,
+          FakeHttpRoute(
+            matches: (method, uri) =>
+                method == 'PATCH' && uri.path == '/api/bookings/b1/status/',
             statusCode: 204,
             body: '',
           ),
@@ -280,13 +243,14 @@ void main() {
 
       await repo.updateBookingStatus('b1', BookingStatus.accepted);
 
-      expect(seen.any((s) => s.startsWith('PATCH /rest/v1/bookings')), isTrue);
+      expect(seen.any((s) => s == 'PATCH /api/bookings/b1/status/'), isTrue);
     });
 
     test('updateBookingStatus throws on non-2xx response', () async {
       FakeHttpRouter.instance.setRoutes([
         FakeHttpRoute(
-          matches: _matchPatchBookings,
+          matches: (method, uri) =>
+              method == 'PATCH' && uri.path == '/api/bookings/b1/status/',
           statusCode: 400,
           body: jsonEncode({'message': 'bad update'}),
         ),
@@ -303,8 +267,9 @@ void main() {
       FakeHttpRouter.instance
         ..setOnRequest((m, u) => seen.add('$m ${u.path}'))
         ..setRoutes([
-          const FakeHttpRoute(
-            matches: _matchPatchBookings,
+          FakeHttpRoute(
+            matches: (method, uri) =>
+                method == 'PATCH' && uri.path == '/api/bookings/b1/deposit/',
             statusCode: 204,
             body: '',
           ),
@@ -312,13 +277,14 @@ void main() {
 
       await repo.updateDepositStatus('b1', DepositStatus.received);
 
-      expect(seen.any((s) => s.startsWith('PATCH /rest/v1/bookings')), isTrue);
+      expect(seen.any((s) => s == 'PATCH /api/bookings/b1/deposit/'), isTrue);
     });
 
     test('updateDepositStatus throws on non-2xx response', () async {
       FakeHttpRouter.instance.setRoutes([
         FakeHttpRoute(
-          matches: _matchPatchBookings,
+          matches: (method, uri) =>
+              method == 'PATCH' && uri.path == '/api/bookings/b1/deposit/',
           statusCode: 400,
           body: jsonEncode({'message': 'bad update'}),
         ),
@@ -335,8 +301,10 @@ void main() {
       FakeHttpRouter.instance
         ..setOnRequest((m, u) => seen.add('$m ${u.path}'))
         ..setRoutes([
-          const FakeHttpRoute(
-            matches: _matchPatchBookings,
+          FakeHttpRoute(
+            matches: (method, uri) =>
+                method == 'POST' &&
+                uri.path == '/api/bookings/b1/generate-code/',
             statusCode: 204,
             body: '',
           ),
@@ -344,13 +312,17 @@ void main() {
 
       await repo.generateBookingCode('b1');
 
-      expect(seen.any((s) => s.startsWith('PATCH /rest/v1/bookings')), isTrue);
+      expect(
+        seen.any((s) => s == 'POST /api/bookings/b1/generate-code/'),
+        isTrue,
+      );
     });
 
     test('generateBookingCode throws on non-2xx response', () async {
       FakeHttpRouter.instance.setRoutes([
         FakeHttpRoute(
-          matches: _matchPatchBookings,
+          matches: (method, uri) =>
+              method == 'POST' && uri.path == '/api/bookings/b1/generate-code/',
           statusCode: 400,
           body: jsonEncode({'message': 'bad update'}),
         ),
@@ -364,8 +336,9 @@ void main() {
       FakeHttpRouter.instance
         ..setOnRequest((m, u) => seen.add('$m ${u.path}'))
         ..setRoutes([
-          const FakeHttpRoute(
-            matches: _matchDeleteBookings,
+          FakeHttpRoute(
+            matches: (method, uri) =>
+                method == 'DELETE' && uri.path == '/api/bookings/b1/',
             statusCode: 204,
             body: '',
           ),
@@ -373,13 +346,14 @@ void main() {
 
       await repo.deleteBooking('b1');
 
-      expect(seen.any((s) => s.startsWith('DELETE /rest/v1/bookings')), isTrue);
+      expect(seen.any((s) => s == 'DELETE /api/bookings/b1/'), isTrue);
     });
 
     test('deleteBooking throws on non-2xx response', () async {
       FakeHttpRouter.instance.setRoutes([
         FakeHttpRoute(
-          matches: _matchDeleteBookings,
+          matches: (method, uri) =>
+              method == 'DELETE' && uri.path == '/api/bookings/b1/',
           statusCode: 400,
           body: jsonEncode({'message': 'bad delete'}),
         ),
@@ -388,154 +362,114 @@ void main() {
       expect(() => repo.deleteBooking('b1'), throwsA(isA<Object>()));
     });
 
-    test('getIncomingRequests maps bookings with item/borrower/image', () async {
-      final bookings = [
-        {
-          'id': 'b1',
-          'item_id': 'i1',
-          'owner_id': 'o1',
-          'borrower_id': 'u1',
-          'status': BookingStatus.pending.name,
-          'deposit_status': DepositStatus.none.name,
-          'booking_code': null,
-          'start_date': '2024-01-01T00:00:00.000Z',
-          'return_by_date': '2024-01-03T00:00:00.000Z',
-          'total_cost': 10.0,
-          'created_at': '2024-01-01T00:00:00.000Z',
-          'updated_at': '2024-01-01T00:00:00.000Z',
-        },
-        {
-          'id': 'b2',
-          'item_id': 'i2',
-          'owner_id': 'o1',
-          'borrower_id': 'u2',
-          'status': BookingStatus.accepted.name,
-          'deposit_status': DepositStatus.none.name,
-          'booking_code': null,
-          'start_date': '2024-02-01T00:00:00.000Z',
-          'return_by_date': '2024-02-03T00:00:00.000Z',
-          'total_cost': 20.0,
-          'created_at': '2024-02-01T00:00:00.000Z',
-          'updated_at': '2024-02-01T00:00:00.000Z',
-        },
-      ];
+    test(
+      'getIncomingRequests maps bookings with item/borrower/image',
+      () async {
+        final bookings = [
+          {
+            'id': 'b1',
+            'item_id': 'i1',
+            'owner_id': 'o1',
+            'borrower_id': 'u1',
+            'status': BookingStatus.pending.name,
+            'deposit_status': DepositStatus.none.name,
+            'booking_code': null,
+            'start_date': '2024-01-01T00:00:00.000Z',
+            'return_by_date': '2024-01-03T00:00:00.000Z',
+            'total_cost': 10.0,
+            'created_at': '2024-01-01T00:00:00.000Z',
+            'updated_at': '2024-01-01T00:00:00.000Z',
+          },
+          {
+            'id': 'b2',
+            'item_id': 'i2',
+            'owner_id': 'o1',
+            'borrower_id': 'u2',
+            'status': BookingStatus.accepted.name,
+            'deposit_status': DepositStatus.none.name,
+            'booking_code': null,
+            'start_date': '2024-02-01T00:00:00.000Z',
+            'return_by_date': '2024-02-03T00:00:00.000Z',
+            'total_cost': 20.0,
+            'created_at': '2024-02-01T00:00:00.000Z',
+            'updated_at': '2024-02-01T00:00:00.000Z',
+          },
+        ];
 
-      FakeHttpRouter.instance.setRoutes([
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/bookings' &&
-              uri.queryParameters['owner_id'] == 'eq.o1',
-          statusCode: 200,
-          body: jsonEncode(bookings),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/items' &&
-              uri.queryParameters['id'] == 'eq.i1',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'i1',
-              'owner_id': 'o1',
-              'title': 'Camera',
-              'category': 'Electronics',
-              'created_at': '2024-01-01T00:00:00.000Z',
-              'updated_at': '2024-01-01T00:00:00.000Z',
-            },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/items' &&
-              uri.queryParameters['id'] == 'eq.i2',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'i2',
-              'owner_id': 'o1',
-              'title': 'Bike',
-              'category': 'Vehicles',
-              'created_at': '2024-02-01T00:00:00.000Z',
-              'updated_at': '2024-02-01T00:00:00.000Z',
-            },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/users' &&
-              uri.queryParameters['id'] == 'eq.u1',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'u1',
-              'email': 'u1@example.com',
-              'name': 'Borrower 1',
-              'created_at': '2024-01-01T00:00:00.000Z',
-              'updated_at': '2024-01-01T00:00:00.000Z',
-            },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/users' &&
-              uri.queryParameters['id'] == 'eq.u2',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'u2',
-              'email': 'u2@example.com',
-              'name': 'Borrower 2',
-              'created_at': '2024-02-01T00:00:00.000Z',
-              'updated_at': '2024-02-01T00:00:00.000Z',
-            },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/item_images' &&
-              uri.queryParameters['item_id'] == 'eq.i1',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'img1',
-              'item_id': 'i1',
-              'image_url': 'http://example.com/i1.png',
-              'position': 0,
-            },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/item_images' &&
-              uri.queryParameters['item_id'] == 'eq.i2',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'img2',
-              'item_id': 'i2',
-              'image_url': 'http://example.com/i2.png',
-              'position': 0,
-            },
-          ]),
-        ),
-      ]);
+        FakeHttpRouter.instance.setRoutes([
+          FakeHttpRoute(
+            matches: (method, uri) =>
+                method == 'GET' &&
+                uri.path == '/api/bookings/incoming/' &&
+                uri.queryParameters['owner_id'] == 'o1',
+            statusCode: 200,
+            body: jsonEncode([
+              {
+                ...bookings[0],
+                'item': {
+                  'id': 'i1',
+                  'owner_id': 'o1',
+                  'title': 'Camera',
+                  'category': 'Electronics',
+                  'created_at': '2024-01-01T00:00:00.000Z',
+                  'updated_at': '2024-01-01T00:00:00.000Z',
+                },
+                'borrower': {
+                  'id': 'u1',
+                  'email': 'u1@example.com',
+                  'name': 'Borrower 1',
+                  'created_at': '2024-01-01T00:00:00.000Z',
+                  'updated_at': '2024-01-01T00:00:00.000Z',
+                },
+                'owner': {
+                  'id': 'o1',
+                  'email': 'o1@example.com',
+                  'name': 'Owner',
+                  'created_at': '2024-01-01T00:00:00.000Z',
+                  'updated_at': '2024-01-01T00:00:00.000Z',
+                },
+                'image_url': 'http://example.com/i1.png',
+              },
+              {
+                ...bookings[1],
+                'item': {
+                  'id': 'i2',
+                  'owner_id': 'o1',
+                  'title': 'Bike',
+                  'category': 'Vehicles',
+                  'created_at': '2024-02-01T00:00:00.000Z',
+                  'updated_at': '2024-02-01T00:00:00.000Z',
+                },
+                'borrower': {
+                  'id': 'u2',
+                  'email': 'u2@example.com',
+                  'name': 'Borrower 2',
+                  'created_at': '2024-02-01T00:00:00.000Z',
+                  'updated_at': '2024-02-01T00:00:00.000Z',
+                },
+                'owner': {
+                  'id': 'o1',
+                  'email': 'o1@example.com',
+                  'name': 'Owner',
+                  'created_at': '2024-01-01T00:00:00.000Z',
+                  'updated_at': '2024-01-01T00:00:00.000Z',
+                },
+                'image_url': 'http://example.com/i2.png',
+              },
+            ]),
+          ),
+        ]);
 
-      final results = await repo.getIncomingRequests('o1');
-      expect(results, hasLength(2));
+        final results = await repo.getIncomingRequests('o1');
+        expect(results, hasLength(2));
 
-      final first = results.first;
-      expect((first['booking'] as Booking).id, 'b1');
-      expect((first['item'] as Item?)?.id, 'i1');
-      expect((first['borrower'] as models.User?)?.id, 'u1');
-      expect(first['imageUrl'], 'http://example.com/i1.png');
-    });
+        final first = results.first;
+        expect((first['booking'] as Booking).id, 'b1');
+        expect((first['item'] as Item?)?.id, 'i1');
+        expect((first['borrower'] as models.User?)?.id, 'u1');
+        expect(first['imageUrl'], 'http://example.com/i1.png');
+      },
+    );
 
     test('getMyRequests maps bookings with item/owner/image', () async {
       final bookings = [
@@ -559,56 +493,35 @@ void main() {
         FakeHttpRoute(
           matches: (method, uri) =>
               method == 'GET' &&
-              uri.path == '/rest/v1/bookings' &&
-              uri.queryParameters['borrower_id'] == 'eq.u1',
-          statusCode: 200,
-          body: jsonEncode(bookings),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/items' &&
-              uri.queryParameters['id'] == 'eq.i1',
+              uri.path == '/api/bookings/my-requests/' &&
+              uri.queryParameters['borrower_id'] == 'u1',
           statusCode: 200,
           body: jsonEncode([
             {
-              'id': 'i1',
-              'owner_id': 'o1',
-              'title': 'Camera',
-              'category': 'Electronics',
-              'created_at': '2024-01-01T00:00:00.000Z',
-              'updated_at': '2024-01-01T00:00:00.000Z',
-            },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/users' &&
-              uri.queryParameters['id'] == 'eq.o1',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'o1',
-              'email': 'o1@example.com',
-              'name': 'Owner 1',
-              'created_at': '2024-01-01T00:00:00.000Z',
-              'updated_at': '2024-01-01T00:00:00.000Z',
-            },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/item_images' &&
-              uri.queryParameters['item_id'] == 'eq.i1',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'img1',
-              'item_id': 'i1',
+              ...bookings[0],
+              'item': {
+                'id': 'i1',
+                'owner_id': 'o1',
+                'title': 'Camera',
+                'category': 'Electronics',
+                'created_at': '2024-01-01T00:00:00.000Z',
+                'updated_at': '2024-01-01T00:00:00.000Z',
+              },
+              'owner': {
+                'id': 'o1',
+                'email': 'o1@example.com',
+                'name': 'Owner 1',
+                'created_at': '2024-01-01T00:00:00.000Z',
+                'updated_at': '2024-01-01T00:00:00.000Z',
+              },
+              'borrower': {
+                'id': 'u1',
+                'email': 'u1@example.com',
+                'name': 'Borrower 1',
+                'created_at': '2024-01-01T00:00:00.000Z',
+                'updated_at': '2024-01-01T00:00:00.000Z',
+              },
               'image_url': 'http://example.com/i1.png',
-              'position': 0,
             },
           ]),
         ),
@@ -662,72 +575,36 @@ void main() {
         FakeHttpRoute(
           matches: (method, uri) =>
               method == 'GET' &&
-              uri.path == '/rest/v1/bookings' &&
-              uri.queryParameters.containsKey('or'),
-          statusCode: 200,
-          body: jsonEncode(bookings),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/items' &&
-              uri.queryParameters['id'] == 'eq.i1',
+              uri.path == '/api/bookings/user-transactions/' &&
+              uri.queryParameters['user_id'] == userId &&
+              uri.queryParameters['limit'] == '10',
           statusCode: 200,
           body: jsonEncode([
             {
-              'id': 'i1',
-              'owner_id': 'o1',
-              'title': 'Camera',
-              'category': 'Electronics',
-              'created_at': '2024-01-01T00:00:00.000Z',
-              'updated_at': '2024-01-01T00:00:00.000Z',
-            },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/items' &&
-              uri.queryParameters['id'] == 'eq.i2',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'i2',
-              'owner_id': userId,
-              'title': 'Bike',
-              'category': 'Vehicles',
-              'created_at': '2024-02-01T00:00:00.000Z',
-              'updated_at': '2024-02-01T00:00:00.000Z',
-            },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/item_images' &&
-              uri.queryParameters['item_id'] == 'eq.i1',
-          statusCode: 200,
-          body: jsonEncode([
-            {
-              'id': 'img1',
-              'item_id': 'i1',
+              ...bookings[0],
+              'item': {
+                'id': 'i1',
+                'owner_id': 'o1',
+                'title': 'Camera',
+                'category': 'Electronics',
+                'created_at': '2024-01-01T00:00:00.000Z',
+                'updated_at': '2024-01-01T00:00:00.000Z',
+              },
               'image_url': 'http://example.com/i1.png',
-              'position': 0,
+              'is_borrower': true,
             },
-          ]),
-        ),
-        FakeHttpRoute(
-          matches: (method, uri) =>
-              method == 'GET' &&
-              uri.path == '/rest/v1/item_images' &&
-              uri.queryParameters['item_id'] == 'eq.i2',
-          statusCode: 200,
-          body: jsonEncode([
             {
-              'id': 'img2',
-              'item_id': 'i2',
+              ...bookings[1],
+              'item': {
+                'id': 'i2',
+                'owner_id': userId,
+                'title': 'Bike',
+                'category': 'Vehicles',
+                'created_at': '2024-02-01T00:00:00.000Z',
+                'updated_at': '2024-02-01T00:00:00.000Z',
+              },
               'image_url': 'http://example.com/i2.png',
-              'position': 0,
+              'is_borrower': false,
             },
           ]),
         ),
@@ -742,22 +619,4 @@ void main() {
   });
 }
 
-bool _matchPatchBookings(String method, Uri uri) {
-  return method == 'PATCH' && uri.path == '/rest/v1/bookings';
-}
-
-bool _matchDeleteBookings(String method, Uri uri) {
-  return method == 'DELETE' && uri.path == '/rest/v1/bookings';
-}
-
-bool _matchGetItems(String method, Uri uri) {
-  return method == 'GET' && uri.path == '/rest/v1/items';
-}
-
-bool _matchGetUsers(String method, Uri uri) {
-  return method == 'GET' && uri.path == '/rest/v1/users';
-}
-
-bool _matchGetItemImages(String method, Uri uri) {
-  return method == 'GET' && uri.path == '/rest/v1/item_images';
-}
+// No shared matchers needed; tests stub exact /api/bookings routes.
