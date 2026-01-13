@@ -1,0 +1,42 @@
+# Render Blueprint for Sellefli Backend
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: sellefli-backend
+    runtime: python
+    region: frankfurt # EU region for better latency with Supabase EU
+    plan: free # Change to 'starter' or higher for production
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: DJANGO_SETTINGS_MODULE
+        value: settings
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        sync: false # Set this in Render dashboard
+      - key: SUPABASE_DB_NAME
+        sync: false
+      - key: SUPABASE_DB_USER
+        sync: false
+      - key: SUPABASE_DB_PASSWORD
+        sync: false
+      - key: SUPABASE_DB_HOST
+        sync: false
+      - key: SUPABASE_DB_PORT
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FCM_SERVER_KEY
+        sync: false
+    healthCheckPath: /api/health/
+    autoDeploy: true
