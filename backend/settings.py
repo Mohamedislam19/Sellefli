@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "item_images",
     "bookings",
     "ratings",
+    "notifications",
 ]
 
 MIDDLEWARE = [

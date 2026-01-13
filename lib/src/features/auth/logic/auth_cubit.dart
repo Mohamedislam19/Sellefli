@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:sellefli/src/features/auth/logic/auth_state.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:sellefli/src/core/services/api_client.dart';
+import 'package:sellefli/src/core/services/push_notification_service.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _authRepository;
@@ -122,6 +123,18 @@ class AuthCubit extends Cubit<AuthState> {
           userEmail: user.email ?? '',
           expiresAt: session.expiresAt,
         );
+        
+        // Register FCM token with backend for push notifications
+        try {
+          await PushNotificationService().registerDeviceWithBackend(
+            authToken: session.accessToken,
+          );
+          debugPrint('[AuthCubit] FCM token registered after login');
+        } catch (e) {
+          debugPrint('[AuthCubit] Failed to register FCM token: $e');
+          // Don't fail login if FCM registration fails
+        }
+        
         emit(AuthAuthenticated(user));
       } else {
         emit(const AuthError('Login failed. Please try again.'));
@@ -181,6 +194,18 @@ class AuthCubit extends Cubit<AuthState> {
           userEmail: user.email ?? '',
           expiresAt: session.expiresAt,
         );
+        
+        // Register FCM token with backend for push notifications
+        try {
+          await PushNotificationService().registerDeviceWithBackend(
+            authToken: session.accessToken,
+          );
+          debugPrint('[AuthCubit] FCM token registered after signup');
+        } catch (e) {
+          debugPrint('[AuthCubit] Failed to register FCM token: $e');
+          // Don't fail signup if FCM registration fails
+        }
+        
         emit(AuthAuthenticated(user));
         // Success message will be shown by BlocListener
       } else {
@@ -233,6 +258,15 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> logout() async {
     emit(AuthLoading());
     try {
+      // Unregister FCM token before signing out
+      try {
+        await PushNotificationService().unregisterDevice();
+        debugPrint('[AuthCubit] FCM token unregistered on logout');
+      } catch (e) {
+        debugPrint('[AuthCubit] Failed to unregister FCM token: $e');
+        // Continue with logout even if unregister fails
+      }
+      
       await _authRepository.signOut();
       // Clear tokens from ApiClient
       await _apiClient.clearTokens();

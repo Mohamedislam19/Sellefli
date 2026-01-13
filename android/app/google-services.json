@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "690008146256",
+    "project_id": "sellefli-42b4c",
+    "storage_bucket": "sellefli-42b4c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690008146256:android:572a66d3ca7f56dba2ec55",
+        "android_client_info": {
+          "package_name": "dz.edu.ensia.sellefli"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjYlvO-cDQX1Huu0rpSp0DwQ-AqnvIZuE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
