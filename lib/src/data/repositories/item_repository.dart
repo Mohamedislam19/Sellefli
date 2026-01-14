@@ -195,9 +195,6 @@ class ItemRepository {
     }
   }
 
-  // ===========================================================================
-  // GET ITEMS (Feed) - Uses Supabase directly for speed, Django as fallback
-  // ===========================================================================
   Future<List<Item>> getItems({
     required int page,
     required int pageSize,
