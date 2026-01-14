@@ -75,7 +75,8 @@ class _MyAppState extends State<MyApp> {
   void _handleNotification(Map<String, dynamic> notification) {
     // Show notification banner when received
     // This will be handled by the MaterialApp's scaffoldMessengerKey
-    print('📬 New notification: ${notification['title']}');
+    // ignore: avoid_print
+    print(' New notification: ${notification['title']}');
   }
 
   @override
