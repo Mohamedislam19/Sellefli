@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_cast
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';

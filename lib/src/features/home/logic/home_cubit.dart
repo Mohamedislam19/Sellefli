@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:bloc/bloc.dart';
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
